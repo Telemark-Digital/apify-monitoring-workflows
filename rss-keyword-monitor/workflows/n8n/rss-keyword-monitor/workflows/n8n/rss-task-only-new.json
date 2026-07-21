@@ -1,0 +1,219 @@
+{
+  "id": "rssKeywordAlerts02",
+  "name": "RSS alerts - ingest every terminal Task dataset",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "90e10502-6497-43e1-a3b4-44517e13d443",
+      "name": "Every hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-900, 100]
+    },
+    {
+      "parameters": {
+        "resource": "Actor tasks",
+        "operation": "Run task",
+        "actorTaskId": {
+          "__rl": true,
+          "value": "PASTEYOURTASKID",
+          "mode": "id"
+        },
+        "useCustomBody": false,
+        "waitForFinish": true,
+        "authentication": "apifyApi"
+      },
+      "id": "61e7f7db-fbfc-4e4e-90da-1b8798d5f932",
+      "name": "Run persistent RSS monitoring Task",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [-650, 100],
+      "notesInFlow": true,
+      "notes": "Verified with @apify/n8n-nodes-apify 0.6.10. Run task with Wait for Finish returns the terminal run object for SUCCEEDED, FAILED, TIMED-OUT, and ABORTED without applying the combined operation's success-only dataset gate."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            {
+              "id": "6df3c356-1b1e-4ff3-8516-4474a01764ee",
+              "leftValue": "={{ $json.defaultDatasetId }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "exists", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cd97dab0-717e-4bbd-bf5e-28c9535eeb80",
+      "name": "Run has default dataset",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-400, 100]
+    },
+    {
+      "parameters": {
+        "resource": "Datasets",
+        "operation": "Get items",
+        "datasetId": "={{ $('Run persistent RSS monitoring Task').first().json.defaultDatasetId }}",
+        "offset": 0,
+        "limit": 200,
+        "options": {},
+        "authentication": "apifyApi"
+      },
+      "id": "a2858d66-6ab6-4c79-8b6c-7c9f58d17f1d",
+      "name": "Fetch terminal run dataset",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [-150, 20],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true,
+      "notesInFlow": true,
+      "notes": "Fetches by the terminal run's defaultDatasetId for every status. This workflow is intentionally non-paginated: the retrieval limit is 200, so the saved Task maxItemsPerRun must be no greater than 200. Confirm that saved-Task cap during account-gated validation before activation. alwaysOutputData preserves the empty-dataset path."
+    },
+    {
+      "parameters": {
+        "jsCode": "const run = $('Run persistent RSS monitoring Task').first().json;\nconst rows = $input.all()\n  .map((item, rowIndex) => ({ record: item.json, rowIndex }))\n  .filter(({ record }) => record && Object.keys(record).length > 0);\n\nif (rows.length === 0) {\n  return [{ json: { hasRecord: false, runId: run.id, runStatus: run.status, datasetId: run.defaultDatasetId } }];\n}\n\nreturn rows.map(({ record, rowIndex }) => {\n  const hasIdentity = typeof record.itemKey === 'string' && record.itemKey.length > 0\n    && typeof record.feedUrl === 'string' && record.feedUrl.length > 0;\n\n  if (!hasIdentity) {\n    const rowIdentity = `row:${rowIndex}`;\n    const diagnostic = {\n      recordType: 'malformed-dataset-row',\n      code: 'MISSING_REQUIRED_IDENTITY',\n      product: 'rss',\n      runId: String(run.id ?? ''),\n      datasetId: String(run.defaultDatasetId ?? ''),\n      rowIndex,\n      requiredFields: ['feedUrl', 'itemKey'],\n    };\n\n    return { json: {\n      hasRecord: true,\n      isDiagnostic: true,\n      deliveryKey: `rss:diagnostic:${encodeURIComponent(String(run.id ?? 'unknown-run'))}:${rowIdentity}`,\n      product: 'rss',\n      sourceId: `diagnostic:${rowIdentity}`,\n      sourceUrl: '',\n      title: 'Malformed RSS dataset row',\n      observedAt: null,\n      runId: run.id,\n      runStatus: run.status,\n      datasetId: run.defaultDatasetId,\n      payloadJson: JSON.stringify(diagnostic),\n      normalized: null,\n      diagnostic,\n    } };\n  }\n\n  const deliveryKey = `rss:${encodeURIComponent(record.feedUrl)}:${encodeURIComponent(record.itemKey)}`;\n\n  return { json: {\n    hasRecord: true,\n    isDiagnostic: false,\n    deliveryKey,\n    product: 'rss',\n    sourceId: record.itemKey,\n    sourceUrl: record.link ?? record.feedUrl,\n    title: record.title ?? '',\n    observedAt: record.firstSeenAt ?? record.publishedAt ?? null,\n    runId: run.id,\n    runStatus: run.status,\n    datasetId: run.defaultDatasetId,\n    payloadJson: JSON.stringify(record),\n    normalized: record,\n  } };\n});"
+      },
+      "id": "3955944d-f908-4107-aac1-ddb0c5d225ac",
+      "name": "Prepare dataset records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 20]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            {
+              "id": "fa658918-45cc-4154-8cd0-a9ddfa21a138",
+              "leftValue": "={{ $json.hasRecord }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5fe35254-4a4a-4f9d-8214-ed61da8e29dd",
+      "name": "Dataset has records",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [350, 20]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": { "__rl": true, "value": "monitor-deliveries", "mode": "name" },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            { "keyName": "deliveryKey", "condition": "eq", "keyValue": "={{ $json.deliveryKey }}" }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "deliveryKey": "={{ $json.deliveryKey }}",
+            "product": "={{ $json.product }}",
+            "sourceId": "={{ $json.sourceId }}",
+            "sourceUrl": "={{ $json.sourceUrl }}",
+            "title": "={{ $json.title }}",
+            "observedAt": "={{ $json.observedAt }}",
+            "runId": "={{ $json.runId }}",
+            "runStatus": "={{ $json.runStatus }}",
+            "datasetId": "={{ $json.datasetId }}",
+            "payloadJson": "={{ $json.payloadJson }}"
+          },
+          "matchingColumns": ["deliveryKey"],
+          "schema": [
+            { "id": "deliveryKey", "displayName": "deliveryKey", "required": true, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "product", "displayName": "product", "required": true, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "sourceId", "displayName": "sourceId", "required": true, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "sourceUrl", "displayName": "sourceUrl", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "title", "displayName": "title", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "observedAt", "displayName": "observedAt", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "runId", "displayName": "runId", "required": true, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "runStatus", "displayName": "runStatus", "required": true, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "datasetId", "displayName": "datasetId", "required": true, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "payloadJson", "displayName": "payloadJson", "required": true, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": false }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a1a7dc23-4ad2-4d54-9e30-474c33d19ab7",
+      "name": "Upsert committed RSS items",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [600, -60],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Create or select monitor-deliveries with the displayed columns. Upsert matches the URL-encoded rss:<feedUrl>:<itemKey> deliveryKey, so equal itemKey values from different feeds remain distinct and replay updates one row instead of inserting a duplicate."
+    },
+    {
+      "parameters": {
+        "jsCode": "const run = $('Run persistent RSS monitoring Task').first().json;\nconst persisted = $('Prepare dataset records').all().filter((item) => item.json.hasRecord === true);\nconst diagnostics = persisted.filter((item) => item.json.isDiagnostic === true);\nconst records = persisted.filter((item) => item.json.isDiagnostic !== true);\nconst result = {\n  runId: run.id,\n  status: run.status,\n  defaultDatasetId: run.defaultDatasetId ?? null,\n  hasNewItems: records.length > 0,\n  newItemCount: records.length,\n  recordsPersisted: persisted.length,\n  validRecordsPersisted: records.length,\n  diagnosticRecordsPersisted: diagnostics.length,\n  items: records.map((item) => item.json.normalized),\n  terminalFailure: run.status !== 'SUCCEEDED',\n};\n\nif (run.status !== 'SUCCEEDED') {\n  throw new Error(`Apify Task run ${run.id} finished ${run.status} after ${persisted.length} committed dataset record(s) were idempotently persisted (${diagnostics.length} malformed-row diagnostic record(s))`);\n}\n\nreturn [{ json: result }];"
+      },
+      "id": "9c81ec28-ac8d-4ceb-9f7e-9fd22f014501",
+      "name": "Report terminal outcome after ingestion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 20]
+    },
+    {
+      "parameters": {
+        "jsCode": "const run = $('Run persistent RSS monitoring Task').first().json;\nconst result = { runId: run.id, status: run.status, defaultDatasetId: null, hasNewItems: false, newItemCount: 0, recordsPersisted: 0, items: [], terminalFailure: run.status !== 'SUCCEEDED', diagnostic: 'Terminal run has no defaultDatasetId; no dataset request was attempted.' };\nif (run.status !== 'SUCCEEDED') throw new Error(`Apify Task run ${run.id} finished ${run.status} without a defaultDatasetId; no records were available to ingest`);\nreturn [{ json: result }];"
+      },
+      "id": "10e5b9c4-088a-483f-bbe2-9b693fa99adc",
+      "name": "Report terminal run without dataset",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-150, 220]
+    }
+  ],
+  "connections": {
+    "Every hour": { "main": [[{ "node": "Run persistent RSS monitoring Task", "type": "main", "index": 0 }]] },
+    "Run persistent RSS monitoring Task": { "main": [[{ "node": "Run has default dataset", "type": "main", "index": 0 }]] },
+    "Run has default dataset": {
+      "main": [
+        [{ "node": "Fetch terminal run dataset", "type": "main", "index": 0 }],
+        [{ "node": "Report terminal run without dataset", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch terminal run dataset": { "main": [[{ "node": "Prepare dataset records", "type": "main", "index": 0 }]] },
+    "Prepare dataset records": { "main": [[{ "node": "Dataset has records", "type": "main", "index": 0 }]] },
+    "Dataset has records": {
+      "main": [
+        [{ "node": "Upsert committed RSS items", "type": "main", "index": 0 }],
+        [{ "node": "Report terminal outcome after ingestion", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upsert committed RSS items": { "main": [[{ "node": "Report terminal outcome after ingestion", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "d847cd17-faae-4882-8380-60a02cf34b7b",
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": []
+}
