@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 2,
+  "status": "DRAFT_NOT_IMPORTED_RUN_OR_EXPORTED_BY_MAKE",
+  "scenarioName": "RSS Keyword Alerts from a Persistent Apify Task",
+  "architecture": "APIFY_SCHEDULE_TO_WATCH_TASK_RUNS",
+  "scenarioSettings": {
+    "storeIncompleteExecutions": true
+  },
+  "taskLaunch": {
+    "owner": "Apify Schedule",
+    "task": "USER_SELECTS_PERSISTENT_TASK",
+    "requirements": {
+      "onlyNew": true,
+      "resetState": false,
+      "maxItemsPerRunAtMost": 200,
+      "datasetRetrievalLimit": 200,
+      "paginationEnabled": false,
+      "scheduleIntervalExceedsTaskTimeout": true
+    }
+  },
+  "modules": [
+    {
+      "order": 1,
+      "app": "Apify",
+      "module": "Watch Task Runs",
+      "configuration": {
+        "task": "USER_SELECTS_PERSISTENT_TASK",
+        "event": "any finished Task run"
+      },
+      "requiredOutputs": ["id", "status", "defaultDatasetId"]
+    },
+    {
+      "order": 2,
+      "module": "Router",
+      "routes": {
+        "datasetAvailable": "defaultDatasetId exists (all terminal statuses)",
+        "missingDataset": "defaultDatasetId does not exist"
+      }
+    },
+    {
+      "order": 3,
+      "app": "Apify",
+      "module": "Get Dataset Items",
+      "route": "datasetAvailable",
+      "configuration": {
+        "datasetId": "defaultDatasetId from module 1",
+        "dataTransformation": "Clean",
+        "format": "JSON",
+        "offset": 0,
+        "limit": 200,
+        "paginationEnabled": false
+      },
+      "capInvariant": "This specification is intentionally non-paginated. The saved Task maxItemsPerRun must be no greater than 200 so the fixed retrieval limit of 200 returns every delivered item."
+    },
+    {
+      "order": 4,
+      "module": "Router",
+      "routes": {
+        "validRecord": "itemKey exists AND feedUrl exists AND isNew = true",
+        "invalidRecord": "itemKey missing OR feedUrl missing OR isNew != true"
+      }
+    },
+    {
+      "order": 5,
+      "app": "Tools",
+      "module": "Array Aggregator",
+      "route": "validRecord",
+      "configuration": {
+        "sourceModule": 3,
+        "stopProcessingAfterEmptyAggregation": false,
+        "arrayOutputField": "Array[]",
+        "targetStructure": "itemKey, feedUrl, feedTitle, title, link, publishedAt, firstSeenAt, matchedTerms, isNew"
+      }
+    },
+    {
+      "order": 6,
+      "module": "Router",
+      "routes": {
+        "newItems": "length(module 5 Array[]) > 0",
+        "quiet": "length(module 5 Array[]) = 0"
+      }
+    },
+    {
+      "order": 7,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "newItems",
+      "configuration": {
+        "variableLifetime": "one execution",
+        "variables": {
+          "hasNewItems": true,
+          "newItemCount": "length(module 5 Array[])",
+          "items": "module 5 Array[]"
+        }
+      },
+      "outputEnvelope": {
+        "hasNewItems": true,
+        "newItemCount": "length(module 5 Array[])",
+        "items": "module 5 Array[]"
+      }
+    },
+    {
+      "order": 8,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "quiet",
+      "configuration": {
+        "variableLifetime": "one execution",
+        "variables": {
+          "hasNewItems": false,
+          "newItemCount": 0,
+          "items": []
+        }
+      },
+      "outputEnvelope": {
+        "hasNewItems": false,
+        "newItemCount": 0,
+        "items": []
+      }
+    },
+    {
+      "order": 9,
+      "app": "Tools",
+      "module": "Iterator",
+      "route": "newItems",
+      "requiredWhen": "module 10 per-item destination is present",
+      "array": "module 5 Array[]"
+    },
+    {
+      "order": 10,
+      "app": "Data store",
+      "module": "Add/Replace a Record",
+      "route": "newItems after module 9 Iterator",
+      "configuration": {
+        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
+        "key": "rss:{{encodeURL(module 9 feedUrl)}}:{{encodeURL(module 9 itemKey)}}",
+        "overwriteExistingRecord": true,
+        "record": {
+          "product": "rss",
+          "sourceId": "itemKey",
+          "sourceUrl": "link",
+          "title": "title",
+          "observedAt": "firstSeenAt",
+          "payloadJson": "JSON string of the RSS item bundle"
+        }
+      },
+      "idempotencyKey": "rss:encodeURL(feedUrl):encodeURL(itemKey)",
+      "nativeIdempotency": "Add/Replace with overwrite enabled leaves exactly one record for the stable key, including after an ambiguous retry.",
+      "fields": ["itemKey", "feedUrl", "feedTitle", "title", "link", "publishedAt", "firstSeenAt", "matchedTerms", "isNew"]
+    },
+    {
+      "order": 11,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "invalidRecord",
+      "purpose": "Credential-free diagnostic visible in Make execution history; end this branch successfully.",
+      "fields": ["Task run ID", "itemKey when present", "feedUrl when present", "missing or invalid field names", "timestamp"]
+    },
+    {
+      "order": 12,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "after module 10 when status != SUCCEEDED",
+      "purpose": "Report the non-success terminal status only after the committed RSS item bundle has been idempotently persisted.",
+      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId", "delivery key", "record persisted = true", "timestamp"]
+    },
+    {
+      "order": 13,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "quiet when status != SUCCEEDED",
+      "purpose": "Report a non-success terminal run whose fetched dataset contains no valid rows; no destination write is attempted.",
+      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId", "dataset record count = 0", "timestamp"]
+    },
+    {
+      "order": 14,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "missingDataset",
+      "purpose": "Report any terminal run without a defaultDatasetId and end safely without requesting dataset items.",
+      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId = null", "dataset request attempted = false", "timestamp"]
+    }
+  ],
+  "terminalFailureRoute": {
+    "datasetWithRows": "module 12 runs after module 10 persisted the stable URL-encoded rss:<feedUrl>:<itemKey> tuple key",
+    "emptyDataset": "module 13 reports the fetched zero-row dataset",
+    "missingDataset": "module 14 does not request dataset items",
+    "then": "end each instant-triggered branch successfully after exposing the terminal failure diagnostic; do not throw an error that could disable the scenario"
+  },
+  "errorHandlers": {
+    "scenario": "Set Store incomplete executions to Yes.",
+    "getDatasetItems": {
+      "handler": "Retry",
+      "automaticCompletion": true,
+      "maximumAttempts": 3,
+      "delayMinutes": 15,
+      "resumeAt": "module 3 with the same defaultDatasetId",
+      "temporaryErrors": "ConnectionError, RateLimitError, and ModuleTimeoutError use Make's automatic exponential-backoff schedule; other errors captured by Retry use the configured 3 attempts at 15-minute intervals.",
+      "never": "rerun the Apify Task"
+    },
+    "destination": {
+      "handler": "Retry",
+      "automaticCompletion": true,
+      "maximumAttempts": 3,
+      "delayMinutes": 15,
+      "resumeAt": "module 10 with the same RSS item bundle",
+      "idempotencyKey": "rss:encodeURL(feedUrl):encodeURL(itemKey)",
+      "requiredProof": "Inject a timeout after the Data store commit, retry, and verify exactly one record exists for the URL-encoded rss:<feedUrl>:<itemKey> key."
+    },
+    "quiet": "Return the false envelope and finish successfully."
+  },
+  "credentials": [],
+  "publicationGate": [
+    "Build in a user-owned Make account, confirm saved Task maxItemsPerRun is no greater than 200 for the fixed non-paginated retrieval limit of 200, and set Store incomplete executions to Yes.",
+    "Run non-empty, quiet, invalid-record, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, dataset-retry, and Data-store-retry tests; inject a post-commit timeout and prove exactly one record exists for the stable key.",
+    "Export and scrub the candidate blueprint.",
+    "Import that exact file into a fresh empty validation organization/team or clean account.",
+    "Reconnect credentials, save and activate the scenario, and verify Make recreated the Task-scoped Watch Task Runs webhook.",
+    "Repeat non-empty, quiet, invalid-record, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, dataset-retry, and Data-store-retry tests after exact-file import, including exactly one record after a post-commit timeout.",
+    "Obtain independent validator PASS and separate adversarial PASS before publication."
+  ]
+}
