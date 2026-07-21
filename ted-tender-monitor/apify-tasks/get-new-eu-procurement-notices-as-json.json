@@ -1,0 +1,29 @@
+{
+  "actorId": "uplifted_novice_vbl/ted-tender-watch",
+  "taskName": "preview-recent-eu-procurement-notices-as-json",
+  "publication": {
+    "slug": "preview-recent-eu-procurement-notices-as-json",
+    "seoTitle": "Preview Recent EU Procurement Notices as JSON",
+    "seoDescription": "Preview French computer-equipment TED notices as JSON. Disable sampleMode on a saved Task for monitoring. Not affiliated with TED or the EU.",
+    "displayedInputFields": ["sampleMode", "cpvCodes", "countries", "noticeTypes", "includeChangeNotices"],
+    "datasetView": "overview"
+  },
+  "input": {
+    "sampleMode": true,
+    "cpvCodes": ["30"],
+    "countries": ["FRA"],
+    "keywords": [],
+    "minValueEur": 0,
+    "noticeTypes": ["cn-standard"],
+    "includeChangeNotices": false,
+    "lookbackDays": 3,
+    "maxNewPerRun": 25
+  },
+  "expectedBehavior": {
+    "maximumTenderRecords": 10,
+    "minimumDatasetRecords": 1,
+    "maximumRunSeconds": 300,
+    "stateWritten": false,
+    "tenderEventCharge": false
+  }
+}
