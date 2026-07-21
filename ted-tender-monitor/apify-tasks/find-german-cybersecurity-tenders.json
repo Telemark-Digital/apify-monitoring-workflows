@@ -3,8 +3,8 @@
   "taskName": "find-german-cybersecurity-tenders",
   "publication": {
     "slug": "find-german-cybersecurity-tenders",
-    "seoTitle": "Find German cybersecurity tenders on TED",
-    "seoDescription": "Preview German TED notices matching cybersecurity as JSON. Disable sampleMode on a saved Task for monitoring. Not affiliated with TED or the EU.",
+    "seoTitle": "Find German Managed Detection Tenders on TED",
+    "seoDescription": "Preview German TED notices matching managed detection as JSON. Disable sampleMode on a saved Task for monitoring. Not affiliated with TED or the EU.",
     "displayedInputFields": ["sampleMode", "cpvCodes", "countries", "keywords", "noticeTypes"],
     "datasetView": "overview"
   },
@@ -12,7 +12,7 @@
     "sampleMode": true,
     "cpvCodes": ["72"],
     "countries": ["DEU"],
-    "keywords": ["cybersecurity"],
+    "keywords": ["Managed Detection"],
     "minValueEur": 0,
     "noticeTypes": ["cn-standard", "cn-social", "cn-desg"],
     "includeChangeNotices": true,
