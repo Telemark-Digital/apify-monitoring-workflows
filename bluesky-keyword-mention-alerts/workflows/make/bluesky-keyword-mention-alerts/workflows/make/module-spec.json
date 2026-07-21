@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 2,
+  "status": "DRAFT_NOT_IMPORTED_RUN_OR_EXPORTED_BY_MAKE",
+  "scenarioName": "Bluesky Keyword and Mention Alerts from a Persistent Apify Task",
+  "architecture": "APIFY_SCHEDULE_TO_WATCH_TASK_RUNS",
+  "scenarioSettings": {
+    "storeIncompleteExecutions": true
+  },
+  "taskLaunch": {
+    "owner": "Apify Schedule",
+    "task": "USER_SELECTS_PERSISTENT_TASK",
+    "requirements": {
+      "onlyNew": true,
+      "resetState": false,
+      "maxPostsPerRunAtMost": 100,
+      "datasetRetrievalLimit": 100,
+      "paginationEnabled": false,
+      "scheduleIntervalExceedsTaskTimeout": true
+    }
+  },
+  "modules": [
+    {
+      "order": 1,
+      "app": "Apify",
+      "module": "Watch Task Runs",
+      "configuration": {
+        "task": "USER_SELECTS_PERSISTENT_TASK",
+        "event": "any finished Task run"
+      },
+      "requiredOutputs": ["id", "status", "defaultDatasetId"]
+    },
+    {
+      "order": 2,
+      "module": "Router",
+      "routes": {
+        "datasetAvailable": "defaultDatasetId exists (all terminal statuses)",
+        "missingDataset": "defaultDatasetId does not exist"
+      }
+    },
+    {
+      "order": 3,
+      "app": "Apify",
+      "module": "Get Dataset Items",
+      "route": "datasetAvailable",
+      "configuration": {
+        "datasetId": "defaultDatasetId from module 1",
+        "dataTransformation": "Clean",
+        "format": "JSON",
+        "offset": 0,
+        "limit": 100,
+        "paginationEnabled": false
+      },
+      "capInvariant": "This specification is intentionally non-paginated. The saved Task maxPostsPerRun must be no greater than 100 so the fixed retrieval limit of 100 returns every delivered post."
+    },
+    {
+      "order": 4,
+      "app": "Tools",
+      "module": "Array Aggregator",
+      "route": "datasetAvailable",
+      "configuration": {
+        "sourceModule": 3,
+        "stopProcessingAfterEmptyAggregation": false,
+        "arrayOutputField": "Array[]",
+        "targetStructure": "all Bluesky post fields required by module 7"
+      }
+    },
+    {
+      "order": 5,
+      "module": "Router",
+      "routes": {
+        "newPosts": "length(module 4 Array[]) > 0",
+        "quiet": "length(module 4 Array[]) = 0"
+      }
+    },
+    {
+      "order": 6,
+      "app": "Tools",
+      "module": "Iterator",
+      "route": "newPosts",
+      "array": "module 4 Array[]"
+    },
+    {
+      "order": 7,
+      "module": "Router",
+      "routes": {
+        "validPost": "uri exists AND url exists AND isNew = true",
+        "invalidPost": "uri missing OR url missing OR isNew != true"
+      }
+    },
+    {
+      "order": 8,
+      "app": "Data store",
+      "module": "Add/Replace a Record",
+      "route": "validPost",
+      "configuration": {
+        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
+        "key": "bluesky:{{module 6 uri}}",
+        "overwriteExistingRecord": true,
+        "record": {
+          "product": "bluesky",
+          "sourceId": "uri",
+          "sourceUrl": "url",
+          "title": "author.handle",
+          "observedAt": "createdAt",
+          "payloadJson": "JSON string of normalizedOutput"
+        }
+      },
+      "idempotencyKey": "bluesky:postUri",
+      "nativeIdempotency": "Add/Replace with overwrite enabled leaves exactly one record for the stable key, including after an ambiguous retry.",
+      "normalizedOutput": {
+        "postUri": "uri",
+        "postUrl": "url",
+        "authorHandle": "author.handle",
+        "authorDisplayName": "author.displayName",
+        "text": "text",
+        "createdAt": "createdAt",
+        "matchedTerms": "matchedTerms[]",
+        "matchSource": "source",
+        "isNew": "isNew",
+        "metrics": {
+          "likes": "likeCount",
+          "reposts": "repostCount",
+          "replies": "replyCount",
+          "quotes": "quoteCount"
+        }
+      }
+    },
+    {
+      "order": 9,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "invalidPost",
+      "purpose": "Credential-free diagnostic visible in Make execution history; end this branch successfully.",
+      "fields": ["Task run ID", "post URI when present", "missing or invalid field names", "timestamp"]
+    },
+    {
+      "order": 10,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "after module 8 when status != SUCCEEDED",
+      "purpose": "Report the non-success terminal status only after the committed post bundle has been idempotently persisted.",
+      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId", "delivery key", "record persisted = true", "timestamp"]
+    },
+    {
+      "order": 11,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "quiet when status != SUCCEEDED",
+      "purpose": "Report a non-success terminal run whose fetched dataset contains no rows; no destination write is attempted.",
+      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId", "dataset record count = 0", "timestamp"]
+    },
+    {
+      "order": 12,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "missingDataset",
+      "purpose": "Report any terminal run without a defaultDatasetId and end safely without requesting dataset items.",
+      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId = null", "dataset request attempted = false", "timestamp"]
+    }
+  ],
+  "terminalFailureRoute": {
+    "datasetWithRows": "module 10 runs after module 8 persisted the stable bluesky:<postUri> key",
+    "emptyDataset": "module 11 reports the fetched zero-row dataset",
+    "missingDataset": "module 12 does not request dataset items",
+    "then": "end each instant-triggered branch successfully after exposing the terminal failure diagnostic; do not throw an error that could disable the scenario"
+  },
+  "errorHandlers": {
+    "scenario": "Set Store incomplete executions to Yes.",
+    "getDatasetItems": {
+      "handler": "Retry",
+      "automaticCompletion": true,
+      "maximumAttempts": 3,
+      "delayMinutes": 15,
+      "resumeAt": "module 3 with the same defaultDatasetId",
+      "temporaryErrors": "ConnectionError, RateLimitError, and ModuleTimeoutError use Make's automatic exponential-backoff schedule; other errors captured by Retry use the configured 3 attempts at 15-minute intervals.",
+      "never": "rerun the Apify Task"
+    },
+    "destination": {
+      "handler": "Retry",
+      "automaticCompletion": true,
+      "maximumAttempts": 3,
+      "delayMinutes": 15,
+      "resumeAt": "module 8 with the same post bundle",
+      "idempotencyKey": "bluesky:postUri",
+      "requiredProof": "Inject a timeout after the Data store commit, retry, and verify exactly one record exists for bluesky:postUri."
+    },
+    "quiet": "Succeed with no destination operation."
+  },
+  "credentials": [],
+  "publicationGate": [
+    "Build in a user-owned Make account, confirm saved Task maxPostsPerRun is no greater than 100 for the fixed non-paginated retrieval limit of 100, and set Store incomplete executions to Yes.",
+    "Run non-empty, quiet, invalid-post, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, dataset-retry, and Data-store-retry tests; inject a post-commit timeout and prove exactly one record exists for the stable key.",
+    "Export and scrub the candidate blueprint.",
+    "Import that exact file into a fresh empty validation organization/team or clean account.",
+    "Reconnect credentials, save and activate the scenario, and verify Make recreated the Task-scoped Watch Task Runs webhook.",
+    "Repeat non-empty, quiet, invalid-post, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, dataset-retry, and Data-store-retry tests after exact-file import, including exactly one record after a post-commit timeout.",
+    "Obtain independent validator PASS and separate adversarial PASS before publication."
+  ]
+}
