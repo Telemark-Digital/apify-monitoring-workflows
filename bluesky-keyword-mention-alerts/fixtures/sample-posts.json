@@ -1,0 +1,54 @@
+[
+  {
+    "uri": "at://did:plc:exampleaccount000000000000/app.bsky.feed.post/3examplepost001",
+    "cid": "bafyreiexamplecontentidentifier000000000000000000000000001",
+    "url": "https://bsky.app/profile/example.bsky.social/post/3examplepost001",
+    "author": {
+      "did": "did:plc:exampleaccount000000000000",
+      "handle": "example.bsky.social",
+      "displayName": "Example Account",
+      "avatar": "https://example.invalid/avatar.png"
+    },
+    "text": "A fictional public post mentioning an example monitoring keyword.",
+    "createdAt": "2026-07-20T10:00:00.000Z",
+    "indexedAt": "2026-07-20T10:00:02.000Z",
+    "langs": [
+      "en"
+    ],
+    "likeCount": 12,
+    "repostCount": 2,
+    "replyCount": 1,
+    "quoteCount": 0,
+    "matchedTerms": [
+      "example monitoring keyword"
+    ],
+    "source": "keyword",
+    "isNew": true
+  },
+  {
+    "uri": "at://did:plc:samplebrand00000000000000/app.bsky.feed.post/3examplepost002",
+    "cid": "bafyreiexamplecontentidentifier000000000000000000000000002",
+    "url": "https://bsky.app/profile/sample-brand.bsky.social/post/3examplepost002",
+    "author": {
+      "did": "did:plc:samplebrand00000000000000",
+      "handle": "sample-brand.bsky.social",
+      "displayName": "Sample Brand"
+    },
+    "text": "A fictional hashtag post used only to demonstrate the output shape.",
+    "createdAt": "2026-07-20T10:05:00.000Z",
+    "indexedAt": "2026-07-20T10:05:01.000Z",
+    "langs": [
+      "en"
+    ],
+    "likeCount": 4,
+    "repostCount": 0,
+    "replyCount": 0,
+    "quoteCount": 0,
+    "matchedTerms": [
+      "photography"
+    ],
+    "source": "hashtag",
+    "isNew": true
+  }
+]
+
