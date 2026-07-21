@@ -1,0 +1,47 @@
+[
+  {
+    "recordType": "tender",
+    "publicationNumber": "000000-2026",
+    "noticeIdentifier": "00000000-0000-4000-8000-000000000001",
+    "publicationDate": "2026-07-20",
+    "noticeType": "cn-standard",
+    "isChangeNotice": false,
+    "modifiesPublicationNumber": null,
+    "title": "Example cloud infrastructure services contract",
+    "titleLanguage": "eng",
+    "buyerName": "Example Regional Procurement Authority",
+    "buyerCountry": "DEU",
+    "cpvCodes": ["72000000", "72222300"],
+    "estimatedValueEur": 250000,
+    "valueUnknown": false,
+    "deadlineDate": "2026-09-15",
+    "links": {
+      "html": "https://ted.europa.eu/en/notice/-/detail/000000-2026",
+      "pdf": "https://ted.europa.eu/en/notice/000000-2026/pdf",
+      "xml": "https://ted.europa.eu/en/notice/000000-2026/xml"
+    },
+    "isNew": true,
+    "firstSeenAt": "2026-07-20T06:00:00.000Z",
+    "stateKey": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "recordType": "summary",
+    "mode": "sample",
+    "stateKey": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "queryFloor": "2026-07-16",
+    "matched": 1,
+    "delivered": 1,
+    "changedDelivered": 0,
+    "malformedSkipped": 0,
+    "overflow": false,
+    "budgetLimited": false,
+    "quiet": false,
+    "newTenderChargesAttempted": 0,
+    "changedTenderChargesAttempted": 0,
+    "newTenderChargesActual": 0,
+    "changedTenderChargesActual": 0,
+    "chargeStatus": "not-applicable",
+    "completedAt": "2026-07-20T06:00:05.000Z"
+  }
+]
+
