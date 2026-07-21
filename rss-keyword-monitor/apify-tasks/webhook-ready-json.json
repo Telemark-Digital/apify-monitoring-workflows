@@ -2,7 +2,7 @@
   "actorId": "uplifted_novice_vbl/rss-keyword-monitor-only-new",
   "taskName": "rss-webhook-ready-json-preview",
   "publication": {
-    "slug": "preview-webhook-ready-rss-items-as-json",
+    "slug": "rss-webhook-ready-json-preview",
     "seoTitle": "Preview Webhook-Ready RSS Items as JSON",
     "seoDescription": "Preview a public news feed as structured JSON for n8n, Make, Slack, or webhooks. Set onlyNew=true on a saved Task before scheduling delivery.",
     "displayedInputFields": [
