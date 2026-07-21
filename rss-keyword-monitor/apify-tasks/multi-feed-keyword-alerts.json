@@ -2,7 +2,7 @@
   "actorId": "uplifted_novice_vbl/rss-keyword-monitor-only-new",
   "taskName": "rss-multi-feed-keyword-alerts-preview",
   "publication": {
-    "slug": "preview-multiple-rss-feeds-for-keywords",
+    "slug": "rss-multi-feed-keyword-alerts-preview",
     "seoTitle": "Preview Multiple RSS Feeds for Keywords",
     "seoDescription": "Preview current items from public RSS feeds for AI, automation, data, and technology keywords. Set onlyNew=true on a saved Task for alerts.",
     "displayedInputFields": [
