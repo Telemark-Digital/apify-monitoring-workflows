@@ -2,7 +2,7 @@
   "actorId": "uplifted_novice_vbl/rss-keyword-monitor-only-new",
   "taskName": "rss-regex-exclusions-preview",
   "publication": {
-    "slug": "preview-rss-regex-and-exclusions",
+    "slug": "rss-regex-exclusions-preview",
     "seoTitle": "Preview RSS with Regex and Exclusion Terms",
     "seoDescription": "Preview current RSS items using a safe regex and exclusion terms. Set onlyNew=true on a saved Task to turn the preview into scheduled alerts.",
     "displayedInputFields": [
@@ -40,4 +40,3 @@
     "resetState": false
   }
 }
-
