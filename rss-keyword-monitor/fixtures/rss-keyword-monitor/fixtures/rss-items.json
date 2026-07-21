@@ -1,0 +1,44 @@
+[
+  {
+    "feedUrl": "https://blog.apify.com/rss/",
+    "feedTitle": "Apify Blog",
+    "feedType": "rss",
+    "itemKey": "guid:https://blog.apify.com/example-automation-update/",
+    "guid": "https://blog.apify.com/example-automation-update/",
+    "title": "A practical automation update",
+    "link": "https://example.org/articles/automation-update",
+    "author": "Apify",
+    "publishedAt": "2026-07-20T08:00:00.000Z",
+    "firstSeenAt": "2026-07-20T08:05:00.000Z",
+    "categories": [
+      "automation"
+    ],
+    "description": "A sanitized example of an RSS item describing an automation update.",
+    "content": null,
+    "matchedTerms": [
+      "automation"
+    ],
+    "isNew": true
+  },
+  {
+    "feedUrl": "https://feeds.bbci.co.uk/news/technology/rss.xml",
+    "feedTitle": "BBC News",
+    "feedType": "rss",
+    "itemKey": "link:https://example.org/articles/technology-policy",
+    "guid": null,
+    "title": "Technology policy changes explained",
+    "link": "https://example.org/articles/technology-policy",
+    "author": null,
+    "publishedAt": "2026-07-20T07:30:00.000Z",
+    "firstSeenAt": "2026-07-20T08:05:00.000Z",
+    "categories": [
+      "technology"
+    ],
+    "description": "A sanitized example of a technology news item.",
+    "content": null,
+    "matchedTerms": [
+      "technology"
+    ],
+    "isNew": true
+  }
+]
