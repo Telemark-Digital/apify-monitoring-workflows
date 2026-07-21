@@ -1,0 +1,42 @@
+{
+  "definitionVersion": 1,
+  "actorId": "uplifted_novice_vbl/bluesky-keyword-mention-alerts",
+  "taskName": "find-bluesky-keyword-posts",
+  "publication": {
+    "slug": "find-bluesky-keyword-posts",
+    "seoTitle": "Preview Current Bluesky Posts for a Keyword",
+    "seoDescription": "Preview public Bluesky posts for a keyword or phrase as JSON. Set onlyNew=true on a saved Task for monitoring. Not affiliated with Bluesky.",
+    "displayedInputFields": [
+      "keywords",
+      "langs",
+      "onlyNew",
+      "maxPostsPerRun"
+    ],
+    "datasetView": "overview"
+  },
+  "input": {
+    "keywords": [
+      "bluesky"
+    ],
+    "handles": [],
+    "hashtags": [],
+    "excludeTerms": [],
+    "langs": [
+      "en"
+    ],
+    "onlyNew": false,
+    "maxPostsPerRun": 10,
+    "sort": "latest",
+    "resetState": false
+  },
+  "discoveryValidation": {
+    "timeoutSeconds": 300,
+    "expectedMinimumDatasetItems": 1,
+    "reason": "A current, high-activity keyword with a ten-record billing and output cap."
+  },
+  "monitoringChange": {
+    "onlyNew": true,
+    "persistentTaskRequired": true,
+    "note": "Copy the Task, set onlyNew to true, and schedule that same Task. Later quiet runs can return zero items."
+  }
+}
