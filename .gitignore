@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+node_modules/
+.n8n/
+storage/
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+private/
+tmp/
