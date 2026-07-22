@@ -26,7 +26,7 @@ Keep `maxRunsPerScenarioExecution` at `1` for the publication template. Normal c
 
 | Order | Make module or control | Configuration |
 | --- | --- | --- |
-| 1 | HTTP - Make a request | List Task runs: `GET https://api.apify.com/v2/actor-tasks/{{TASK_ID}}/runs?desc=1&limit=1000&offset=0` with the scrubbed Authorization placeholder. |
+| 1 | HTTP - Make a request | List terminal Task runs: `GET https://api.apify.com/v2/actor-tasks/{{TASK_ID}}/runs?desc=1&limit=1000&offset=0&status=SUCCEEDED,FAILED,ABORTED,TIMED-OUT` with the scrubbed Authorization placeholder. |
 | 2 | Data store - Get a Record | Read exact cursor key `rss:cursor:{{TASK_ID}}`. The cursor record stores the last processed run ID in `sourceId`. Do not use Search Records or key-prefix filtering. |
 | 3 | Tools - Set Multiple Variables | Compute `cursorExists`, `cursorPrimingStop`, `cursorBoundaryMissing`, `overflowStop`, and up to one `reversedRuns[]` entry because `maxRunsPerScenarioExecution=1`. First activation must prime the cursor unless an intentional bounded backfill is documented. |
 | 4 | Router | Proceed when `overflowStop=false`. Stop on missing first-run cursor or missing cursor boundary; end with a diagnostic and do not reach module 5 or any write. |
