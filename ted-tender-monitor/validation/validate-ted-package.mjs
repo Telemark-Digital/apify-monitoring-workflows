@@ -111,8 +111,9 @@ assert.equal(make.scenarioSettings.processInOrder, true, 'Make must avoid overla
 assert.equal(make.modules.some((module) => module.app === 'Apify' || module.module === 'Watch Task Runs' || module.module === 'Get Dataset Items'), false, 'Make must not use the official Apify connector modules');
 assert.equal(make.modules.some((module) => module.module === 'Search Records'), false, 'Make must not use Data store Search Records for cursor discovery');
 assert.equal(makeListRuns.configuration.method, 'GET');
-assert.match(makeListRuns.configuration.url, /\/actor-tasks\/\{\{TASK_ID\}\}\/runs\?desc=1&limit=1000&offset=0$/);
+assert.match(makeListRuns.configuration.url, /\/actor-tasks\/\{\{TASK_ID\}\}\/runs\?desc=1&limit=1000&offset=0&status=SUCCEEDED,FAILED,ABORTED,TIMED-OUT$/);
 assert.equal(makeListRuns.configuration.headers.find((header) => header.name === 'Authorization').value, 'Bearer <APIFY_TOKEN_PLACEHOLDER>');
+assert.equal(makeListRuns.configuration.status, 'SUCCEEDED,FAILED,ABORTED,TIMED-OUT');
 assert.equal(makeListRuns.runWindow.limit, 1000);
 assert.match(makeListRuns.runWindow.sort, /reverse/i);
 assert.match(makeListRuns.runWindow.overflowGuard, /stored cursor run is not present/i);
