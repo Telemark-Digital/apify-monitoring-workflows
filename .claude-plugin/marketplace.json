@@ -1,0 +1,32 @@
+{
+  "name": "telemark-digital-apify",
+  "owner": {
+    "name": "Telemark Digital",
+    "email": "thetelemarkdigital@gmail.com"
+  },
+  "description": "Telemark Digital Apify plugins for bounded AI-client discovery and saved-Task monitoring guidance.",
+  "plugins": [
+    {
+      "name": "bluesky-keyword-alerts",
+      "source": "./plugins/bluesky-keyword-alerts",
+      "description": "Find bounded public Bluesky keyword, handle, mention, and hashtag results through Apify MCP.",
+      "category": "Productivity",
+      "tags": ["apify", "bluesky", "monitoring"]
+    },
+    {
+      "name": "rss-keyword-monitor",
+      "source": "./plugins/rss-keyword-monitor",
+      "description": "Preview RSS, Atom, and RDF keyword or regex matches through Apify MCP.",
+      "category": "Productivity",
+      "tags": ["apify", "rss", "monitoring"]
+    },
+    {
+      "name": "ted-tender-monitor",
+      "source": "./plugins/ted-tender-monitor",
+      "description": "Preview EU procurement notices from TED through Apify MCP.",
+      "category": "Productivity",
+      "tags": ["apify", "procurement", "tenders"]
+    }
+  ]
+}
+
