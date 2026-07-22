@@ -28,7 +28,7 @@ The saved Task owns all filters, state behavior, build, memory, and timeout. The
 Two launch profiles satisfy this contract:
 
 - n8n: start manually for testing or from the included daily n8n schedule, then run the persistent Task.
-- Make: an Apify Schedule runs the persistent Task; **Watch Task Runs** starts the Make scenario for every finished run of that Task.
+- Make: an Apify Schedule runs the persistent Task; a Make scenario schedule polls recent Task runs over HTTP, skips checkpointed run IDs, fetches default dataset items, writes product rows, and writes the run checkpoint last.
 
 For either launch profile, the schedule interval must be strictly longer than the saved Task's hard timeout to reduce avoidable contention. The Actor's Task-state lease, not schedule cadence, provides mutual exclusion and rejects a contender before delivery.
 
@@ -58,7 +58,7 @@ For either launch profile, the schedule interval must be strictly longer than th
 - Task not found: stop and request a persistent Task identifier owned by the connected account.
 - Actor status other than `SUCCEEDED`: fetch and persist the run's dataset first when an ID exists, then report the status. Never use n8n's success-gated combined operation for this workflow.
 - Workflow timeout: check the Apify run before retrying because the run may still be active.
-- Canonical Make data-store failure: retry only the failed **Add/Replace a Record** sink with the same dataset bundle. Module 8 retries identified tenders with `ted:<publicationNumber>`; module 9 retries every run-scoped row with `ted:run:<runId>:row:<bundleOrder>`. Both sinks use overwrite, and neither retry reruns the Apify Task. Optional downstream destinations need their own idempotency contract.
+- Canonical Make data-store failure: retry only the failed **Add/Replace a Record** sink with the same dataset bundle. Module 13 retries identified tenders with `ted:<publicationNumber>`; module 14 retries every run-scoped row with `ted:run:<runId>:row:<bundleOrder>`. Both sinks use overwrite, and neither retry reruns the Apify Task. Optional downstream destinations need their own idempotency contract.
 - Tender without `publicationNumber`: persist it under the deterministic run-row fallback key, record a diagnostic, and do not expose it as a tender.
 - Tender with `title: null`: persist and expose it normally; a display-only fallback must not overwrite the null payload value.
 
@@ -73,5 +73,5 @@ For either launch profile, the schedule interval must be strictly longer than th
 7. A tender missing `publicationNumber` is persisted under its run-row key but is not exposed as a tender.
 8. A tender with `title: null` is persisted and exposed with null preserved and an optional display fallback.
 9. The exported workflow contains no credential binding or secret value.
-10. Make post-commit timeout tests independently prove exactly one record after retry at module 8 and module 9, using each route's stable key.
+10. Make post-commit timeout tests independently prove exactly one record after retry at module 13 and module 14, using each route's stable key.
 11. Account-gated validation confirms `maxNewPerRun <= 999`, retrieval limit 1000, no pagination, and exactly one appended summary control row before activation.

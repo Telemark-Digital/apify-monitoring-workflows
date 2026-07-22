@@ -16,7 +16,7 @@ Author implementation is complete. Local structural and Actor tests passed on 20
 - n8n upserts every dataset row before terminal reporting; identified tenders use `ted:<publicationNumber>` and other rows use deterministic run-row keys.
 - TED `title:null` is accepted, preserved in payload/normalized output, and may receive only a display fallback.
 - Terminal fixtures prove failed committed-row ingestion, replay idempotency, failed empty-dataset safety, and missing-dataset safety.
-- Make package is explicitly marked DRAFT and specifies disjoint module 8 and module 9 Data store sinks, mappings, filters, error routes, and account-gated retry tests for both keys.
+- Make package is explicitly marked DRAFT and specifies disjoint module 13 and module 14 Data store sinks, mappings, filters, error routes, and account-gated retry tests for both keys.
 
 ## Account-gated checks
 
@@ -26,7 +26,7 @@ These checks cannot be claimed complete until the relevant accounts or authentic
 2. Confirm every discovery run succeeds within five minutes and has a non-empty default dataset.
 3. Record Task IDs, landing-page URLs, run IDs, durations, and dataset counts.
 4. Connect an Apify credential, select a primed persistent Task, verify `maxNewPerRun <= 999`, and validate quiet and tender-producing runs including the one summary control row.
-5. Build the Make scenario, run all error-path tests including independent post-commit retries for modules 8 and 9, export it from Make, and perform a fresh-account import.
+5. Build the Make scenario, run all error-path tests including independent post-commit retries for modules 13 and 14, export it from Make, and perform a fresh-account import.
 
 Run the product validator from this product directory:
 

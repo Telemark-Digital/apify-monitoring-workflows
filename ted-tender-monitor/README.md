@@ -1,6 +1,6 @@
 # TED Tender Monitor - EU Procurement Alerts
 
-Ready-to-use examples for monitoring official TED procurement notices with the [TED Tender Monitor - EU Procurement Alerts Actor](https://apify.com/uplifted_novice_vbl/ted-tender-watch).
+Public examples for monitoring official TED procurement notices with the [TED Tender Monitor - EU Procurement Alerts Actor](https://apify.com/uplifted_novice_vbl/ted-tender-watch).
 
 This is an unofficial, independent community tool. It is not affiliated with, endorsed by, or operated by TED, the European Union, or the Publications Office of the European Union.
 
