@@ -1,6 +1,6 @@
 # Apify Monitoring Workflows
 
-Ready-to-use Apify Task configurations and automation workflows for monitoring Bluesky posts, RSS feeds, and TED procurement notices.
+Public Apify Task configurations, validated n8n workflow examples, and Make construction specifications for monitoring Bluesky posts, RSS feeds, and TED procurement notices.
 
 Created and maintained by **Telemark Digital**.
 
@@ -16,7 +16,9 @@ Public product icons are in [assets/icons](./assets/icons/) using clean external
 
 ## Terminal-run reliability
 
-Actor runs can commit dataset records before ending `FAILED`, `TIMED-OUT`, or `ABORTED`. The public workflows therefore fetch every terminal run that has a `defaultDatasetId`, persist its records under stable product-prefixed keys, and only then expose or report the terminal status. Failed empty datasets and runs without a dataset ID are reported safely. The terminal fixtures also prove replay idempotency, and the TED fixture confirms that `title: null` remains valid.
+Actor runs can commit dataset records before ending `FAILED`, `TIMED-OUT`, or `ABORTED`. For each terminal run they process, the public workflows fetch the run's `defaultDatasetId` when present, persist records under stable product-prefixed keys, and only then expose or report the terminal status. Failed empty datasets and runs without a dataset ID are reported safely. The terminal fixtures also prove replay idempotency, and the TED fixture confirms that `title: null` remains valid.
+
+For Make, the construction specifications use Apify's maximum 1000-run task-runs page, reverse that page before processing, and require an overflow stop if a full page has no checkpoint boundary. This prevents silent skipping; if an account needs a longer outage window than `1000 * Apify Schedule interval`, add paginated backfill before activation.
 
 In each n8n export, dataset retrieval and Data Table upsert retry the same operation in place up to three times, waiting five seconds between attempts. These retries keep the original `defaultDatasetId` and stable delivery key and never rerun the Apify Task. If either operation still fails after its retries, perform manual recovery using the original run ID and its dataset; this package does not claim automatic exactly-once delivery.
 
@@ -41,4 +43,3 @@ These examples contain no credentials. Connect your own Apify and destination ac
 The examples are prepared and validated locally before publication. The repository currently contains Make construction specifications, not blueprints. A blueprint will exist only after the corresponding scenario has been built, run, exported from Make, scrubbed, and re-imported successfully.
 
 See [Account Gates](./docs/account-gates.md) for the GitHub publisher, n8n Creator Portal, optional n8n Cloud, and Make publication steps.
-
