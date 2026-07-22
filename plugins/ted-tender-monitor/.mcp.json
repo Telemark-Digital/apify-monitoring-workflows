@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "telemark-ted-tender-monitor": {
+      "type": "http",
+      "url": "https://mcp.apify.com?tools=uplifted_novice_vbl/ted-tender-watch"
+    }
+  }
+}
+
