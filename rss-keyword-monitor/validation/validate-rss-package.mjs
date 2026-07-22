@@ -139,7 +139,7 @@ assert(make.taskLaunch.requirements.noDataStoreSearchForCursor === true, 'Make m
 assert(make.taskLaunch.requirements.maxRunsPerScenarioExecution === 1, 'Make must process at most one Task run per execution');
 assert(make.taskLaunch.requirements.operationBudgetValidation === true, 'Make must require operation budget validation');
 assert(make.taskLaunch.requirements.backlogDrainFormula === 'makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour', 'Make must document backlog drain math');
-assert(/module 12 Array Aggregator sourceModule=11/.test(make.taskLaunch.requirements.completionBarrier), 'Make must document the module 12 completion barrier');
+assert(/module 12 Array Aggregator sourceModule=9/.test(make.taskLaunch.requirements.completionBarrier), 'Make must document the module 12 completion barrier');
 assert(/completedDeliveryWrites equals attemptedDatasetRows/.test(make.taskLaunch.requirements.completionBarrier), 'Make must document the cursor count guard');
 assert(/Rollback\/stop-on-error/.test(make.taskLaunch.requirements.deliveryFailureStrategy), 'Make module 11 failures must stop the scenario');
 assert(make.taskLaunch.requirements.runOrdering === 'reverse-fetched-desc-page-after-cursor-filter', 'Make must define run ordering');
@@ -155,7 +155,7 @@ assert(makeDelivery.configuration.key === '{{module 10 recordKey}}', 'Make RSS D
 assert(makeDelivery.idempotencyKey === 'module 10 recordKey', 'Make RSS destination idempotency must use prepared recordKey');
 assert(make.errorHandlers.destination.idempotencyKey === 'module 10 recordKey', 'Make RSS retry must preserve the prepared recordKey');
 assert(makeBarrier.order === 12, 'Make barrier must be module 12');
-assert(makeBarrier.configuration.sourceModule === 11, 'Make Array Aggregator must consume completed delivery writes');
+assert(makeBarrier.configuration.sourceModule === 9, 'Make Array Aggregator must source the dataset-item iterator and close the delivery-write route');
 assert(/Make-native completion barrier/.test(makeBarrier.barrierInvariant), 'Make barrier must document Make-native completion');
 assert(/completedDeliveryWrites equals attemptedDatasetRows/.test(makeBarrier.barrierInvariant), 'Make barrier must document the count guard');
 assert(make.taskLaunch.requirements.maxItemsPerRunAtMost === 200, 'Make saved Task cap must remain 200');
@@ -180,7 +180,7 @@ assert(/HTTP polling/i.test(make.publicationGate.join(' ')), 'Make account gate 
 assert(/run-cursor/i.test(make.publicationGate.join(' ')), 'Make account gate must verify run cursoring');
 assert(/desc=1&limit=1000&offset=0/i.test(make.publicationGate.join(' ')), 'Make account gate must verify the max poll page');
 assert(/cursor-gap stop/i.test(make.publicationGate.join(' ')), 'Make account gate must verify cursor-gap stop behavior');
-assert(/module 12 as the Array Aggregator completion barrier with sourceModule=11/i.test(make.publicationGate.join(' ')), 'Make account gate must verify the completion barrier');
+assert(/module 12 as the Array Aggregator completion barrier with sourceModule=9/i.test(make.publicationGate.join(' ')), 'Make account gate must verify the completion barrier');
 assert(/Rollback\/stop-on-error rather than Retry\/Break/i.test(make.publicationGate.join(' ')), 'Make account gate must reject Retry/Break on module 11');
 assert(make.errorHandlers.destination.handler === 'Rollback', 'Make module 11 must use Rollback');
 assert(make.errorHandlers.destination.stopsScenario === true, 'Make module 11 Rollback must stop the scenario');
