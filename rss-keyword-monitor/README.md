@@ -103,4 +103,3 @@ node validation/validate-rss-package.mjs
 ```
 
 This checks JSON parsing, allowed Actor fields, output fixture shape, persistent-Task workflow semantics, blank credentials, and internal-name or likely-secret leakage. Live platform tests and public Task publication are separate release gates.
-
