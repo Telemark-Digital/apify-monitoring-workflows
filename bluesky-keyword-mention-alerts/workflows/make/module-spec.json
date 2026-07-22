@@ -18,19 +18,30 @@
       "datasetRetrievalLimit": 100,
       "paginationEnabled": false,
       "pollRunLimit": 1000,
-      "runCheckpointKey": "bluesky:run:<runId>",
       "makePollIntervalCoversRunWindow": true,
       "scheduleIntervalExceedsTaskTimeout": true,
-      "overflowStopIfNoCheckpointBoundary": true,
-      "runOrdering": "reverse-fetched-desc-page-before-processing",
-      "pollWindowFormula": "covered_minutes = pollRunLimit * Apify Schedule interval minutes; if expected outage can exceed this, implement paginated backfill before activation",
-      "preflightExistingCheckpointRead": true,
+      "runOrdering": "reverse-fetched-desc-page-after-cursor-filter",
+      "pollWindowFormula": "covered_minutes = pollRunLimit * Apify Schedule interval minutes; if the stored cursor can fall outside this 1000-run page, perform paginated/manual backfill before activation",
       "overflowStopBeforeProcessing": true,
       "preflightModules": [
         2,
         3,
         4
-      ]
+      ],
+      "runCursorKey": "bluesky:cursor:<TASK_ID>",
+      "runCursorSourceId": "lastProcessedRunId",
+      "cursorPrimingRequired": true,
+      "preflightCursorRead": true,
+      "noDataStoreSearchForCursor": true,
+      "runCursorStrategy": "single exact-key Data store cursor; do not use Search Records or Data store key-prefix scans",
+      "maxRunsPerScenarioExecution": 1,
+      "operationBudgetValidation": true,
+      "operationBudgetGuard": "Process at most one cursor-selected terminal Task run per Make scenario execution. Repeated scheduled polls catch up a backlog only when makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour; otherwise pause the Apify Schedule and perform paginated/manual backfill before activation.",
+      "overflowStopIfCursorMissingFromFetchedPage": true,
+      "backlogDrainFormula": "makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour",
+      "backlogDrainRequirement": "Because publication templates process one Task run per Make scenario execution, the Make schedule must poll faster than the Apify Task schedule for normal catch-up; if this formula is not true, pause the Apify Schedule and run a paginated/manual backfill before activation.",
+      "completionBarrier": "module 12 Array Aggregator sourceModule=11 emits only after module 11 completed delivery writes for the selected run, or emits an empty aggregation when there are zero dataset rows; module 14 cursor is downstream of module 13 outcome and only allowed when completedDeliveryWrites equals attemptedDatasetRows and no module 11 incomplete execution exists",
+      "deliveryFailureStrategy": "Module 11 must use Rollback/stop-on-error, not Make Retry/Break. Make Retry saves failed bundles as incomplete executions and lets the scenario continue, which can otherwise advance the run cursor before every dataset row is persisted."
     }
   },
   "authentication": {
@@ -67,60 +78,66 @@
       },
       "runWindow": {
         "limit": 1000,
-        "sort": "desc from Apify; reverse the fetched page before module 5 so uncheckpointed runs are processed oldest-to-newest within the page",
+        "sort": "desc from Apify; module 3 filters newer terminal runs after the exact cursor, limits to maxRunsPerScenarioExecution=1, then reverses before module 5 so processing is oldest-to-newest within the selected cursor window",
         "terminalStatuses": [
           "SUCCEEDED",
           "FAILED",
           "ABORTED",
           "TIMED-OUT"
         ],
-        "checkpointKey": "bluesky:run:<runId>",
         "officialPagination": "Apify task-runs API supports limit and offset; limit maximum is 1000.",
-        "overflowGuard": "Modules 2-4 must read pre-existing run checkpoints and stop before module 5 if module 1 returns count=1000 and no checkpointed terminal run boundary exists. This prevents silent misses after more than 1000 uncheckpointed runs."
+        "overflowGuard": "Modules 2-4 read the exact cursor record before writes, require first-run cursor priming, and stop before module 5 if the stored cursor run is not present in the fetched page. This prevents silent misses whenever Make cannot prove the cursor boundary.",
+        "cursorKey": "bluesky:cursor:<TASK_ID>"
       }
     },
     {
       "order": 2,
       "app": "Data store",
-      "module": "Search Records",
-      "label": "Preflight Existing Run Checkpoints",
-      "route": "after module 1 before any product or run-checkpoint write",
+      "module": "Get a Record",
+      "label": "Read Last Processed Run Cursor",
+      "route": "after module 1 before any product or run-cursor write",
       "configuration": {
         "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
-        "keyPrefix": "bluesky:run:",
-        "matchAgainst": "module 1 data.items[].id",
-        "readOnly": true
+        "key": "bluesky:cursor:{{TASK_ID}}",
+        "readOnly": true,
+        "expectedSourceId": "last processed Apify Task run ID"
       },
-      "purpose": "Read pre-existing run checkpoint keys for the fetched Task-run page before this execution can write any new run checkpoints."
+      "purpose": "Read the exact-key cursor record whose sourceId stores the last processed run ID. Do not use Data store Search Records or key-prefix filtering for cursor discovery."
     },
     {
       "order": 3,
       "app": "Tools",
       "module": "Set Multiple Variables",
-      "label": "Preflight Overflow Guard",
-      "route": "after module 2 before any product or run-checkpoint write",
+      "label": "Preflight Cursor Guard",
+      "route": "after module 2 before any product or run-cursor write",
       "inputs": {
         "taskRuns": "module 1 data.items[]",
-        "preExistingCheckpointKeys": "module 2 records[].key"
+        "lastProcessedRunId": "module 2 data.sourceId",
+        "allowInitialBackfill": false,
+        "maxRunsPerScenarioExecution": 1
       },
       "outputs": {
         "pageIsFull": "module 1 data.count = 1000",
-        "preExistingCheckpointBoundaryFound": "any terminal run in module 1 has key bluesky:run:<runId> in module 2 records[].key",
-        "reversedRuns": "module 1 data.items[] reversed oldest-to-newest within the fetched desc page",
-        "overflowStop": "pageIsFull = true AND preExistingCheckpointBoundaryFound = false"
+        "cursorExists": "module 2 record exists and module 2 data.sourceId is not empty",
+        "cursorFoundInFetchedPage": "cursorExists AND any module 1 terminal run id equals module 2 data.sourceId",
+        "cursorPrimingStop": "cursorExists = false AND allowInitialBackfill = false",
+        "cursorBoundaryMissing": "cursorExists = true AND cursorFoundInFetchedPage = false",
+        "reversedRuns": "up to maxRunsPerScenarioExecution terminal module 1 data.items[] newer than lastProcessedRunId, reversed oldest-to-newest within the fetched desc page",
+        "overflowStop": "cursorPrimingStop = true OR cursorBoundaryMissing = true"
       },
-      "invariant": "This guard uses only checkpoints that existed before this execution writes new checkpoints."
+      "invariant": "This guard uses only the exact-key cursor that existed before this execution writes a new cursor. First activation must prime the cursor or intentionally enable a bounded backfill."
     },
     {
       "order": 4,
       "module": "Router",
-      "label": "Overflow Guard Router",
-      "route": "after module 3 before any product or run-checkpoint write",
+      "label": "Cursor Guard Router",
+      "route": "after module 3 before any product or run-cursor write",
       "routes": {
         "proceed": "module 3 overflowStop = false",
-        "overflowStop": "module 3 overflowStop = true"
+        "cursorPrimingStop": "module 3 cursorPrimingStop = true",
+        "overflowStop": "module 3 cursorBoundaryMissing = true"
       },
-      "invariant": "The overflowStop route ends with a diagnostic and must not reach module 5 or any product/run-checkpoint write. Use paginated/manual backfill before resuming."
+      "invariant": "The cursorPrimingStop and overflowStop routes end with diagnostics and must not reach module 5 or any product/run-cursor write. Prime the cursor or perform paginated/manual backfill before resuming. This stop is required whenever the cursor is absent from the fetched page, not only when the page is full."
     },
     {
       "order": 5,
@@ -128,27 +145,37 @@
       "module": "Iterator",
       "label": "Iterator - Reversed Recent Task Runs",
       "array": "module 3 reversedRuns[]",
-      "route": "proceed"
+      "route": "proceed",
+      "configuration": {
+        "maxRunsPerScenarioExecution": 1
+      }
     },
     {
       "order": 6,
-      "app": "Data store",
-      "module": "Get a Record",
-      "label": "Read Run Checkpoint",
-      "configuration": {
-        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
-        "key": "bluesky:run:{{module 5 id}}"
-      }
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "label": "Current Run Context",
+      "route": "module 5 cursor-selected terminal run",
+      "inputs": {
+        "run": "module 5"
+      },
+      "outputs": {
+        "runId": "module 5 id",
+        "status": "module 5 status",
+        "defaultDatasetId": "module 5 defaultDatasetId",
+        "finishedAt": "module 5 finishedAt"
+      },
+      "purpose": "Expose the current cursor-selected terminal run fields for the dataset router and final cursor write."
     },
     {
       "order": 7,
       "module": "Router",
-      "label": "Run Checkpoint Router",
+      "label": "Run Dataset Router",
       "routes": {
-        "datasetAvailable": "run status is terminal AND checkpoint is missing AND defaultDatasetId exists",
-        "missingDataset": "run status is terminal AND checkpoint is missing AND defaultDatasetId does not exist",
-        "alreadyCheckpointedOrNonTerminal": "checkpoint exists OR run status is not terminal"
-      }
+        "datasetAvailable": "module 5 defaultDatasetId exists",
+        "missingDataset": "module 5 defaultDatasetId missing or empty"
+      },
+      "purpose": "Route exactly one selected terminal Task run either into the dataset retrieval path or into the missing-dataset cursor path."
     },
     {
       "order": 8,
@@ -179,58 +206,29 @@
     {
       "order": 9,
       "app": "Tools",
-      "module": "Array Aggregator",
+      "module": "Iterator",
+      "label": "Iterator - Dataset Items",
       "route": "datasetAvailable",
-      "configuration": {
-        "sourceModule": 5,
-        "stopProcessingAfterEmptyAggregation": false,
-        "arrayOutputField": "Array[]",
-        "targetStructure": "all Bluesky post fields required by module 12"
-      }
+      "array": "module 8 parsed JSON array[]",
+      "purpose": "Split the Apify dataset-items HTTP JSON array into one bundle per dataset record before preparing and writing delivery records."
     },
     {
       "order": 10,
-      "module": "Router",
-      "routes": {
-        "newPosts": "length(module 9 Array[]) > 0",
-        "quiet": "length(module 9 Array[]) = 0"
-      }
-    },
-    {
-      "order": 11,
       "app": "Tools",
-      "module": "Iterator",
-      "route": "newPosts",
-      "array": "module 9 Array[]"
-    },
-    {
-      "order": 12,
-      "module": "Router",
-      "routes": {
-        "validPost": "uri exists AND url exists AND isNew = true",
-        "invalidPost": "uri missing OR url missing OR isNew != true"
-      }
-    },
-    {
-      "order": 13,
-      "app": "Data store",
-      "module": "Add/Replace a Record",
-      "route": "validPost",
-      "configuration": {
-        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
-        "key": "bluesky:{{module 11 uri}}",
-        "overwriteExistingRecord": true,
-        "record": {
-          "product": "bluesky",
-          "sourceId": "uri",
-          "sourceUrl": "url",
-          "title": "author.handle",
-          "observedAt": "createdAt",
-          "payloadJson": "JSON string of normalizedOutput"
-        }
+      "module": "Set Multiple Variables",
+      "label": "Prepare Delivery Record",
+      "route": "datasetAvailable",
+      "inputs": "module 9 dataset item bundle plus module 5 current Task run context",
+      "validation": "validDelivery = uri exists AND url exists AND isNew = true",
+      "recordKey": "if validDelivery then bluesky:{{module 9 uri}} else bluesky:run:{{module 5 id}}:row:{{module 9 bundle order}}",
+      "recordFields": {
+        "product": "if validDelivery then bluesky else bluesky-diagnostic",
+        "sourceId": "if validDelivery then uri else module 5 id + row bundle order",
+        "sourceUrl": "url or Apify Task run URL",
+        "title": "author.handle or Invalid Bluesky dataset row",
+        "observedAt": "createdAt or {{now}}",
+        "payloadJson": "JSON string of normalizedOutput plus taskRunStatus, defaultDatasetId, validity, and diagnostic fields"
       },
-      "idempotencyKey": "bluesky:postUri",
-      "nativeIdempotency": "Add/Replace with overwrite enabled leaves exactly one record for the stable key, including after an ambiguous retry.",
       "normalizedOutput": {
         "postUri": "uri",
         "postUrl": "url",
@@ -247,60 +245,111 @@
           "replies": "replyCount",
           "quotes": "quoteCount"
         }
+      },
+      "diagnosticFields": [
+        "Task run ID",
+        "row bundle order",
+        "post URI when present",
+        "missing or invalid field names",
+        "task run status",
+        "timestamp"
+      ],
+      "purpose": "Prepare exactly one idempotent Data store delivery record for every dataset row. Valid product rows and invalid/diagnostic rows both continue to the single delivery sink at module 11, so cursor advancement waits for all row persistence."
+    },
+    {
+      "order": 11,
+      "app": "Data store",
+      "module": "Add/Replace a Record",
+      "label": "Write Delivery Record",
+      "route": "after module 10 for every dataset row",
+      "configuration": {
+        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
+        "key": "{{module 10 recordKey}}",
+        "overwriteExistingRecord": true,
+        "record": {
+          "product": "{{module 10 product}}",
+          "sourceId": "{{module 10 sourceId}}",
+          "sourceUrl": "{{module 10 sourceUrl}}",
+          "title": "{{module 10 title}}",
+          "observedAt": "{{module 10 observedAt}}",
+          "payloadJson": "{{module 10 payloadJson}}"
+        }
+      },
+      "idempotencyKey": "module 10 recordKey",
+      "destinationKeyProof": "bluesky:<postUri> for valid rows, or bluesky:run:<runId>:row:<bundleOrder> for invalid/diagnostic rows",
+      "nativeIdempotency": "Add/Replace with overwrite enabled leaves exactly one record for the stable module 10 recordKey, including after an ambiguous retry."
+    },
+    {
+      "order": 12,
+      "app": "Tools",
+      "module": "Array Aggregator",
+      "label": "Aggregate Completed Delivery Writes",
+      "route": "after module 11 delivery writes, or empty aggregation for zero-row datasets",
+      "configuration": {
+        "sourceModule": 11,
+        "stopProcessingAfterEmptyAggregation": false,
+        "arrayOutputField": "Array[]",
+        "targetStructure": "completed module 11 delivery write records with module 10 recordKey, product, sourceId, sourceUrl, title, observedAt, validity, diagnostic fields, and task run status"
+      },
+      "barrierInvariant": "This is the Make-native completion barrier for successful delivery writes. Module 13 and the dataset-run cursor can run only after Make has completed every module 11 delivery write emitted by module 9, or after this aggregator emits an empty Array[] for a zero-row dataset. Module 13 must still verify completedDeliveryWrites equals attemptedDatasetRows and that no module 11 incomplete execution exists before module 14 can write the cursor."
+    },
+    {
+      "order": 13,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "label": "Dataset Run Outcome",
+      "route": "after module 12 completion barrier",
+      "fields": [
+        "Make execution ID",
+        "Task ID",
+        "Task run ID",
+        "Task run status",
+        "defaultDatasetId",
+        "attempted dataset rows = length(module 8 parsed JSON array[])",
+        "completed delivery writes = length(module 12 Array[])",
+        "valid product rows = count(module 12 Array[] where product matches public product)",
+        "diagnostic rows = count(module 12 Array[] where product is diagnostic or run-scoped)",
+        "module 11 incomplete executions = 0 required",
+        "cursor write allowed = completed delivery writes equals attempted dataset rows AND module 11 incomplete executions = 0",
+        "timestamp"
+      ],
+      "purpose": "Summarize the selected dataset run after the delivery-write barrier. This module is the only dataset path into the run cursor, and it must stop before module 14 unless every attempted dataset row has a completed module 11 delivery write and no module 11 incomplete execution exists.",
+      "outputs": {
+        "attemptedDatasetRows": "length(module 8 parsed JSON array[])",
+        "completedDeliveryWrites": "length(module 12 Array[])",
+        "module11IncompleteExecutions": "0 required; module 11 must use Rollback/stop-on-error instead of Retry/Break so incomplete bundles cannot continue to cursor advancement",
+        "cursorWriteAllowed": "completedDeliveryWrites = attemptedDatasetRows AND module11IncompleteExecutions = 0"
       }
     },
     {
       "order": 14,
-      "app": "Tools",
-      "module": "Set Multiple Variables",
-      "route": "invalidPost",
-      "purpose": "Credential-free diagnostic visible in Make execution history; end this branch successfully.",
-      "fields": [
-        "Task run ID",
-        "post URI when present",
-        "missing or invalid field names",
-        "timestamp"
-      ]
+      "app": "Data store",
+      "module": "Add/Replace a Record",
+      "label": "Write Dataset Run Cursor",
+      "route": "after module 13 dataset outcome when module 13 cursorWriteAllowed = true",
+      "configuration": {
+        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
+        "key": "bluesky:cursor:{{TASK_ID}}",
+        "overwriteExistingRecord": true,
+        "record": {
+          "product": "bluesky-cursor",
+          "sourceId": "{{module 5 id}}",
+          "sourceUrl": "https://console.apify.com/actors/tasks/{{TASK_ID}}/runs/{{module 5 id}}",
+          "title": "BLUESKY Task run cursor",
+          "observedAt": "{{now}}",
+          "payloadJson": "{\"lastProcessedRunId\":\"{{module 5 id}}\",\"status\":\"{{module 5 status}}\",\"defaultDatasetId\":\"{{module 5 defaultDatasetId}}\",\"finishedAt\":\"{{module 5 finishedAt}}\",\"cursorOutcomeModule\":\"module 13\"}"
+        }
+      },
+      "idempotencyKey": "bluesky:cursor:taskId",
+      "checkpointInvariant": "Write this cursor only after module 13 has completed and verified completedDeliveryWrites equals attemptedDatasetRows with zero module 11 incomplete executions. For dataset runs, module 13 can only execute after module 12 aggregates completed module 11 delivery writes; module 11 must use Rollback/stop-on-error so failed row persistence cannot continue into cursor advancement. For missing-dataset runs, module 15 records that no dataset request was attempted. If cursor writing fails, the previous cursor causes a safe idempotent replay on the next poll.",
+      "nativeIdempotency": "Add/Replace with overwrite enabled leaves exactly one cursor record for the Task key, including after an ambiguous retry."
     },
     {
       "order": 15,
       "app": "Tools",
       "module": "Set Multiple Variables",
-      "route": "after module 13 when status != SUCCEEDED",
-      "purpose": "Report the non-success terminal status only after the committed post bundle has been idempotently persisted.",
-      "fields": [
-        "Make execution ID",
-        "Task ID",
-        "Task run ID",
-        "Task run status",
-        "defaultDatasetId",
-        "delivery key",
-        "record persisted = true",
-        "timestamp"
-      ]
-    },
-    {
-      "order": 16,
-      "app": "Tools",
-      "module": "Set Multiple Variables",
-      "route": "quiet",
-      "purpose": "Report a terminal run whose fetched dataset contains no rows; no product destination write is attempted.",
-      "fields": [
-        "Make execution ID",
-        "Task ID",
-        "Task run ID",
-        "Task run status",
-        "defaultDatasetId",
-        "dataset record count = 0",
-        "timestamp"
-      ]
-    },
-    {
-      "order": 17,
-      "app": "Tools",
-      "module": "Set Multiple Variables",
+      "label": "Missing Dataset Outcome",
       "route": "missingDataset",
-      "purpose": "Report any terminal run without a defaultDatasetId and end safely without requesting dataset items.",
       "fields": [
         "Make execution ID",
         "Task ID",
@@ -308,37 +357,40 @@
         "Task run status",
         "defaultDatasetId = null",
         "dataset request attempted = false",
+        "cursor write allowed = true because no dataset rows can exist",
         "timestamp"
-      ]
+      ],
+      "purpose": "Report a terminal Task run without defaultDatasetId, record that no dataset request was attempted, and permit a separate cursor write without requesting dataset items."
     },
     {
-      "order": 18,
+      "order": 16,
       "app": "Data store",
       "module": "Add/Replace a Record",
-      "label": "Write Run Checkpoint",
-      "route": "after all uncheckpointed terminal branches finish row persistence and diagnostics",
+      "label": "Write Missing-Dataset Run Cursor",
+      "route": "after module 15 missing-dataset outcome",
       "configuration": {
         "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
-        "key": "bluesky:run:{{module 5 id}}",
+        "key": "bluesky:cursor:{{TASK_ID}}",
         "overwriteExistingRecord": true,
         "record": {
-          "product": "bluesky-run",
-          "sourceId": "module 5 id",
-          "sourceUrl": "Apify Task run URL when available",
-          "title": "Task run checkpoint",
-          "observedAt": "module 5 finishedAt or now",
-          "payloadJson": "JSON string of run id, status, defaultDatasetId, processedAt, and row counts"
+          "product": "bluesky-cursor",
+          "sourceId": "{{module 5 id}}",
+          "sourceUrl": "https://console.apify.com/actors/tasks/{{TASK_ID}}/runs/{{module 5 id}}",
+          "title": "BLUESKY Task run cursor",
+          "observedAt": "{{now}}",
+          "payloadJson": "{\"lastProcessedRunId\":\"{{module 5 id}}\",\"status\":\"{{module 5 status}}\",\"defaultDatasetId\":\"{{module 5 defaultDatasetId}}\",\"finishedAt\":\"{{module 5 finishedAt}}\",\"cursorOutcomeModule\":\"module 15\"}"
         }
       },
-      "idempotencyKey": "bluesky:run:runId",
-      "checkpointInvariant": "Write this checkpoint only after all product row upserts and diagnostics for the run have completed. If Make fails before this module, the next poll must replay the run idempotently."
+      "idempotencyKey": "bluesky:cursor:taskId",
+      "checkpointInvariant": "Write this cursor only after module 15 has completed. Dataset runs must use module 14, where module 13 verifies completedDeliveryWrites equals attemptedDatasetRows with zero module 11 incomplete executions after module 12 aggregates completed module 11 writes. If cursor writing fails, the previous cursor causes a safe idempotent replay on the next poll.",
+      "nativeIdempotency": "Add/Replace with overwrite enabled leaves exactly one cursor record for the Task key, including after an ambiguous retry."
     }
   ],
   "terminalFailureRoute": {
-    "datasetWithRows": "module 15 runs after module 13 persisted the stable bluesky:<postUri> key",
-    "emptyDataset": "module 16 reports the fetched zero-row dataset",
-    "missingDataset": "module 17 does not request dataset items",
-    "then": "write module 18 run checkpoint last; do not throw an error that could disable the scenario"
+    "datasetPath": "module 13 reports the selected run after module 12 aggregates completed module 11 delivery writes and verifies completedDeliveryWrites equals attemptedDatasetRows with zero module 11 incomplete executions; module 14 writes the dataset run cursor downstream of that real Make barrier only when cursorWriteAllowed=true",
+    "emptyDataset": "module 12 emits an empty Array[] and module 13 records zero completed delivery writes before module 14 writes the cursor",
+    "missingDataset": "module 15 records that no dataset request was attempted; module 16 writes the missing-dataset run cursor",
+    "then": "do not throw an error after successful diagnostics; module 11 delivery failures must Rollback/stop before module 12/module 14 so incomplete executions cannot advance the cursor"
   },
   "errorHandlers": {
     "scenario": "Set Store incomplete executions to Yes and process in order/no overlap.",
@@ -359,36 +411,42 @@
       "never": "rerun the Apify Task"
     },
     "destination": {
-      "handler": "Retry",
-      "automaticCompletion": true,
-      "maximumAttempts": 3,
-      "delayMinutes": 15,
-      "resumeAt": "module 13 with the same post bundle",
-      "idempotencyKey": "bluesky:postUri",
-      "requiredProof": "Inject a timeout after the Data store commit, retry, and verify exactly one record exists for bluesky:postUri."
+      "handler": "Rollback",
+      "automaticCompletion": false,
+      "stopsScenario": true,
+      "noFurtherBundles": true,
+      "resumeAt": "next scheduled scenario execution from module 2 exact cursor read; do not resume downstream of module 11",
+      "idempotencyKey": "module 10 recordKey",
+      "never": "Do not use Make Retry/Break on module 11. Retry saves failed bundles as incomplete executions and the scenario run continues, which can allow module 12 and module 14 to advance the cursor before all rows persist.",
+      "requiredProof": "Inject a module 11 post-commit timeout/failure and prove module 12/module 14 do not run for that execution, the run cursor remains unchanged, and the next poll replays idempotently leaving exactly one record for bluesky:<postUri> for valid rows, or bluesky:run:<runId>:row:<bundleOrder> for invalid/diagnostic rows.",
+      "cursorSafety": "Rollback/stop-on-error is required for module 11 because it stops the scenario run with no further bundles; successful replay is safe due stable module 10 recordKey overwrite."
     },
-    "runCheckpoint": {
+    "preflightCursorRead": {
       "handler": "Retry",
       "automaticCompletion": true,
       "maximumAttempts": 3,
       "delayMinutes": 15,
-      "idempotencyKey": "bluesky:run:runId",
-      "requiredProof": "Run checkpoint is written last; duplicate polls leave exactly one checkpoint."
+      "resumeAt": "module 2 exact-key cursor read before any product or run-cursor write",
+      "never": "write product rows or run cursor before preflight succeeds"
     },
-    "preflightCheckpointSearch": {
+    "runCursor": {
       "handler": "Retry",
       "automaticCompletion": true,
       "maximumAttempts": 3,
       "delayMinutes": 15,
-      "resumeAt": "module 2 before any product or run-checkpoint write",
-      "never": "write product rows or run checkpoints before preflight succeeds"
+      "resumeAt": "module 14 for dataset runs or module 16 for missing-dataset runs",
+      "idempotencyKey": "bluesky:cursor:taskId",
+      "requiredProof": "Run cursor is written only after module 13 dataset outcome or module 15 missing-dataset outcome; duplicate polls leave exactly one cursor record and do not re-deliver already cursored runs."
     }
   },
   "publicationGate": [
     "Build in a user-owned Make account, configure the scenario schedule, confirm maxPostsPerRun is no greater than 100, and set Store incomplete executions to Yes plus process-in-order/no-overlap behavior.",
-    "Use HTTP polling, not the Make Apify connector: list recent Task runs with desc=1&limit=1000&offset=0, reverse the fetched page before processing, skip checkpointed run IDs, stop loudly if a full 1000-run page has no checkpoint boundary, and fetch dataset items with the fixed non-paginated retrieval limit of 100.",
+    "Use HTTP polling, not the Make Apify connector: list recent Task runs with desc=1&limit=1000&offset=0, reverse the fetched page before processing, read the exact run cursor, process only one newer terminal run per execution, stop loudly if the cursor is missing or if the fetched page has no cursor boundary, and fetch dataset items with the fixed non-paginated retrieval limit of 100.",
+    "Prime the exact Data store cursor before first activation by storing the latest already-accepted terminal run ID in sourceId at the <product>:cursor:<TASK_ID> key, unless an intentional bounded initial backfill is documented. Do not use Data store Search Records or key-prefix scans for cursor discovery.",
+    "Keep maxRunsPerScenarioExecution at 1 for publication validation. Confirm makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour; if not, pause the Apify Schedule and perform paginated/manual backfill before activation.",
+    "Use module 10 to prepare every dataset row, module 11 as the only delivery Data store sink with Rollback/stop-on-error rather than Retry/Break, module 12 as the Array Aggregator completion barrier with sourceModule=11, module 13 to verify completedDeliveryWrites equals attemptedDatasetRows and zero module 11 incomplete executions, module 14 as the dataset-run cursor write after module 13, and module 16 as the missing-dataset cursor write after module 15.",
     "Prove the reviewed limited Apify token can list Task runs and fetch default dataset items; scrub Authorization headers, Task IDs, data-store IDs, execution data, and sample payloads from exports.",
-    "Run non-empty, quiet, invalid-record, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, duplicate-poll replay, dataset-retry, run-window, preflight overflow-stop using only pre-existing checkpoint keys, run-checkpoint, and Data-store-retry tests; inject a post-commit timeout and prove exactly one record for the product key and exactly one run checkpoint exist for the stable keys.",
+    "Run non-empty, quiet/empty-dataset, invalid-record, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, duplicate-poll replay, dataset-retry, run-window, first-run cursor priming, preflight cursor-gap stop, completion-barrier, run-cursor, and Data-store-retry tests; inject a post-commit timeout/failure at module 11 and prove module 12/module 14 do not run in that execution, the cursor remains unchanged, replay leaves exactly one record for the delivery key, and a later successful run leaves exactly one run cursor.",
     "Export and scrub the candidate blueprint.",
     "Import that exact file into a fresh empty validation organization/team or clean account.",
     "Reconnect the limited HTTP credential/header placeholder, save and activate only for validation, then repeat the full matrix after exact-file import.",
