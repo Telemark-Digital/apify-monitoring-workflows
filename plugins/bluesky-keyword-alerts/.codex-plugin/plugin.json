@@ -1,0 +1,32 @@
+{
+  "name": "bluesky-keyword-alerts",
+  "version": "0.1.0",
+  "description": "Find bounded public Bluesky keyword, handle, mention, and hashtag results through Telemark Digital's Apify Actor.",
+  "author": {
+    "name": "Telemark Digital",
+    "email": "thetelemarkdigital@gmail.com",
+    "url": "https://github.com/Telemark-Digital"
+  },
+  "homepage": "https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/plugins/bluesky-keyword-alerts",
+  "repository": "https://github.com/Telemark-Digital/apify-monitoring-workflows",
+  "license": "MIT",
+  "keywords": ["apify", "bluesky", "alerts", "monitoring"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Bluesky Keyword Alerts",
+    "shortDescription": "Bounded Bluesky post discovery through Apify.",
+    "longDescription": "Find recent public Bluesky posts for keywords, handles, mentions, and hashtags, then use the published Apify Task workflows when recurring only-new monitoring is needed.",
+    "developerName": "Telemark Digital",
+    "category": "Productivity",
+    "capabilities": ["MCP", "Apify Actor", "Workflow guidance"],
+    "websiteURL": "https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/plugins/bluesky-keyword-alerts",
+    "brandColor": "#1185FE",
+    "defaultPrompt": [
+      "Find recent Bluesky posts about product research.",
+      "Preview public Bluesky mentions for this handle.",
+      "Set up saved-Task monitoring for this keyword."
+    ]
+  }
+}
+
