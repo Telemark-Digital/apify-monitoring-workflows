@@ -605,11 +605,12 @@ for (const { relativePath, value } of makeFiles) {
         listRuns?.app !== 'HTTP'
         || listRuns?.module !== 'Make a request'
         || listRuns?.configuration?.method !== 'GET'
-        || !/\/actor-tasks\/\{\{TASK_ID\}\}\/runs\?desc=1&limit=1000&offset=0$/.test(listRuns?.configuration?.url ?? '')
+        || !/\/actor-tasks\/\{\{TASK_ID\}\}\/runs\?desc=1&limit=1000&offset=0&status=SUCCEEDED,FAILED,ABORTED,TIMED-OUT$/.test(listRuns?.configuration?.url ?? '')
         || listAuth !== 'Bearer <APIFY_TOKEN_PLACEHOLDER>'
         || listRuns?.configuration?.limit !== 1000
         || listRuns?.configuration?.offset !== 0
         || listRuns?.configuration?.desc !== true
+        || listRuns?.configuration?.status !== 'SUCCEEDED,FAILED,ABORTED,TIMED-OUT'
         || listRuns?.runWindow?.limit !== 1000
         || !/reverse/i.test(listRuns?.runWindow?.sort ?? '')
         || !/limit maximum is 1000/i.test(listRuns?.runWindow?.officialPagination ?? '')
@@ -618,7 +619,7 @@ for (const { relativePath, value } of makeFiles) {
         || !Array.isArray(listRuns?.runWindow?.terminalStatuses)
         || !['SUCCEEDED', 'FAILED', 'ABORTED', 'TIMED-OUT'].every((status) => listRuns.runWindow.terminalStatuses.includes(status))
     ) {
-        errors.push(`${relativePath}: HTTP List Task Runs must use the max 1000-run page, reversed processing, overflow stop, and a scrubbed limited-token Authorization placeholder`);
+        errors.push(`${relativePath}: HTTP List Task Runs must use the max 1000-run terminal-status-filtered page, reversed processing, overflow stop, and a scrubbed limited-token Authorization placeholder`);
     }
     const cursorRead = byLabel.get('Read Last Processed Run Cursor');
     const preflightGuard = byLabel.get('Preflight Cursor Guard');
@@ -717,6 +718,7 @@ for (const { relativePath, value } of makeFiles) {
         errors.push(`${relativePath}: TED Make must reserve exactly one summary control row within the 1000-row retrieval limit`);
     }
     const prepareDelivery = byLabel.get('Prepare Delivery Record');
+    const payloadSerializer = byLabel.get('Serialize Delivery Payload');
     const deliverySink = byLabel.get('Write Delivery Record');
     const aggregator = byLabel.get('Aggregate Completed Delivery Writes');
     const datasetOutcome = byLabel.get('Dataset Run Outcome');
@@ -737,6 +739,18 @@ for (const { relativePath, value } of makeFiles) {
         || !/module 10 recordKey/i.test(deliverySink?.nativeIdempotency ?? '')
     ) {
         errors.push(`${relativePath}: Make must prepare every row in module 10 and write it through the single module 11 delivery sink`);
+    }
+    if (relativePath.startsWith(`bluesky-keyword-mention-alerts${path.sep}`) && (
+        payloadSerializer?.order !== 10.5
+        || payloadSerializer?.makeModuleId !== 17
+        || payloadSerializer?.app !== 'JSON'
+        || payloadSerializer?.module !== 'Transform to JSON'
+        || !/after module 10 before module 11/i.test(payloadSerializer?.route ?? '')
+        || payloadSerializer?.configuration?.output !== 'json'
+        || !/native JSON serializer/i.test(payloadSerializer?.purpose ?? '')
+        || deliverySink?.configuration?.record?.payloadJson !== '{{module 17 json}}'
+    )) {
+        errors.push(`${relativePath}: Bluesky Make must serialize payloadJson through native JSON module 17 before the Data store write`);
     }
     if (aggregator?.configuration?.stopProcessingAfterEmptyAggregation !== false) {
         errors.push(`${relativePath}: Array Aggregator must emit an empty aggregation`);
