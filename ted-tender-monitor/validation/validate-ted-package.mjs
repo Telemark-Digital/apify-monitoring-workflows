@@ -126,7 +126,7 @@ assert.equal(make.taskLaunch.requirements.noDataStoreSearchForCursor, true);
 assert.equal(make.taskLaunch.requirements.maxRunsPerScenarioExecution, 1);
 assert.equal(make.taskLaunch.requirements.operationBudgetValidation, true);
 assert.equal(make.taskLaunch.requirements.backlogDrainFormula, 'makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour');
-assert.match(make.taskLaunch.requirements.completionBarrier, /module 12 Array Aggregator sourceModule=11/);
+assert.match(make.taskLaunch.requirements.completionBarrier, /module 12 Array Aggregator sourceModule=9/);
 assert.match(make.taskLaunch.requirements.completionBarrier, /completedDeliveryWrites equals attemptedDatasetRows/);
 assert.match(make.taskLaunch.requirements.deliveryFailureStrategy, /Rollback\/stop-on-error/);
 assert.equal(make.taskLaunch.requirements.runOrdering, 'reverse-fetched-desc-page-after-cursor-filter');
@@ -135,7 +135,7 @@ assert.equal(make.modules.find((module) => module.label === 'Read Last Processed
 assert.equal(make.modules.find((module) => module.label === 'Preflight Cursor Guard').order, 3);
 assert.match(JSON.stringify(make.modules.find((module) => module.label === 'Cursor Guard Router')), /must not reach module 5/);
 assert.equal(make.modules.find((module) => module.label === 'Iterator - Dataset Items').order, 9);
-assert.equal(makeBarrier.configuration.sourceModule, 11);
+assert.equal(makeBarrier.configuration.sourceModule, 9);
 assert.match(makeBarrier.barrierInvariant, /Make-native completion barrier/);
 assert.match(makeBarrier.barrierInvariant, /completedDeliveryWrites equals attemptedDatasetRows/);
 assert.match(makeDatasetRouter.routes.datasetAvailable, /defaultDatasetId exists/i);
@@ -194,7 +194,7 @@ assert.match(implementationText, /completedDeliveryWrites equals attemptedDatase
 const publicationGate = make.publicationGate.join(' ');
 assert.match(publicationGate, /module 10 to prepare every dataset row/);
 assert.match(publicationGate, /module 11 as the only delivery Data store sink/);
-assert.match(publicationGate, /module 12 as the Array Aggregator completion barrier with sourceModule=11/);
+assert.match(publicationGate, /module 12 as the Array Aggregator completion barrier with sourceModule=9/);
 assert.match(publicationGate, /Rollback\/stop-on-error rather than Retry\/Break/);
 assert.match(publicationGate, /maxNewPerRun is no greater than 999/i);
 assert.match(publicationGate, /non-paginated retrieval limit of 1000/i);
