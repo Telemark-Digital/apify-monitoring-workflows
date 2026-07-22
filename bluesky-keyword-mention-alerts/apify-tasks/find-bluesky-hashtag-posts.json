@@ -40,4 +40,3 @@
     "note": "Copy the Task, set onlyNew to true, and schedule that same Task. Later quiet runs can return zero items."
   }
 }
-
