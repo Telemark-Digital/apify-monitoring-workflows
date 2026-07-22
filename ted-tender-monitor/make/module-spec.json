@@ -61,7 +61,7 @@
       "label": "HTTP List Task Runs",
       "configuration": {
         "method": "GET",
-        "url": "https://api.apify.com/v2/actor-tasks/{{TASK_ID}}/runs?desc=1&limit=1000&offset=0",
+        "url": "https://api.apify.com/v2/actor-tasks/{{TASK_ID}}/runs?desc=1&limit=1000&offset=0&status=SUCCEEDED,FAILED,ABORTED,TIMED-OUT",
         "headers": [
           {
             "name": "Authorization",
@@ -75,11 +75,12 @@
         "parseResponse": true,
         "limit": 1000,
         "offset": 0,
-        "desc": true
+        "desc": true,
+        "status": "SUCCEEDED,FAILED,ABORTED,TIMED-OUT"
       },
       "runWindow": {
         "limit": 1000,
-        "sort": "desc from Apify; module 3 filters newer terminal runs after the exact cursor, limits to maxRunsPerScenarioExecution=1, then reverses before module 5 so processing is oldest-to-newest within the selected cursor window",
+        "sort": "desc from Apify with the official terminal-status filter; module 3 filters newer terminal runs after the exact cursor, limits to maxRunsPerScenarioExecution=1, then reverses before module 5 so processing is oldest-to-newest within the selected cursor window",
         "terminalStatuses": [
           "SUCCEEDED",
           "FAILED",
@@ -439,7 +440,7 @@
   },
   "publicationGate": [
     "Build in a user-owned Make account, configure the scenario schedule, confirm maxNewPerRun is no greater than 999, and set Store incomplete executions to Yes plus process-in-order/no-overlap behavior.",
-    "Use HTTP polling, not the Make Apify connector: list recent Task runs with desc=1&limit=1000&offset=0, reverse the fetched page before processing, read the exact run cursor, process only one newer terminal run per execution, stop loudly if the cursor is missing or if the fetched page has no cursor boundary, and fetch dataset items with the fixed non-paginated retrieval limit of 1000.",
+    "Use HTTP polling, not the Make Apify connector: list recent terminal Task runs with desc=1&limit=1000&offset=0&status=SUCCEEDED,FAILED,ABORTED,TIMED-OUT, reverse the fetched page before processing, read the exact run cursor, process only one newer terminal run per execution, stop loudly if the cursor is missing or if the fetched page has no cursor boundary, and fetch dataset items with the fixed non-paginated retrieval limit of 1000.",
     "Prime the exact Data store cursor before first activation by storing the latest already-accepted terminal run ID in sourceId at the <product>:cursor:<TASK_ID> key, unless an intentional bounded initial backfill is documented. Do not use Data store Search Records or key-prefix scans for cursor discovery.",
     "Keep maxRunsPerScenarioExecution at 1 for publication validation. Confirm makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour; if not, pause the Apify Schedule and perform paginated/manual backfill before activation.",
     "Use module 10 to prepare every dataset row, module 11 as the only delivery Data store sink with Rollback/stop-on-error rather than Retry/Break, module 12 as the Array Aggregator completion barrier with sourceModule=11, module 13 to verify completedDeliveryWrites equals attemptedDatasetRows and zero module 11 incomplete executions, module 14 as the dataset-run cursor write after module 13, and module 16 as the missing-dataset cursor write after module 15.",
