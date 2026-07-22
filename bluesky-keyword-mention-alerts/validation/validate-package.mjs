@@ -186,15 +186,47 @@ walk(workflow, (_value, trail) => assert(!/(^|\.)credentials(\.|$)/i.test(trail)
 
 const makeFile = path.join(root, 'workflows', 'make', 'module-spec.json');
 const make = parsed.get(makeFile);
-const makeDataset = make.modules.find((module) => module.module === 'Get Dataset Items');
+const makeDataset = make.modules.find((module) => module.label === 'HTTP Get Dataset Items');
+const makeListRuns = make.modules.find((module) => module.label === 'HTTP List Task Runs');
+const makeRunCheckpoint = make.modules.find((module) => module.label === 'Write Run Checkpoint');
+assert.equal(make.architecture, 'APIFY_SCHEDULE_TO_HTTP_POLLING_RECONCILER');
+assert.equal(make.scenarioSettings.processInOrder, true, 'Make must avoid overlapping executions for run checkpoints');
+assert.equal(make.modules.some((module) => module.app === 'Apify' || module.module === 'Watch Task Runs' || module.module === 'Get Dataset Items'), false, 'Make must not use the official Apify connector modules');
+assert.equal(makeListRuns.configuration.method, 'GET');
+assert.match(makeListRuns.configuration.url, /\/actor-tasks\/\{\{TASK_ID\}\}\/runs\?desc=1&limit=1000&offset=0$/);
+assert.equal(makeListRuns.configuration.headers.find((header) => header.name === 'Authorization').value, 'Bearer <APIFY_TOKEN_PLACEHOLDER>');
+assert.equal(makeListRuns.runWindow.limit, 1000);
+assert.match(makeListRuns.runWindow.sort, /reverse the fetched page/i);
+assert.match(makeListRuns.runWindow.overflowGuard, /no checkpointed terminal run boundary/i);
+assert.equal(make.taskLaunch.requirements.pollRunLimit, 1000);
+assert.equal(make.taskLaunch.requirements.overflowStopIfNoCheckpointBoundary, true);
+assert.equal(make.taskLaunch.requirements.overflowStopBeforeProcessing, true);
+assert.equal(make.taskLaunch.requirements.preflightExistingCheckpointRead, true);
+assert.equal(make.taskLaunch.requirements.runOrdering, 'reverse-fetched-desc-page-before-processing');
+assert.deepEqual(make.taskLaunch.requirements.preflightModules, [2, 3, 4]);
+assert.equal(make.modules.find((module) => module.label === 'Preflight Existing Run Checkpoints').order, 2);
+assert.equal(make.modules.find((module) => module.label === 'Preflight Overflow Guard').order, 3);
+assert.equal(make.modules.find((module) => module.label === 'Overflow Guard Router').order, 4);
+assert.match(JSON.stringify(make.modules.find((module) => module.label === 'Overflow Guard Router')), /must not reach module 5/);
 assert.equal(make.taskLaunch.requirements.maxPostsPerRunAtMost, 100);
 assert.equal(make.taskLaunch.requirements.datasetRetrievalLimit, 100);
 assert.equal(make.taskLaunch.requirements.paginationEnabled, false);
+assert.equal(make.taskLaunch.requirements.makePollIntervalCoversRunWindow, true);
+assert.equal(makeDataset.configuration.method, 'GET');
+assert.match(makeDataset.configuration.url, /\/datasets\/\{\{module 5 defaultDatasetId\}\}\/items\?format=json&clean=1&offset=0&limit=100$/);
+assert.equal(makeDataset.configuration.headers.find((header) => header.name === 'Authorization').value, 'Bearer <APIFY_TOKEN_PLACEHOLDER>');
 assert.equal(makeDataset.configuration.limit, 100);
 assert.equal(makeDataset.configuration.paginationEnabled, false);
 assert.match(makeDataset.capInvariant, /intentionally non-paginated/i);
+assert.equal(makeRunCheckpoint.idempotencyKey, 'bluesky:run:runId');
+assert.match(makeRunCheckpoint.checkpointInvariant, /after all product row upserts/i);
+assert.equal(makeRunCheckpoint.order, 18);
 assert.match(make.publicationGate.join(' '), /maxPostsPerRun is no greater than 100/i);
 assert.match(make.publicationGate.join(' '), /non-paginated retrieval limit of 100/i);
+assert.match(make.publicationGate.join(' '), /HTTP polling/i);
+assert.match(make.publicationGate.join(' '), /run checkpoint/i);
+assert.match(make.publicationGate.join(' '), /desc=1&limit=1000&offset=0/i);
+assert.match(make.publicationGate.join(' '), /overflow-stop/i);
 
 for (const relativePath of [
     'README.md',
