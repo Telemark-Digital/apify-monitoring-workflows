@@ -124,8 +124,9 @@ assert(make.scenarioSettings.processInOrder === true, 'Make must avoid overlappi
 assert(make.modules.every((module) => module.app !== 'Apify' && module.module !== 'Watch Task Runs' && module.module !== 'Get Dataset Items'), 'Make must not use the official Apify connector modules');
 assert(make.modules.every((module) => module.module !== 'Search Records'), 'Make must not use Data store Search Records for cursor discovery');
 assert(makeListRuns.configuration.method === 'GET', 'Make list-runs module must use HTTP GET');
-assert(/\/actor-tasks\/\{\{TASK_ID\}\}\/runs\?desc=1&limit=1000&offset=0$/.test(makeListRuns.configuration.url), 'Make must list the max 1000-run page');
+assert(/\/actor-tasks\/\{\{TASK_ID\}\}\/runs\?desc=1&limit=1000&offset=0&status=SUCCEEDED,FAILED,ABORTED,TIMED-OUT$/.test(makeListRuns.configuration.url), 'Make must list the max 1000-run terminal-status-filtered page');
 assert(makeListRuns.configuration.headers.find((header) => header.name === 'Authorization').value === 'Bearer <APIFY_TOKEN_PLACEHOLDER>', 'Make list-runs Authorization header must be scrubbed');
+assert(makeListRuns.configuration.status === 'SUCCEEDED,FAILED,ABORTED,TIMED-OUT', 'Make must use the official terminal status filter');
 assert(makeListRuns.runWindow.limit === 1000, 'Make run poll limit must remain 1000');
 assert(/reverse/i.test(makeListRuns.runWindow.sort), 'Make must reverse the fetched desc page before processing');
 assert(/stored cursor run is not present/i.test(makeListRuns.runWindow.overflowGuard), 'Make must stop loudly on an overflowing page with a missing cursor boundary');
