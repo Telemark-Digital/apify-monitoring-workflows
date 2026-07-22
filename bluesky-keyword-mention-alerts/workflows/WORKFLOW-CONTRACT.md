@@ -19,7 +19,7 @@ The Task ID is configuration, not a secret. The API token is a secret and must n
 Two launch profiles satisfy this contract:
 
 - n8n: trigger manually for testing or on an n8n schedule, then run the configured persistent Task.
-- Make: an Apify Schedule runs the configured persistent Task; **Watch Task Runs** starts the Make scenario for every finished run of that Task.
+- Make: an Apify Schedule runs the configured persistent Task; a Make scenario schedule polls recent Task runs over HTTP, skips checkpointed run IDs, fetches default dataset items, writes product rows, and writes the run checkpoint last.
 
 1. Start from the selected launch profile while reusing the same persistent Task.
 2. Run or observe the configured Task without overriding its input, build, memory, or timeout.
@@ -72,4 +72,3 @@ Two launch profiles satisfy this contract:
 7. A mixed valid/malformed failed dataset preserves its valid post plus one sanitized run-row diagnostic before reporting terminal failure; replay leaves exactly those same keys.
 8. Two consecutive executions use the same Task ID.
 9. A forced concurrent run is rejected before dataset delivery or charging, and the activated schedule interval is strictly longer than the selected Task's hard timeout as a separate cadence guard.
-
