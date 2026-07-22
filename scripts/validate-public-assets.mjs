@@ -40,6 +40,7 @@ async function walk(directory) {
     for (const entry of entries) {
         const fullPath = path.join(directory, entry.name);
         const relativePath = path.relative(root, fullPath);
+        if (relativePath === '.git' && entry.isDirectory()) continue;
         const parts = relativePath.split(path.sep);
 
         if (parts.some((part) => forbiddenParts.has(part) || part.startsWith('.env.'))) {
@@ -574,22 +575,73 @@ for (const { relativePath, value } of makeFiles) {
     if (value.status !== 'DRAFT_NOT_IMPORTED_RUN_OR_EXPORTED_BY_MAKE') {
         errors.push(`${relativePath}: Make status must remain an explicit draft`);
     }
-    if (value.architecture !== 'APIFY_SCHEDULE_TO_WATCH_TASK_RUNS') {
-        errors.push(`${relativePath}: Make package must use the event-driven Task watcher architecture`);
+    if (value.architecture !== 'APIFY_SCHEDULE_TO_HTTP_POLLING_RECONCILER') {
+        errors.push(`${relativePath}: Make package must use the HTTP polling Task-run reconciler architecture`);
     }
     if (value.scenarioSettings?.storeIncompleteExecutions !== true) {
         errors.push(`${relativePath}: Make must store incomplete executions for retry handling`);
     }
+    if (value.scenarioSettings?.processInOrder !== true) {
+        errors.push(`${relativePath}: Make must process in order / avoid overlapping executions for checkpoint safety`);
+    }
     const modules = Array.isArray(value.modules) ? value.modules : [];
-    const byName = new Map(modules.map((module) => [module.module, module]));
-    for (const name of ['Watch Task Runs', 'Router', 'Get Dataset Items', 'Array Aggregator', 'Iterator']) {
-        if (!byName.has(name)) errors.push(`${relativePath}: missing Make module/control ${name}`);
+    if (modules.some((module) => module.app === 'Apify' || module.module === 'Watch Task Runs' || module.module === 'Get Dataset Items')) {
+        errors.push(`${relativePath}: Make must not use the Make Apify connector modules`);
     }
-    const watcher = byName.get('Watch Task Runs');
-    if (watcher?.configuration?.event !== 'any finished Task run') {
-        errors.push(`${relativePath}: watcher must pass every terminal Task run to the status router`);
+    const byLabel = new Map(modules.filter((module) => module.label).map((module) => [module.label, module]));
+    for (const label of ['HTTP List Task Runs', 'Preflight Existing Run Checkpoints', 'Preflight Overflow Guard', 'Overflow Guard Router', 'Iterator - Reversed Recent Task Runs', 'Read Run Checkpoint', 'Run Checkpoint Router', 'HTTP Get Dataset Items', 'Write Run Checkpoint']) {
+        if (!byLabel.has(label)) errors.push(`${relativePath}: missing Make module/control ${label}`);
     }
-    const dataset = byName.get('Get Dataset Items');
+    if (!modules.some((module) => module.module === 'Router')) errors.push(`${relativePath}: missing Make Router control`);
+    if (!modules.some((module) => module.module === 'Array Aggregator')) errors.push(`${relativePath}: missing Make Array Aggregator control`);
+    if (!modules.some((module) => module.module === 'Iterator')) errors.push(`${relativePath}: missing Make Iterator control`);
+    const listRuns = byLabel.get('HTTP List Task Runs');
+    const listHeaders = Array.isArray(listRuns?.configuration?.headers) ? listRuns.configuration.headers : [];
+    const listAuth = listHeaders.find((header) => header.name === 'Authorization')?.value;
+    if (
+        listRuns?.app !== 'HTTP'
+        || listRuns?.module !== 'Make a request'
+        || listRuns?.configuration?.method !== 'GET'
+        || !/\/actor-tasks\/\{\{TASK_ID\}\}\/runs\?desc=1&limit=1000&offset=0$/.test(listRuns?.configuration?.url ?? '')
+        || listAuth !== 'Bearer <APIFY_TOKEN_PLACEHOLDER>'
+        || listRuns?.configuration?.limit !== 1000
+        || listRuns?.configuration?.offset !== 0
+        || listRuns?.configuration?.desc !== true
+        || listRuns?.runWindow?.limit !== 1000
+        || !/reverse the fetched page/i.test(listRuns?.runWindow?.sort ?? '')
+        || !/limit maximum is 1000/i.test(listRuns?.runWindow?.officialPagination ?? '')
+        || !/count=1000.*no checkpointed terminal run boundary/i.test(listRuns?.runWindow?.overflowGuard ?? '')
+        || !Array.isArray(listRuns?.runWindow?.terminalStatuses)
+        || !['SUCCEEDED', 'FAILED', 'ABORTED', 'TIMED-OUT'].every((status) => listRuns.runWindow.terminalStatuses.includes(status))
+    ) {
+        errors.push(`${relativePath}: HTTP List Task Runs must use the max 1000-run page, reversed processing, overflow stop, and a scrubbed limited-token Authorization placeholder`);
+    }
+    const preflightSearch = byLabel.get('Preflight Existing Run Checkpoints');
+    const preflightGuard = byLabel.get('Preflight Overflow Guard');
+    const overflowRouter = byLabel.get('Overflow Guard Router');
+    const runIterator = byLabel.get('Iterator - Reversed Recent Task Runs');
+    if (
+        preflightSearch?.order !== 2
+        || preflightSearch?.app !== 'Data store'
+        || preflightSearch?.module !== 'Search Records'
+        || !/before any product or run-checkpoint write/i.test(preflightSearch?.route ?? '')
+        || preflightSearch?.configuration?.readOnly !== true
+        || !/module 1 data\.items\[\]\.id/.test(preflightSearch?.configuration?.matchAgainst ?? '')
+        || preflightGuard?.order !== 3
+        || preflightGuard?.module !== 'Set Multiple Variables'
+        || !/preExistingCheckpointKeys|pre-existing run checkpoint keys/i.test(JSON.stringify(preflightGuard))
+        || !/before this execution writes new checkpoints/i.test(preflightGuard?.invariant ?? '')
+        || overflowRouter?.order !== 4
+        || overflowRouter?.module !== 'Router'
+        || !/module 3 overflowStop = true/.test(overflowRouter?.routes?.overflowStop ?? '')
+        || !/must not reach module 5 or any product\/run-checkpoint write/i.test(overflowRouter?.invariant ?? '')
+        || runIterator?.order !== 5
+        || runIterator?.array !== 'module 3 reversedRuns[]'
+        || runIterator?.route !== 'proceed'
+    ) {
+        errors.push(`${relativePath}: Make must structurally preflight existing checkpoints and stop before processing on overflow`);
+    }
+    const dataset = byLabel.get('HTTP Get Dataset Items');
     if (!Number.isInteger(dataset?.configuration?.limit) || dataset.configuration.limit < 1) {
         errors.push(`${relativePath}: dataset retrieval limit must be a positive integer`);
     }
@@ -604,9 +656,23 @@ for (const { relativePath, value } of makeFiles) {
         || requirements[capRequirementName] !== capContract.cap
         || requirements.datasetRetrievalLimit !== capContract.limit
         || requirements.paginationEnabled !== false
+        || requirements.pollRunLimit !== 1000
+        || requirements.overflowStopIfNoCheckpointBoundary !== true
+        || requirements.overflowStopBeforeProcessing !== true
+        || requirements.preflightExistingCheckpointRead !== true
+        || JSON.stringify(requirements.preflightModules) !== JSON.stringify([2, 3, 4])
+        || requirements.runOrdering !== 'reverse-fetched-desc-page-before-processing'
+        || !/covered_minutes = pollRunLimit/i.test(requirements.pollWindowFormula ?? '')
+        || requirements.makePollIntervalCoversRunWindow !== true
         || dataset?.configuration?.offset !== 0
         || dataset?.configuration?.limit !== capContract.limit
         || dataset?.configuration?.paginationEnabled !== false
+        || dataset?.app !== 'HTTP'
+        || dataset?.module !== 'Make a request'
+        || dataset?.configuration?.method !== 'GET'
+        || !String(dataset?.configuration?.url ?? '').endsWith(`/datasets/{{module 5 defaultDatasetId}}/items?format=json&clean=1&offset=0&limit=${capContract.limit}`)
+        || !Array.isArray(dataset?.configuration?.headers)
+        || dataset.configuration.headers.find((header) => header.name === 'Authorization')?.value !== 'Bearer <APIFY_TOKEN_PLACEHOLDER>'
         || !/intentionally non-paginated/i.test(dataset?.capInvariant ?? '')
         || !new RegExp(`${capContract.field}[^.]*no greater than ${capContract.cap}`, 'i').test(dataset?.capInvariant ?? '')
     ) {
@@ -619,7 +685,7 @@ for (const { relativePath, value } of makeFiles) {
     )) {
         errors.push(`${relativePath}: TED Make must reserve exactly one summary control row within the 1000-row retrieval limit`);
     }
-    const aggregator = byName.get('Array Aggregator');
+    const aggregator = modules.find((module) => module.module === 'Array Aggregator');
     if (aggregator?.configuration?.stopProcessingAfterEmptyAggregation !== false) {
         errors.push(`${relativePath}: Array Aggregator must emit an empty aggregation`);
     }
@@ -652,7 +718,7 @@ for (const { relativePath, value } of makeFiles) {
         errors.push(`${relativePath}: terminal failure routes must cover post-persistence, empty, and missing-dataset reporting`);
     }
     if (dataset?.route !== 'datasetAvailable') {
-        errors.push(`${relativePath}: Get Dataset Items must run for every terminal status with a dataset ID`);
+        errors.push(`${relativePath}: HTTP Get Dataset Items must run for every terminal status with a dataset ID`);
     }
     const postPersistenceReport = modules.find((module) =>
         module.module === 'Set Multiple Variables'
@@ -663,7 +729,7 @@ for (const { relativePath, value } of makeFiles) {
     if (!postPersistenceReport || !destinationModule || postPersistenceReport.order <= destinationModule.order) {
         errors.push(`${relativePath}: non-success status reporting must follow the Data store write`);
     }
-    for (const handlerName of ['getDatasetItems', 'destination']) {
+    for (const handlerName of ['listTaskRuns', 'preflightCheckpointSearch', 'getDatasetItems', 'destination', 'runCheckpoint']) {
         const handler = value.errorHandlers?.[handlerName];
         if (
             handler?.handler !== 'Retry'
@@ -674,14 +740,42 @@ for (const { relativePath, value } of makeFiles) {
             errors.push(`${relativePath}: ${handlerName} must use automatic Retry with 3 attempts and a 15-minute delay`);
         }
     }
+    if (value.errorHandlers?.listTaskRuns?.never !== 'rerun the Apify Task' || value.errorHandlers?.getDatasetItems?.never !== 'rerun the Apify Task') {
+        errors.push(`${relativePath}: Make HTTP polling retries must never rerun the Apify Task`);
+    }
     if (!Array.isArray(value.credentials) || value.credentials.length !== 0) {
         errors.push(`${relativePath}: Make specification must contain no credentials`);
+    }
+    if (
+        value.authentication?.app !== 'HTTP'
+        || value.authentication?.value !== 'Bearer <APIFY_TOKEN_PLACEHOLDER>'
+        || !/Remove real Authorization values/i.test(value.authentication?.exportScrub ?? '')
+        || !/limited Apify token/i.test(value.authentication?.tokenScope ?? '')
+    ) {
+        errors.push(`${relativePath}: Make authentication must use a scrubbed limited-token HTTP placeholder`);
+    }
+    const checkpoint = byLabel.get('Write Run Checkpoint');
+    if (
+        checkpoint?.app !== 'Data store'
+        || checkpoint?.module !== 'Add/Replace a Record'
+        || checkpoint?.configuration?.overwriteExistingRecord !== true
+        || checkpoint?.order <= (destinationModule?.order ?? 0)
+        || !/after all uncheckpointed terminal branches/i.test(checkpoint?.route ?? '')
+        || !/Write this checkpoint only after all product row upserts and diagnostics/i.test(checkpoint?.checkpointInvariant ?? '')
+    ) {
+        errors.push(`${relativePath}: Make run checkpoint must be an idempotent final Data store write`);
     }
     const gate = Array.isArray(value.publicationGate) ? value.publicationGate.join(' ') : '';
     if (
         !/exact file/i.test(gate)
         || !/save and activate/i.test(gate)
-        || !/recreated the Task-scoped Watch Task Runs webhook/i.test(gate)
+        || !/HTTP polling/i.test(gate)
+        || !/desc=1&limit=1000&offset=0/i.test(gate)
+        || !/reverse the fetched page/i.test(gate)
+        || !/full 1000-run page has no checkpoint boundary/i.test(gate)
+        || !/overflow-stop/i.test(gate)
+        || !/run checkpoint/i.test(gate)
+        || !/Authorization headers/i.test(gate)
         || !/Repeat .* after exact-file import/i.test(gate)
         || !/post-commit timeout/i.test(gate)
         || !/exactly one record/i.test(gate)
@@ -748,15 +842,23 @@ const rssAggregator = rssModules.find((module) => module.module === 'Array Aggre
 if (!rssValidationRouter || !rssAggregator || rssValidationRouter.order >= rssAggregator.order) {
     errors.push('RSS Make must validate each record before aggregation');
 }
-const rssIterator = rssModules.find((module) => module.module === 'Iterator');
+const rssIterator = rssModules.find((module) => module.module === 'Iterator' && module.order === 13);
 const rssDestination = validateDataStoreDestination(
     rssMake,
     'RSS',
     'rss:encodeURL(feedUrl):encodeURL(itemKey)',
-    ['encodeURL(module 9 feedUrl)', 'encodeURL(module 9 itemKey)'],
+    ['encodeURL(module 13 feedUrl)', 'encodeURL(module 13 itemKey)'],
 );
-if (!rssIterator || !rssDestination || rssIterator.order >= rssDestination.order || !/module 9 Iterator/i.test(rssDestination.route ?? '')) {
+if (!rssIterator || !rssDestination || rssIterator.order >= rssDestination.order || !/module 13 Iterator/i.test(rssDestination.route ?? '')) {
     errors.push('RSS Make per-item data-store destination must consume the mandatory Iterator output');
+}
+const rssPostPersistenceReport = rssModules.find((module) => module.order === 16);
+if (
+    rssPostPersistenceReport?.module !== 'Set Multiple Variables'
+    || rssPostPersistenceReport?.route !== 'after module 14 when status != SUCCEEDED'
+    || !/idempotently persisted/i.test(rssPostPersistenceReport?.purpose ?? '')
+) {
+    errors.push('RSS Make terminal status report must run after module 14 persisted the Data store row');
 }
 
 const tedMake = makeFiles.find(({ relativePath }) => relativePath.startsWith(`ted-tender-monitor${path.sep}`));
@@ -772,23 +874,23 @@ for (const field of ['html', 'pdf', 'xml']) {
 }
 const tedModules = tedMake?.value?.modules ?? [];
 const tedModulesByOrder = new Map(tedModules.map((module) => [module.order, module]));
-const tedDestinations = tedModules.filter((module) => module.app === 'Data store' && module.module === 'Add/Replace a Record');
-const tedIdentifiedDestination = tedModulesByOrder.get(8);
-const tedRunScopedDestination = tedModulesByOrder.get(9);
+const tedDestinations = tedModules.filter((module) => module.app === 'Data store' && module.module === 'Add/Replace a Record' && module.label !== 'Write Run Checkpoint');
+const tedIdentifiedDestination = tedModulesByOrder.get(13);
+const tedRunScopedDestination = tedModulesByOrder.get(14);
 if (tedDestinations.length !== 2 || tedDestinations[0] !== tedIdentifiedDestination || tedDestinations[1] !== tedRunScopedDestination) {
-    errors.push('TED Make must use exactly modules 8 and 9 as its two Data store Add/Replace destinations');
+    errors.push('TED Make must use exactly modules 13 and 14 as its two Data store Add/Replace destinations');
 }
 const tedDestinationContracts = [
     {
         module: tedIdentifiedDestination,
         route: 'identifiedTender',
-        key: 'ted:{{module 6 publicationNumber}}',
+        key: 'ted:{{module 11 publicationNumber}}',
         idempotencyKey: 'ted:publicationNumber',
     },
     {
         module: tedRunScopedDestination,
         route: 'runScopedRecord',
-        key: 'ted:run:{{module 1 id}}:row:{{module 6 bundle order}}',
+        key: 'ted:run:{{module 5 id}}:row:{{module 11 bundle order}}',
         idempotencyKey: 'ted:run:runId:row:bundleOrder',
     },
 ];
@@ -811,49 +913,49 @@ for (const contract of tedDestinationContracts) {
         errors.push(`TED Make module ${destination?.order ?? 'missing'} must document exactly-one-record retry behavior`);
     }
 }
-const tedClassificationRouter = tedModulesByOrder.get(7);
+const tedClassificationRouter = tedModulesByOrder.get(12);
 if (
     tedClassificationRouter?.module !== 'Router'
     || tedClassificationRouter?.routes?.identifiedTender !== 'recordType = tender AND publicationNumber exists'
     || tedClassificationRouter?.routes?.runScopedRecord !== 'recordType != tender OR publicationNumber missing'
 ) {
-    errors.push('TED Make module 7 must classify identified and run-scoped records with the exact route semantics');
+    errors.push('TED Make module 12 must classify identified and run-scoped records with the exact route semantics');
 }
 for (const router of tedModules.filter((module) => module.module === 'Router')) {
     if (/ted:(?:<|\{\{|publicationNumber|run:)/.test(JSON.stringify(router))) {
         errors.push(`TED Make Router module ${router.order} must not pretend to assign a persistence key`);
     }
 }
-const tedDiagnosticRouter = tedModulesByOrder.get(10);
+const tedDiagnosticRouter = tedModulesByOrder.get(15);
 if (
     tedDiagnosticRouter?.module !== 'Router'
-    || tedDiagnosticRouter?.route !== 'after module 9'
+    || tedDiagnosticRouter?.route !== 'after module 14'
     || tedDiagnosticRouter?.routes?.invalidTenderDiagnostic !== 'recordType = tender AND publicationNumber missing'
     || tedDiagnosticRouter?.routes?.terminalFailureDiagnostic !== 'status != SUCCEEDED'
-    || tedModulesByOrder.get(11)?.route !== 'module 10 invalidTenderDiagnostic'
-    || tedModulesByOrder.get(12)?.route !== 'module 10 terminalFailureDiagnostic'
-    || tedModulesByOrder.get(13)?.route !== 'after module 8 when status != SUCCEEDED'
-    || tedModulesByOrder.get(14)?.route !== 'quiet when status != SUCCEEDED'
-    || tedModulesByOrder.get(15)?.route !== 'missingDataset'
+    || tedModulesByOrder.get(16)?.route !== 'module 15 invalidTenderDiagnostic'
+    || tedModulesByOrder.get(17)?.route !== 'module 15 terminalFailureDiagnostic'
+    || tedModulesByOrder.get(18)?.route !== 'after module 13 when status != SUCCEEDED'
+    || tedModulesByOrder.get(19)?.route !== 'emptyDataset'
+    || tedModulesByOrder.get(20)?.route !== 'missingDataset'
 ) {
-    errors.push('TED Make diagnostic routers and modules 10-15 must preserve the post-sink route topology');
+    errors.push('TED Make diagnostic routers and modules 15-20 must preserve the post-sink route topology');
 }
 const tedDestinationRetry = tedMake?.value?.errorHandlers?.destination;
 if (
-    JSON.stringify(tedDestinationRetry?.modules) !== JSON.stringify([8, 9])
-    || tedDestinationRetry?.idempotencyKeys?.module8 !== 'ted:publicationNumber'
-    || tedDestinationRetry?.idempotencyKeys?.module9 !== 'ted:run:runId:row:bundleOrder'
-    || !/module 8 with ted:<publicationNumber>/i.test(tedDestinationRetry?.requiredProof ?? '')
-    || !/module 9 with ted:run:<runId>:row:<bundleOrder>/i.test(tedDestinationRetry?.requiredProof ?? '')
+    JSON.stringify(tedDestinationRetry?.modules) !== JSON.stringify([13, 14])
+    || tedDestinationRetry?.idempotencyKeys?.module13 !== 'ted:publicationNumber'
+    || tedDestinationRetry?.idempotencyKeys?.module14 !== 'ted:run:runId:row:bundleOrder'
+    || !/module 13 with ted:<publicationNumber>/i.test(tedDestinationRetry?.requiredProof ?? '')
+    || !/module 14 with ted:run:<runId>:row:<bundleOrder>/i.test(tedDestinationRetry?.requiredProof ?? '')
 ) {
-    errors.push('TED Make destination retry must cover modules 8 and 9 with their separate stable keys and post-commit proofs');
+    errors.push('TED Make destination retry must cover modules 13 and 14 with their separate stable keys and post-commit proofs');
 }
 const tedTerminalRoute = tedMake?.value?.terminalFailureRoute;
 if (
-    !/module 13.*module 8 persisted ted:<publicationNumber>/i.test(tedTerminalRoute?.identifiedTenderRows ?? '')
-    || !/module 12.*module 9 persisted ted:run:<runId>:row:<bundleOrder>/i.test(tedTerminalRoute?.runScopedRows ?? '')
-    || !/module 14.*zero-row dataset/i.test(tedTerminalRoute?.emptyDataset ?? '')
-    || !/module 15.*does not request dataset items/i.test(tedTerminalRoute?.missingDataset ?? '')
+    !/module 18.*module 13 persisted ted:<publicationNumber>/i.test(tedTerminalRoute?.identifiedTenderRows ?? '')
+    || !/module 17.*module 14 persisted ted:run:<runId>:row:<bundleOrder>/i.test(tedTerminalRoute?.runScopedRows ?? '')
+    || !/module 19.*zero-row dataset/i.test(tedTerminalRoute?.emptyDataset ?? '')
+    || !/module 20.*does not request dataset items/i.test(tedTerminalRoute?.missingDataset ?? '')
 ) {
     errors.push('TED Make terminal failure routes must follow the applicable sink and use coherent diagnostic module orders');
 }
