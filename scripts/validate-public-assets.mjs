@@ -688,7 +688,7 @@ for (const { relativePath, value } of makeFiles) {
         || !/one cursor-selected terminal Task run/i.test(requirements.operationBudgetGuard ?? '')
         || requirements.backlogDrainFormula !== 'makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour'
         || !/pause the Apify Schedule/i.test(requirements.backlogDrainRequirement ?? '')
-        || !/module 12 Array Aggregator sourceModule=11/i.test(requirements.completionBarrier ?? '')
+        || !/module 12 Array Aggregator sourceModule=9/i.test(requirements.completionBarrier ?? '')
         || !/completedDeliveryWrites equals attemptedDatasetRows/i.test(requirements.completionBarrier ?? '')
         || !/Module 11 must use Rollback\/stop-on-error/i.test(requirements.deliveryFailureStrategy ?? '')
         || !/Retry saves failed bundles as incomplete executions/i.test(requirements.deliveryFailureStrategy ?? '')
@@ -760,7 +760,7 @@ for (const { relativePath, value } of makeFiles) {
     }
     if (
         aggregator?.order !== 12
-        || aggregator?.configuration?.sourceModule !== 11
+        || aggregator?.configuration?.sourceModule !== 9
         || !/Make-native completion barrier/i.test(aggregator?.barrierInvariant ?? '')
         || !/completedDeliveryWrites equals attemptedDatasetRows/i.test(aggregator?.barrierInvariant ?? '')
     ) {
@@ -874,7 +874,7 @@ for (const { relativePath, value } of makeFiles) {
         || !/run-cursor/i.test(gate)
         || !/maxRunsPerScenarioExecution at 1/i.test(gate)
         || !/makePollsPerHour \* maxRunsPerScenarioExecution > apifyRunsPerHour/i.test(gate)
-        || !/module 12 as the Array Aggregator completion barrier with sourceModule=11/i.test(gate)
+        || !/module 12 as the Array Aggregator completion barrier with sourceModule=9/i.test(gate)
         || !/Rollback\/stop-on-error rather than Retry\/Break/i.test(gate)
         || !/completedDeliveryWrites equals attemptedDatasetRows/i.test(gate)
         || !/module 12\/module 14 do not run/i.test(gate)
