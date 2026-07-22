@@ -589,8 +589,11 @@ for (const { relativePath, value } of makeFiles) {
         errors.push(`${relativePath}: Make must not use the Make Apify connector modules`);
     }
     const byLabel = new Map(modules.filter((module) => module.label).map((module) => [module.label, module]));
-    for (const label of ['HTTP List Task Runs', 'Preflight Existing Run Checkpoints', 'Preflight Overflow Guard', 'Overflow Guard Router', 'Iterator - Reversed Recent Task Runs', 'Read Run Checkpoint', 'Run Checkpoint Router', 'HTTP Get Dataset Items', 'Write Run Checkpoint']) {
+    for (const label of ['HTTP List Task Runs', 'Read Last Processed Run Cursor', 'Preflight Cursor Guard', 'Cursor Guard Router', 'Iterator - Reversed Recent Task Runs', 'Current Run Context', 'Run Dataset Router', 'HTTP Get Dataset Items', 'Iterator - Dataset Items', 'Prepare Delivery Record', 'Write Delivery Record', 'Aggregate Completed Delivery Writes', 'Dataset Run Outcome', 'Write Dataset Run Cursor', 'Missing Dataset Outcome', 'Write Missing-Dataset Run Cursor']) {
         if (!byLabel.has(label)) errors.push(`${relativePath}: missing Make module/control ${label}`);
+    }
+    if (modules.some((module) => module.module === 'Search Records')) {
+        errors.push(`${relativePath}: Make must not use Data store Search Records for cursor or checkpoint discovery`);
     }
     if (!modules.some((module) => module.module === 'Router')) errors.push(`${relativePath}: missing Make Router control`);
     if (!modules.some((module) => module.module === 'Array Aggregator')) errors.push(`${relativePath}: missing Make Array Aggregator control`);
@@ -608,38 +611,54 @@ for (const { relativePath, value } of makeFiles) {
         || listRuns?.configuration?.offset !== 0
         || listRuns?.configuration?.desc !== true
         || listRuns?.runWindow?.limit !== 1000
-        || !/reverse the fetched page/i.test(listRuns?.runWindow?.sort ?? '')
+        || !/reverse/i.test(listRuns?.runWindow?.sort ?? '')
         || !/limit maximum is 1000/i.test(listRuns?.runWindow?.officialPagination ?? '')
-        || !/count=1000.*no checkpointed terminal run boundary/i.test(listRuns?.runWindow?.overflowGuard ?? '')
+        || !/stored cursor run is not present/i.test(listRuns?.runWindow?.overflowGuard ?? '')
+        || !/maxRunsPerScenarioExecution=1/i.test(listRuns?.runWindow?.sort ?? '')
         || !Array.isArray(listRuns?.runWindow?.terminalStatuses)
         || !['SUCCEEDED', 'FAILED', 'ABORTED', 'TIMED-OUT'].every((status) => listRuns.runWindow.terminalStatuses.includes(status))
     ) {
         errors.push(`${relativePath}: HTTP List Task Runs must use the max 1000-run page, reversed processing, overflow stop, and a scrubbed limited-token Authorization placeholder`);
     }
-    const preflightSearch = byLabel.get('Preflight Existing Run Checkpoints');
-    const preflightGuard = byLabel.get('Preflight Overflow Guard');
-    const overflowRouter = byLabel.get('Overflow Guard Router');
+    const cursorRead = byLabel.get('Read Last Processed Run Cursor');
+    const preflightGuard = byLabel.get('Preflight Cursor Guard');
+    const overflowRouter = byLabel.get('Cursor Guard Router');
     const runIterator = byLabel.get('Iterator - Reversed Recent Task Runs');
+    const runContext = byLabel.get('Current Run Context');
+    const datasetItemIterator = byLabel.get('Iterator - Dataset Items');
     if (
-        preflightSearch?.order !== 2
-        || preflightSearch?.app !== 'Data store'
-        || preflightSearch?.module !== 'Search Records'
-        || !/before any product or run-checkpoint write/i.test(preflightSearch?.route ?? '')
-        || preflightSearch?.configuration?.readOnly !== true
-        || !/module 1 data\.items\[\]\.id/.test(preflightSearch?.configuration?.matchAgainst ?? '')
+        cursorRead?.order !== 2
+        || cursorRead?.app !== 'Data store'
+        || cursorRead?.module !== 'Get a Record'
+        || !/before any product or run-cursor write/i.test(cursorRead?.route ?? '')
+        || cursorRead?.configuration?.readOnly !== true
+        || !/^[a-z]+:cursor:\{\{TASK_ID\}\}$/.test(cursorRead?.configuration?.key ?? '')
+        || !/Do not use Data store Search Records/i.test(cursorRead?.purpose ?? '')
         || preflightGuard?.order !== 3
         || preflightGuard?.module !== 'Set Multiple Variables'
-        || !/preExistingCheckpointKeys|pre-existing run checkpoint keys/i.test(JSON.stringify(preflightGuard))
-        || !/before this execution writes new checkpoints/i.test(preflightGuard?.invariant ?? '')
+        || !/cursorFoundInFetchedPage/i.test(JSON.stringify(preflightGuard))
+        || !/cursorPrimingStop/i.test(JSON.stringify(preflightGuard))
+        || preflightGuard?.outputs?.cursorBoundaryMissing !== 'cursorExists = true AND cursorFoundInFetchedPage = false'
+        || !/maxRunsPerScenarioExecution/i.test(preflightGuard?.outputs?.reversedRuns ?? '')
+        || preflightGuard?.inputs?.maxRunsPerScenarioExecution !== 1
+        || !/exact-key cursor that existed before/i.test(preflightGuard?.invariant ?? '')
         || overflowRouter?.order !== 4
         || overflowRouter?.module !== 'Router'
-        || !/module 3 overflowStop = true/.test(overflowRouter?.routes?.overflowStop ?? '')
-        || !/must not reach module 5 or any product\/run-checkpoint write/i.test(overflowRouter?.invariant ?? '')
+        || !/module 3 cursorPrimingStop = true/.test(overflowRouter?.routes?.cursorPrimingStop ?? '')
+        || !/module 3 cursorBoundaryMissing = true/.test(overflowRouter?.routes?.overflowStop ?? '')
+        || !/must not reach module 5 or any product\/run-cursor write/i.test(overflowRouter?.invariant ?? '')
         || runIterator?.order !== 5
         || runIterator?.array !== 'module 3 reversedRuns[]'
         || runIterator?.route !== 'proceed'
+        || runContext?.order !== 6
+        || runContext?.module !== 'Set Multiple Variables'
+        || runContext?.outputs?.defaultDatasetId !== 'module 5 defaultDatasetId'
+        || datasetItemIterator?.order !== 9
+        || datasetItemIterator?.module !== 'Iterator'
+        || datasetItemIterator?.route !== 'datasetAvailable'
+        || datasetItemIterator?.array !== 'module 8 parsed JSON array[]'
     ) {
-        errors.push(`${relativePath}: Make must structurally preflight existing checkpoints and stop before processing on overflow`);
+        errors.push(`${relativePath}: Make must structurally preflight the exact run cursor and stop before processing on cursor gaps`);
     }
     const dataset = byLabel.get('HTTP Get Dataset Items');
     if (!Number.isInteger(dataset?.configuration?.limit) || dataset.configuration.limit < 1) {
@@ -657,11 +676,23 @@ for (const { relativePath, value } of makeFiles) {
         || requirements.datasetRetrievalLimit !== capContract.limit
         || requirements.paginationEnabled !== false
         || requirements.pollRunLimit !== 1000
-        || requirements.overflowStopIfNoCheckpointBoundary !== true
+        || requirements.overflowStopIfCursorMissingFromFetchedPage !== true
         || requirements.overflowStopBeforeProcessing !== true
-        || requirements.preflightExistingCheckpointRead !== true
+        || requirements.preflightCursorRead !== true
+        || requirements.cursorPrimingRequired !== true
+        || requirements.noDataStoreSearchForCursor !== true
+        || !/single exact-key Data store cursor/i.test(requirements.runCursorStrategy ?? '')
+        || requirements.maxRunsPerScenarioExecution !== 1
+        || requirements.operationBudgetValidation !== true
+        || !/one cursor-selected terminal Task run/i.test(requirements.operationBudgetGuard ?? '')
+        || requirements.backlogDrainFormula !== 'makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour'
+        || !/pause the Apify Schedule/i.test(requirements.backlogDrainRequirement ?? '')
+        || !/module 12 Array Aggregator sourceModule=11/i.test(requirements.completionBarrier ?? '')
+        || !/completedDeliveryWrites equals attemptedDatasetRows/i.test(requirements.completionBarrier ?? '')
+        || !/Module 11 must use Rollback\/stop-on-error/i.test(requirements.deliveryFailureStrategy ?? '')
+        || !/Retry saves failed bundles as incomplete executions/i.test(requirements.deliveryFailureStrategy ?? '')
         || JSON.stringify(requirements.preflightModules) !== JSON.stringify([2, 3, 4])
-        || requirements.runOrdering !== 'reverse-fetched-desc-page-before-processing'
+        || requirements.runOrdering !== 'reverse-fetched-desc-page-after-cursor-filter'
         || !/covered_minutes = pollRunLimit/i.test(requirements.pollWindowFormula ?? '')
         || requirements.makePollIntervalCoversRunWindow !== true
         || dataset?.configuration?.offset !== 0
@@ -685,51 +716,79 @@ for (const { relativePath, value } of makeFiles) {
     )) {
         errors.push(`${relativePath}: TED Make must reserve exactly one summary control row within the 1000-row retrieval limit`);
     }
-    const aggregator = modules.find((module) => module.module === 'Array Aggregator');
+    const prepareDelivery = byLabel.get('Prepare Delivery Record');
+    const deliverySink = byLabel.get('Write Delivery Record');
+    const aggregator = byLabel.get('Aggregate Completed Delivery Writes');
+    const datasetOutcome = byLabel.get('Dataset Run Outcome');
+    const datasetCursor = byLabel.get('Write Dataset Run Cursor');
+    const missingDatasetOutcome = byLabel.get('Missing Dataset Outcome');
+    const missingDatasetCursor = byLabel.get('Write Missing-Dataset Run Cursor');
+    if (
+        prepareDelivery?.order !== 10
+        || prepareDelivery?.module !== 'Set Multiple Variables'
+        || !/one idempotent Data store delivery record for every dataset row/i.test(prepareDelivery?.purpose ?? '')
+        || !/module 9/i.test(prepareDelivery?.inputs ?? '')
+        || deliverySink?.order !== 11
+        || deliverySink?.app !== 'Data store'
+        || deliverySink?.module !== 'Add/Replace a Record'
+        || deliverySink?.configuration?.key !== '{{module 10 recordKey}}'
+        || deliverySink?.configuration?.overwriteExistingRecord !== true
+        || deliverySink?.idempotencyKey !== 'module 10 recordKey'
+        || !/module 10 recordKey/i.test(deliverySink?.nativeIdempotency ?? '')
+    ) {
+        errors.push(`${relativePath}: Make must prepare every row in module 10 and write it through the single module 11 delivery sink`);
+    }
     if (aggregator?.configuration?.stopProcessingAfterEmptyAggregation !== false) {
         errors.push(`${relativePath}: Array Aggregator must emit an empty aggregation`);
     }
     if (aggregator?.configuration?.arrayOutputField !== 'Array[]') {
         errors.push(`${relativePath}: Array Aggregator output must use Make's actual Array[] field`);
     }
+    if (
+        aggregator?.order !== 12
+        || aggregator?.configuration?.sourceModule !== 11
+        || !/Make-native completion barrier/i.test(aggregator?.barrierInvariant ?? '')
+        || !/completedDeliveryWrites equals attemptedDatasetRows/i.test(aggregator?.barrierInvariant ?? '')
+    ) {
+        errors.push(`${relativePath}: Array Aggregator must consume completed delivery writes from module 11 as the Make-native cursor barrier`);
+    }
     const terminalRouter = modules.find((module) => module.module === 'Router' && module.routes?.datasetAvailable);
     if (
         !terminalRouter
         || /SUCCEEDED/i.test(terminalRouter.routes.datasetAvailable)
         || !/defaultDatasetId exists/i.test(terminalRouter.routes.datasetAvailable)
-        || !/defaultDatasetId does not exist/i.test(terminalRouter.routes.missingDataset ?? '')
+        || !/defaultDatasetId missing/i.test(terminalRouter.routes.missingDataset ?? '')
     ) {
         errors.push(`${relativePath}: dataset retrieval must route only on dataset ID presence, never terminal success`);
     }
     const terminalRoute = value.terminalFailureRoute;
-    const persistedRowRoutes = [
-        terminalRoute?.datasetWithRows,
-        terminalRoute?.identifiedTenderRows,
-        terminalRoute?.runScopedRows,
-    ].filter((route) => typeof route === 'string');
     if (
         !terminalRoute
-        || persistedRowRoutes.length === 0
-        || persistedRowRoutes.some((route) => !/after .*persisted/i.test(route))
-        || !/zero-row dataset/i.test(terminalRoute.emptyDataset ?? '')
-        || !/does not request dataset/i.test(terminalRoute.missingDataset ?? '')
+        || !/module 12 aggregates completed module 11 delivery writes/i.test(terminalRoute.datasetPath ?? '')
+        || !/module 12 emits an empty Array\[\]/i.test(terminalRoute.emptyDataset ?? '')
+        || !/module 15 records that no dataset request was attempted/i.test(terminalRoute.missingDataset ?? '')
         || !/do not throw/i.test(terminalRoute.then ?? '')
     ) {
-        errors.push(`${relativePath}: terminal failure routes must cover post-persistence, empty, and missing-dataset reporting`);
+        errors.push(`${relativePath}: terminal failure routes must cover the completion barrier, empty dataset, and missing-dataset cursor paths`);
     }
     if (dataset?.route !== 'datasetAvailable') {
         errors.push(`${relativePath}: HTTP Get Dataset Items must run for every terminal status with a dataset ID`);
     }
-    const postPersistenceReport = modules.find((module) =>
-        module.module === 'Set Multiple Variables'
-        && /after module \d+ when status != SUCCEEDED/i.test(module.route ?? '')
-        && /persisted/i.test(module.purpose ?? '')
-    );
-    const destinationModule = modules.find((module) => module.app === 'Data store' && module.module === 'Add/Replace a Record');
-    if (!postPersistenceReport || !destinationModule || postPersistenceReport.order <= destinationModule.order) {
-        errors.push(`${relativePath}: non-success status reporting must follow the Data store write`);
+    const destinationModule = deliverySink;
+    if (
+        datasetOutcome?.order !== 13
+        || datasetOutcome?.module !== 'Set Multiple Variables'
+        || !/after module 12 completion barrier/i.test(datasetOutcome?.route ?? '')
+        || !JSON.stringify(datasetOutcome?.fields ?? []).includes('Task run status')
+        || datasetOutcome?.outputs?.attemptedDatasetRows !== 'length(module 8 parsed JSON array[])'
+        || datasetOutcome?.outputs?.completedDeliveryWrites !== 'length(module 12 Array[])'
+        || datasetOutcome?.outputs?.cursorWriteAllowed !== 'completedDeliveryWrites = attemptedDatasetRows AND module11IncompleteExecutions = 0'
+        || !/must stop before module 14 unless every attempted dataset row/i.test(datasetOutcome?.purpose ?? '')
+        || datasetOutcome.order <= (aggregator?.order ?? 0)
+    ) {
+        errors.push(`${relativePath}: dataset status reporting must follow the delivery-write completion barrier`);
     }
-    for (const handlerName of ['listTaskRuns', 'preflightCheckpointSearch', 'getDatasetItems', 'destination', 'runCheckpoint']) {
+    for (const handlerName of ['listTaskRuns', 'preflightCursorRead', 'getDatasetItems', 'runCursor']) {
         const handler = value.errorHandlers?.[handlerName];
         if (
             handler?.handler !== 'Retry'
@@ -739,6 +798,19 @@ for (const { relativePath, value } of makeFiles) {
         ) {
             errors.push(`${relativePath}: ${handlerName} must use automatic Retry with 3 attempts and a 15-minute delay`);
         }
+    }
+    const destinationHandler = value.errorHandlers?.destination;
+    if (
+        destinationHandler?.handler !== 'Rollback'
+        || destinationHandler.automaticCompletion !== false
+        || destinationHandler.stopsScenario !== true
+        || destinationHandler.noFurtherBundles !== true
+        || destinationHandler.idempotencyKey !== 'module 10 recordKey'
+        || !/Do not use Make Retry\/Break on module 11/i.test(destinationHandler.never ?? '')
+        || !/module 12\/module 14 do not run/i.test(destinationHandler.requiredProof ?? '')
+        || !/run cursor remains unchanged/i.test(destinationHandler.requiredProof ?? '')
+    ) {
+        errors.push(`${relativePath}: destination/module 11 failures must use Rollback stop-on-error, not Retry/Break`);
     }
     if (value.errorHandlers?.listTaskRuns?.never !== 'rerun the Apify Task' || value.errorHandlers?.getDatasetItems?.never !== 'rerun the Apify Task') {
         errors.push(`${relativePath}: Make HTTP polling retries must never rerun the Apify Task`);
@@ -754,16 +826,27 @@ for (const { relativePath, value } of makeFiles) {
     ) {
         errors.push(`${relativePath}: Make authentication must use a scrubbed limited-token HTTP placeholder`);
     }
-    const checkpoint = byLabel.get('Write Run Checkpoint');
+    const cursorWrites = [datasetCursor, missingDatasetCursor];
     if (
-        checkpoint?.app !== 'Data store'
-        || checkpoint?.module !== 'Add/Replace a Record'
-        || checkpoint?.configuration?.overwriteExistingRecord !== true
-        || checkpoint?.order <= (destinationModule?.order ?? 0)
-        || !/after all uncheckpointed terminal branches/i.test(checkpoint?.route ?? '')
-        || !/Write this checkpoint only after all product row upserts and diagnostics/i.test(checkpoint?.checkpointInvariant ?? '')
+        datasetCursor?.order !== 14
+        || !/after module 13 dataset outcome when module 13 cursorWriteAllowed = true/i.test(datasetCursor?.route ?? '')
+        || missingDatasetOutcome?.order !== 15
+        || !/no dataset request was attempted/i.test(missingDatasetOutcome?.purpose ?? '')
+        || missingDatasetCursor?.order !== 16
+        || !/after module 15 missing-dataset outcome/i.test(missingDatasetCursor?.route ?? '')
+        || cursorWrites.some((checkpoint) =>
+            checkpoint?.app !== 'Data store'
+            || checkpoint?.module !== 'Add/Replace a Record'
+            || checkpoint?.configuration?.overwriteExistingRecord !== true
+            || checkpoint?.order <= (destinationModule?.order ?? 0)
+            || !/^[a-z]+:cursor:taskId$/.test(checkpoint?.idempotencyKey ?? '')
+        )
+        || !/completedDeliveryWrites equals attemptedDatasetRows/i.test(datasetCursor?.checkpointInvariant ?? '')
+        || !/zero module 11 incomplete executions/i.test(datasetCursor?.checkpointInvariant ?? '')
+        || !/module 11 must use Rollback\/stop-on-error/i.test(datasetCursor?.checkpointInvariant ?? '')
+        || !/module 15 has completed/i.test(missingDatasetCursor?.checkpointInvariant ?? '')
     ) {
-        errors.push(`${relativePath}: Make run checkpoint must be an idempotent final Data store write`);
+        errors.push(`${relativePath}: Make run cursor must be an idempotent write after the dataset barrier or missing-dataset outcome`);
     }
     const gate = Array.isArray(value.publicationGate) ? value.publicationGate.join(' ') : '';
     if (
@@ -772,9 +855,16 @@ for (const { relativePath, value } of makeFiles) {
         || !/HTTP polling/i.test(gate)
         || !/desc=1&limit=1000&offset=0/i.test(gate)
         || !/reverse the fetched page/i.test(gate)
-        || !/full 1000-run page has no checkpoint boundary/i.test(gate)
-        || !/overflow-stop/i.test(gate)
-        || !/run checkpoint/i.test(gate)
+        || !/fetched page has no cursor boundary/i.test(gate)
+        || !/cursor-gap stop/i.test(gate)
+        || !/run-cursor/i.test(gate)
+        || !/maxRunsPerScenarioExecution at 1/i.test(gate)
+        || !/makePollsPerHour \* maxRunsPerScenarioExecution > apifyRunsPerHour/i.test(gate)
+        || !/module 12 as the Array Aggregator completion barrier with sourceModule=11/i.test(gate)
+        || !/Rollback\/stop-on-error rather than Retry\/Break/i.test(gate)
+        || !/completedDeliveryWrites equals attemptedDatasetRows/i.test(gate)
+        || !/module 12\/module 14 do not run/i.test(gate)
+        || !/Do not use Data store Search Records/i.test(gate)
         || !/Authorization headers/i.test(gate)
         || !/Repeat .* after exact-file import/i.test(gate)
         || !/post-commit timeout/i.test(gate)
@@ -803,8 +893,9 @@ for (const field of ['postUri', 'postUrl', 'authorHandle', 'authorDisplayName', 
 }
 if (!Object.hasOwn(blueskyOutput?.metrics ?? {}, 'quotes')) errors.push('Bluesky Make mapping missing metrics.quotes');
 
-function validateDataStoreDestination(make, label, expectedKey, expectedFields) {
-    const destination = make?.value?.modules?.find((module) => module.app === 'Data store' && module.module === 'Add/Replace a Record');
+function validateDataStoreDestination(make, label, expectedRecordKeyPattern, expectedProofPattern) {
+    const destination = make?.value?.modules?.find((module) => module.label === 'Write Delivery Record');
+    const prepare = make?.value?.modules?.find((module) => module.label === 'Prepare Delivery Record');
     const handler = make?.value?.errorHandlers?.destination;
     if (!destination) {
         errors.push(`${label} Make must use Data store Add/Replace a Record as its canonical destination`);
@@ -813,13 +904,17 @@ function validateDataStoreDestination(make, label, expectedKey, expectedFields) 
     if (destination.configuration?.overwriteExistingRecord !== true) {
         errors.push(`${label} Make data-store destination must enable overwrite`);
     }
-    if (destination.idempotencyKey !== expectedKey || handler?.idempotencyKey !== expectedKey) {
-        errors.push(`${label} Make data-store key must remain ${expectedKey} in the module and retry handler`);
+    if (destination.idempotencyKey !== 'module 10 recordKey' || handler?.idempotencyKey !== 'module 10 recordKey') {
+        errors.push(`${label} Make data-store key must use the module 10 prepared recordKey in the module and destination failure handler`);
     }
-    for (const expectedField of expectedFields) {
-        if (!String(destination.configuration?.key ?? '').includes(expectedField)) {
-            errors.push(`${label} Make data-store key mapping must include ${expectedField}`);
-        }
+    if (destination.configuration?.key !== '{{module 10 recordKey}}') {
+        errors.push(`${label} Make data-store destination must use the prepared module 10 recordKey`);
+    }
+    if (!expectedRecordKeyPattern.test(prepare?.recordKey ?? '')) {
+        errors.push(`${label} Make prepared recordKey does not include the expected stable product identity`);
+    }
+    if (!expectedProofPattern.test(destination.destinationKeyProof ?? '')) {
+        errors.push(`${label} Make destination proof does not document the expected stable product key`);
     }
     if (!/exactly one record/i.test(destination.nativeIdempotency ?? '') || !/exactly one record/i.test(handler?.requiredProof ?? '')) {
         errors.push(`${label} Make must require an exactly-one-record post-commit retry proof`);
@@ -827,38 +922,38 @@ function validateDataStoreDestination(make, label, expectedKey, expectedFields) 
     return destination;
 }
 
-validateDataStoreDestination(blueskyMake, 'Bluesky', 'bluesky:postUri', ['uri']);
+validateDataStoreDestination(blueskyMake, 'Bluesky', /bluesky:\{\{module 9 uri\}\}/, /bluesky:<postUri>/);
 
 const rssMake = makeFiles.find(({ relativePath }) => relativePath.startsWith(`rss-keyword-monitor${path.sep}`));
-const rssEnvelopes = rssMake?.value?.modules?.filter((module) => module.outputEnvelope).map((module) => module.outputEnvelope) ?? [];
-if (!rssEnvelopes.some((envelope) => envelope.hasNewItems === true)) errors.push('RSS Make mapping missing true envelope');
-if (!rssEnvelopes.some((envelope) => envelope.hasNewItems === false && envelope.newItemCount === 0)) errors.push('RSS Make mapping missing false envelope');
+const rssEnvelope = rssMake?.value?.modules?.find((module) => module.label === 'Prepare Delivery Record')?.outputEnvelope;
+if (!rssEnvelope || !/validDelivery = true/.test(rssEnvelope.hasNewItems ?? '') || !/valid RSS records/i.test(rssEnvelope.items ?? '')) {
+    errors.push('RSS Make mapping missing a valid-row output envelope');
+}
 if (rssMake?.value?.taskLaunch?.requirements?.scheduleIntervalExceedsTaskTimeout !== true) {
     errors.push('RSS Make Task schedule interval must exceed the saved Task hard timeout');
 }
 const rssModules = rssMake?.value?.modules ?? [];
-const rssValidationRouter = rssModules.find((module) => module.module === 'Router' && module.routes?.validRecord);
+const rssPrepare = rssModules.find((module) => module.label === 'Prepare Delivery Record');
 const rssAggregator = rssModules.find((module) => module.module === 'Array Aggregator');
-if (!rssValidationRouter || !rssAggregator || rssValidationRouter.order >= rssAggregator.order) {
-    errors.push('RSS Make must validate each record before aggregation');
+if (!rssPrepare || !/validDelivery = itemKey exists AND feedUrl exists AND isNew = true/.test(rssPrepare.validation ?? '') || !rssAggregator || rssPrepare.order >= rssAggregator.order) {
+    errors.push('RSS Make must validate each record before the completion barrier');
 }
-const rssIterator = rssModules.find((module) => module.module === 'Iterator' && module.order === 13);
 const rssDestination = validateDataStoreDestination(
     rssMake,
     'RSS',
-    'rss:encodeURL(feedUrl):encodeURL(itemKey)',
-    ['encodeURL(module 13 feedUrl)', 'encodeURL(module 13 itemKey)'],
+    /rss:\{\{encodeURL\(module 9 feedUrl\)\}\}:\{\{encodeURL\(module 9 itemKey\)\}\}/,
+    /rss:<encodedFeedUrl>:<encodedItemKey>/,
 );
-if (!rssIterator || !rssDestination || rssIterator.order >= rssDestination.order || !/module 13 Iterator/i.test(rssDestination.route ?? '')) {
-    errors.push('RSS Make per-item data-store destination must consume the mandatory Iterator output');
+if (!rssDestination || rssDestination.order !== 11 || !/after module 10 for every dataset row/i.test(rssDestination.route ?? '')) {
+    errors.push('RSS Make per-item data-store destination must consume the prepared module 10 record');
 }
-const rssPostPersistenceReport = rssModules.find((module) => module.order === 16);
+const rssPostPersistenceReport = rssModules.find((module) => module.order === 13);
 if (
     rssPostPersistenceReport?.module !== 'Set Multiple Variables'
-    || rssPostPersistenceReport?.route !== 'after module 14 when status != SUCCEEDED'
-    || !/idempotently persisted/i.test(rssPostPersistenceReport?.purpose ?? '')
+    || rssPostPersistenceReport?.route !== 'after module 12 completion barrier'
+    || !/delivery-write barrier/i.test(rssPostPersistenceReport?.purpose ?? '')
 ) {
-    errors.push('RSS Make terminal status report must run after module 14 persisted the Data store row');
+    errors.push('RSS Make terminal status report must run after the module 12 delivery-write barrier');
 }
 
 const tedMake = makeFiles.find(({ relativePath }) => relativePath.startsWith(`ted-tender-monitor${path.sep}`));
@@ -874,97 +969,64 @@ for (const field of ['html', 'pdf', 'xml']) {
 }
 const tedModules = tedMake?.value?.modules ?? [];
 const tedModulesByOrder = new Map(tedModules.map((module) => [module.order, module]));
-const tedDestinations = tedModules.filter((module) => module.app === 'Data store' && module.module === 'Add/Replace a Record' && module.label !== 'Write Run Checkpoint');
-const tedIdentifiedDestination = tedModulesByOrder.get(13);
-const tedRunScopedDestination = tedModulesByOrder.get(14);
-if (tedDestinations.length !== 2 || tedDestinations[0] !== tedIdentifiedDestination || tedDestinations[1] !== tedRunScopedDestination) {
-    errors.push('TED Make must use exactly modules 13 and 14 as its two Data store Add/Replace destinations');
+const tedDestinations = tedModules.filter((module) => module.app === 'Data store' && module.module === 'Add/Replace a Record');
+const tedPrepare = tedModulesByOrder.get(10);
+const tedDeliveryDestination = tedModulesByOrder.get(11);
+const tedDatasetCursor = tedModulesByOrder.get(14);
+const tedMissingDatasetCursor = tedModulesByOrder.get(16);
+if (tedDestinations.length !== 3 || tedDeliveryDestination?.label !== 'Write Delivery Record' || tedDatasetCursor?.label !== 'Write Dataset Run Cursor' || tedMissingDatasetCursor?.label !== 'Write Missing-Dataset Run Cursor') {
+    errors.push('TED Make must use one delivery Data store sink plus two explicit cursor writes');
 }
-const tedDestinationContracts = [
-    {
-        module: tedIdentifiedDestination,
-        route: 'identifiedTender',
-        key: 'ted:{{module 11 publicationNumber}}',
-        idempotencyKey: 'ted:publicationNumber',
-    },
-    {
-        module: tedRunScopedDestination,
-        route: 'runScopedRecord',
-        key: 'ted:run:{{module 5 id}}:row:{{module 11 bundle order}}',
-        idempotencyKey: 'ted:run:runId:row:bundleOrder',
-    },
-];
-for (const contract of tedDestinationContracts) {
-    const destination = contract.module;
-    if (
-        destination?.route !== contract.route
-        || destination?.configuration?.key !== contract.key
-        || destination?.idempotencyKey !== contract.idempotencyKey
-    ) {
-        errors.push(`TED Make module ${destination?.order ?? 'missing'} must preserve the exact ${contract.route} route and key semantics`);
-    }
-    if (destination?.configuration?.overwriteExistingRecord !== true) {
-        errors.push(`TED Make module ${destination?.order ?? 'missing'} must enable overwrite`);
-    }
-    if (!/title:null remains null/i.test(destination?.configuration?.record?.payloadJson ?? '')) {
-        errors.push(`TED Make module ${destination?.order ?? 'missing'} must preserve title:null in payloadJson`);
-    }
-    if (!/exactly one record/i.test(destination?.nativeIdempotency ?? '')) {
-        errors.push(`TED Make module ${destination?.order ?? 'missing'} must document exactly-one-record retry behavior`);
-    }
-}
-const tedClassificationRouter = tedModulesByOrder.get(12);
 if (
-    tedClassificationRouter?.module !== 'Router'
-    || tedClassificationRouter?.routes?.identifiedTender !== 'recordType = tender AND publicationNumber exists'
-    || tedClassificationRouter?.routes?.runScopedRecord !== 'recordType != tender OR publicationNumber missing'
+    tedDeliveryDestination?.configuration?.key !== '{{module 10 recordKey}}'
+    || tedDeliveryDestination?.idempotencyKey !== 'module 10 recordKey'
+    || !/ted:<publicationNumber>.*ted:run:<runId>:row:<bundleOrder>/i.test(tedDeliveryDestination?.destinationKeyProof ?? '')
+    || !/title:null remains null/i.test(tedPrepare?.recordFields?.payloadJson ?? '')
+    || !/exactly one record/i.test(tedDeliveryDestination?.nativeIdempotency ?? '')
 ) {
-    errors.push('TED Make module 12 must classify identified and run-scoped records with the exact route semantics');
+    errors.push('TED Make module 11 must preserve identified and run-scoped key semantics through module 10 recordKey');
+}
+if (
+    tedPrepare?.label !== 'Prepare Delivery Record'
+    || tedPrepare?.validation !== 'identifiedTender = recordType = tender AND publicationNumber exists'
+    || !/ted:\{\{module 9 publicationNumber\}\}/.test(tedPrepare?.recordKey ?? '')
+    || !/ted:run:\{\{module 5 id\}\}:row:\{\{module 9 bundle order\}\}/.test(tedPrepare?.recordKey ?? '')
+) {
+    errors.push('TED Make module 10 must classify identified and run-scoped records with the exact key semantics');
+}
+const tedClassificationRouter = tedPrepare;
+if (
+    tedClassificationRouter?.validation !== 'identifiedTender = recordType = tender AND publicationNumber exists'
+) {
+    errors.push('TED Make module 10 must classify identified and run-scoped records with the exact route semantics');
 }
 for (const router of tedModules.filter((module) => module.module === 'Router')) {
     if (/ted:(?:<|\{\{|publicationNumber|run:)/.test(JSON.stringify(router))) {
         errors.push(`TED Make Router module ${router.order} must not pretend to assign a persistence key`);
     }
 }
-const tedDiagnosticRouter = tedModulesByOrder.get(15);
-if (
-    tedDiagnosticRouter?.module !== 'Router'
-    || tedDiagnosticRouter?.route !== 'after module 14'
-    || tedDiagnosticRouter?.routes?.invalidTenderDiagnostic !== 'recordType = tender AND publicationNumber missing'
-    || tedDiagnosticRouter?.routes?.terminalFailureDiagnostic !== 'status != SUCCEEDED'
-    || tedModulesByOrder.get(16)?.route !== 'module 15 invalidTenderDiagnostic'
-    || tedModulesByOrder.get(17)?.route !== 'module 15 terminalFailureDiagnostic'
-    || tedModulesByOrder.get(18)?.route !== 'after module 13 when status != SUCCEEDED'
-    || tedModulesByOrder.get(19)?.route !== 'emptyDataset'
-    || tedModulesByOrder.get(20)?.route !== 'missingDataset'
-) {
-    errors.push('TED Make diagnostic routers and modules 15-20 must preserve the post-sink route topology');
-}
 const tedDestinationRetry = tedMake?.value?.errorHandlers?.destination;
 if (
-    JSON.stringify(tedDestinationRetry?.modules) !== JSON.stringify([13, 14])
-    || tedDestinationRetry?.idempotencyKeys?.module13 !== 'ted:publicationNumber'
-    || tedDestinationRetry?.idempotencyKeys?.module14 !== 'ted:run:runId:row:bundleOrder'
-    || !/module 13 with ted:<publicationNumber>/i.test(tedDestinationRetry?.requiredProof ?? '')
-    || !/module 14 with ted:run:<runId>:row:<bundleOrder>/i.test(tedDestinationRetry?.requiredProof ?? '')
+    tedDestinationRetry?.idempotencyKey !== 'module 10 recordKey'
+    || !/module 11/i.test(tedDestinationRetry?.resumeAt ?? '')
+    || !/ted:<publicationNumber>/i.test(tedDestinationRetry?.requiredProof ?? '')
+    || !/ted:run:<runId>:row:<bundleOrder>/i.test(tedDestinationRetry?.requiredProof ?? '')
 ) {
-    errors.push('TED Make destination retry must cover modules 13 and 14 with their separate stable keys and post-commit proofs');
+    errors.push('TED Make destination retry must cover module 11 with both stable key families and post-commit proofs');
 }
 const tedTerminalRoute = tedMake?.value?.terminalFailureRoute;
 if (
-    !/module 18.*module 13 persisted ted:<publicationNumber>/i.test(tedTerminalRoute?.identifiedTenderRows ?? '')
-    || !/module 17.*module 14 persisted ted:run:<runId>:row:<bundleOrder>/i.test(tedTerminalRoute?.runScopedRows ?? '')
-    || !/module 19.*zero-row dataset/i.test(tedTerminalRoute?.emptyDataset ?? '')
-    || !/module 20.*does not request dataset items/i.test(tedTerminalRoute?.missingDataset ?? '')
+    !/module 12 aggregates completed module 11 delivery writes/i.test(tedTerminalRoute?.datasetPath ?? '')
+    || !/module 12 emits an empty Array\[\]/i.test(tedTerminalRoute?.emptyDataset ?? '')
+    || !/module 15 records that no dataset request was attempted/i.test(tedTerminalRoute?.missingDataset ?? '')
 ) {
     errors.push('TED Make terminal failure routes must follow the applicable sink and use coherent diagnostic module orders');
 }
 if (!tedMake?.value?.invalidTenderRoute) errors.push('TED Make mapping missing invalid-tender diagnostic route');
-const tedMakeValidationRouter = tedMake?.value?.modules?.find((module) => module.module === 'Router' && module.routes?.identifiedTender);
-if (!tedMakeValidationRouter || /title exists/i.test(JSON.stringify(tedMakeValidationRouter.routes))) {
+if (!tedPrepare || /title exists/i.test(JSON.stringify(tedPrepare))) {
     errors.push('TED Make must accept title:null and validate tender identity only by publicationNumber');
 }
-if (!String(tedMake?.value?.nonTenderRoute ?? '').includes('persisted under deterministic')) {
+if (!/deterministic run-row keys/i.test(tedMake?.value?.nonTenderRoute ?? '')) {
     errors.push('TED Make must persist non-tender dataset records under deterministic run-row keys');
 }
 
