@@ -1,0 +1,14 @@
+{
+  "name": "bluesky-keyword-alerts",
+  "version": "0.1.0",
+  "description": "Find bounded public Bluesky keyword, handle, mention, and hashtag results through Telemark Digital's Apify Actor.",
+  "author": {
+    "name": "Telemark Digital",
+    "email": "thetelemarkdigital@gmail.com",
+    "url": "https://github.com/Telemark-Digital"
+  },
+  "homepage": "https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/plugins/bluesky-keyword-alerts",
+  "repository": "https://github.com/Telemark-Digital/apify-monitoring-workflows",
+  "license": "MIT"
+}
+
