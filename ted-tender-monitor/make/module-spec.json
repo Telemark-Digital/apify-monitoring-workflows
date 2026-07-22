@@ -2,9 +2,11 @@
   "schemaVersion": 2,
   "status": "DRAFT_NOT_IMPORTED_RUN_OR_EXPORTED_BY_MAKE",
   "scenarioName": "TED Tender Alerts from a Persistent Apify Task",
-  "architecture": "APIFY_SCHEDULE_TO_WATCH_TASK_RUNS",
+  "architecture": "APIFY_SCHEDULE_TO_HTTP_POLLING_RECONCILER",
   "scenarioSettings": {
-    "storeIncompleteExecutions": true
+    "storeIncompleteExecutions": true,
+    "processInOrder": true,
+    "schedule": "Make scenario schedule; do not overlap executions for the same Task"
   },
   "taskLaunch": {
     "owner": "Apify Schedule",
@@ -16,37 +18,159 @@
       "summaryRowsPerRun": 1,
       "datasetRetrievalLimit": 1000,
       "paginationEnabled": false,
-      "scheduleIntervalExceedsTaskTimeout": true
+      "pollRunLimit": 1000,
+      "runCheckpointKey": "ted:run:<runId>",
+      "makePollIntervalCoversRunWindow": true,
+      "scheduleIntervalExceedsTaskTimeout": true,
+      "overflowStopIfNoCheckpointBoundary": true,
+      "runOrdering": "reverse-fetched-desc-page-before-processing",
+      "pollWindowFormula": "covered_minutes = pollRunLimit * Apify Schedule interval minutes; if expected outage can exceed this, implement paginated backfill before activation",
+      "preflightExistingCheckpointRead": true,
+      "overflowStopBeforeProcessing": true,
+      "preflightModules": [
+        2,
+        3,
+        4
+      ]
     }
   },
+  "authentication": {
+    "app": "HTTP",
+    "method": "Authorization header",
+    "value": "Bearer <APIFY_TOKEN_PLACEHOLDER>",
+    "tokenScope": "Reviewed limited Apify token; do not use Make Apify connector or full-access OAuth.",
+    "exportScrub": "Remove real Authorization values from every blueprint export and screenshot."
+  },
+  "credentials": [],
   "modules": [
     {
       "order": 1,
-      "app": "Apify",
-      "module": "Watch Task Runs",
+      "app": "HTTP",
+      "module": "Make a request",
+      "label": "HTTP List Task Runs",
       "configuration": {
-        "task": "USER_SELECTS_PERSISTENT_TASK",
-        "event": "any finished Task run"
+        "method": "GET",
+        "url": "https://api.apify.com/v2/actor-tasks/{{TASK_ID}}/runs?desc=1&limit=1000&offset=0",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer <APIFY_TOKEN_PLACEHOLDER>"
+          },
+          {
+            "name": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "parseResponse": true,
+        "limit": 1000,
+        "offset": 0,
+        "desc": true
       },
-      "requiredOutputs": ["id", "status", "defaultDatasetId"]
-    },
-    {
-      "order": 2,
-      "module": "Router",
-      "routes": {
-        "datasetAvailable": "defaultDatasetId exists (all terminal statuses)",
-        "missingDataset": "defaultDatasetId does not exist"
+      "runWindow": {
+        "limit": 1000,
+        "sort": "desc from Apify; reverse the fetched page before module 5 so uncheckpointed runs are processed oldest-to-newest within the page",
+        "terminalStatuses": [
+          "SUCCEEDED",
+          "FAILED",
+          "ABORTED",
+          "TIMED-OUT"
+        ],
+        "checkpointKey": "ted:run:<runId>",
+        "officialPagination": "Apify task-runs API supports limit and offset; limit maximum is 1000.",
+        "overflowGuard": "Modules 2-4 must read pre-existing run checkpoints and stop before module 5 if module 1 returns count=1000 and no checkpointed terminal run boundary exists. This prevents silent misses after more than 1000 uncheckpointed runs."
       }
     },
     {
+      "order": 2,
+      "app": "Data store",
+      "module": "Search Records",
+      "label": "Preflight Existing Run Checkpoints",
+      "route": "after module 1 before any product or run-checkpoint write",
+      "configuration": {
+        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
+        "keyPrefix": "ted:run:",
+        "matchAgainst": "module 1 data.items[].id",
+        "readOnly": true
+      },
+      "purpose": "Read pre-existing run checkpoint keys for the fetched Task-run page before this execution can write any new run checkpoints."
+    },
+    {
       "order": 3,
-      "app": "Apify",
-      "module": "Get Dataset Items",
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "label": "Preflight Overflow Guard",
+      "route": "after module 2 before any product or run-checkpoint write",
+      "inputs": {
+        "taskRuns": "module 1 data.items[]",
+        "preExistingCheckpointKeys": "module 2 records[].key"
+      },
+      "outputs": {
+        "pageIsFull": "module 1 data.count = 1000",
+        "preExistingCheckpointBoundaryFound": "any terminal run in module 1 has key ted:run:<runId> in module 2 records[].key",
+        "reversedRuns": "module 1 data.items[] reversed oldest-to-newest within the fetched desc page",
+        "overflowStop": "pageIsFull = true AND preExistingCheckpointBoundaryFound = false"
+      },
+      "invariant": "This guard uses only checkpoints that existed before this execution writes new checkpoints."
+    },
+    {
+      "order": 4,
+      "module": "Router",
+      "label": "Overflow Guard Router",
+      "route": "after module 3 before any product or run-checkpoint write",
+      "routes": {
+        "proceed": "module 3 overflowStop = false",
+        "overflowStop": "module 3 overflowStop = true"
+      },
+      "invariant": "The overflowStop route ends with a diagnostic and must not reach module 5 or any product/run-checkpoint write. Use paginated/manual backfill before resuming."
+    },
+    {
+      "order": 5,
+      "app": "Tools",
+      "module": "Iterator",
+      "label": "Iterator - Reversed Recent Task Runs",
+      "array": "module 3 reversedRuns[]",
+      "route": "proceed"
+    },
+    {
+      "order": 6,
+      "app": "Data store",
+      "module": "Get a Record",
+      "label": "Read Run Checkpoint",
+      "configuration": {
+        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
+        "key": "ted:run:{{module 5 id}}"
+      }
+    },
+    {
+      "order": 7,
+      "module": "Router",
+      "label": "Run Checkpoint Router",
+      "routes": {
+        "datasetAvailable": "run status is terminal AND checkpoint is missing AND defaultDatasetId exists",
+        "missingDataset": "run status is terminal AND checkpoint is missing AND defaultDatasetId does not exist",
+        "alreadyCheckpointedOrNonTerminal": "checkpoint exists OR run status is not terminal"
+      }
+    },
+    {
+      "order": 8,
+      "app": "HTTP",
+      "module": "Make a request",
+      "label": "HTTP Get Dataset Items",
       "route": "datasetAvailable",
       "configuration": {
-        "datasetId": "defaultDatasetId from module 1",
-        "dataTransformation": "Clean",
-        "format": "JSON",
+        "method": "GET",
+        "url": "https://api.apify.com/v2/datasets/{{module 5 defaultDatasetId}}/items?format=json&clean=1&offset=0&limit=1000",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer <APIFY_TOKEN_PLACEHOLDER>"
+          },
+          {
+            "name": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "parseResponse": true,
         "offset": 0,
         "limit": 1000,
         "paginationEnabled": false
@@ -54,34 +178,34 @@
       "capInvariant": "This specification is intentionally non-paginated. The saved Task maxNewPerRun must be no greater than 999; the Actor appends exactly one summary control row, so 999 tender rows plus 1 summary fit the fixed retrieval limit of 1000."
     },
     {
-      "order": 4,
+      "order": 9,
       "app": "Tools",
       "module": "Array Aggregator",
       "route": "datasetAvailable",
       "configuration": {
-        "sourceModule": 3,
+        "sourceModule": 5,
         "stopProcessingAfterEmptyAggregation": false,
         "arrayOutputField": "Array[]",
-        "targetStructure": "all TED record fields required by modules 7 and 8"
+        "targetStructure": "all TED record fields required by modules 13 and 14"
       }
     },
     {
-      "order": 5,
+      "order": 10,
       "module": "Router",
       "routes": {
-        "recordsPresent": "length(module 4 Array[]) > 0",
-        "quiet": "length(module 4 Array[]) = 0"
+        "recordsPresent": "length(module 9 Array[]) > 0",
+        "emptyDataset": "length(module 9 Array[]) = 0"
       }
     },
     {
-      "order": 6,
+      "order": 11,
       "app": "Tools",
       "module": "Iterator",
       "route": "recordsPresent",
-      "array": "module 4 Array[]"
+      "array": "module 9 Array[]"
     },
     {
-      "order": 7,
+      "order": 12,
       "module": "Router",
       "routes": {
         "identifiedTender": "recordType = tender AND publicationNumber exists",
@@ -89,140 +213,190 @@
       }
     },
     {
-      "order": 8,
+      "order": 13,
       "app": "Data store",
       "module": "Add/Replace a Record",
       "route": "identifiedTender",
       "configuration": {
         "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
-        "key": "ted:{{module 6 publicationNumber}}",
+        "key": "ted:{{module 11 publicationNumber}}",
         "overwriteExistingRecord": true,
         "record": {
           "product": "ted",
           "sourceId": "publicationNumber",
           "sourceUrl": "links.html",
-          "title": "display only: title when non-empty, otherwise Tender <publicationNumber>",
+          "title": "displayTitle",
           "observedAt": "firstSeenAt",
-          "payloadJson": "JSON string of the original dataset record; title:null remains null here"
+          "payloadJson": "original dataset record; title:null remains null here"
         }
       },
       "idempotencyKey": "ted:publicationNumber",
       "nativeIdempotency": "Add/Replace with overwrite enabled leaves exactly one record for the stable key, including after an ambiguous retry.",
       "normalizedOutput": {
         "publicationNumber": "publicationNumber",
-        "publicationDate": "publicationDate",
         "noticeType": "noticeType",
-        "isChangeNotice": "isChangeNotice",
-        "modifiesPublicationNumber": "modifiesPublicationNumber",
-        "title": "title (string or null, preserved)",
-        "displayTitle": "title when non-empty; otherwise Tender <publicationNumber>",
-        "buyerName": "buyerName",
-        "buyerCountry": "buyerCountry",
-        "cpvCodes": "cpvCodes[]",
-        "estimatedValueEur": "estimatedValueEur",
-        "valueUnknown": "valueUnknown",
-        "deadlineDate": "deadlineDate",
+        "title": "string or null, preserved",
+        "displayTitle": "title or Tender <publicationNumber>",
         "links": {
           "html": "links.html",
           "pdf": "links.pdf",
           "xml": "links.xml"
-        },
-        "firstSeenAt": "firstSeenAt"
+        }
       }
     },
     {
-      "order": 9,
+      "order": 14,
       "app": "Data store",
       "module": "Add/Replace a Record",
       "route": "runScopedRecord",
       "configuration": {
         "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
-        "key": "ted:run:{{module 1 id}}:row:{{module 6 bundle order}}",
+        "key": "ted:run:{{module 5 id}}:row:{{module 11 bundle order}}",
         "overwriteExistingRecord": true,
         "record": {
-          "product": "ted",
-          "sourceId": "run ID plus Iterator bundle order",
-          "sourceUrl": "links.html when present",
-          "title": "display only: Tender <publicationNumber> or TED <recordType> record",
-          "observedAt": "firstSeenAt or completedAt",
-          "payloadJson": "JSON string of the original dataset record; title:null remains null here"
+          "product": "ted-run",
+          "sourceId": "module 5 id row bundle order",
+          "sourceUrl": "Apify Task run URL when available",
+          "title": "Run-scoped TED record",
+          "observedAt": "firstSeenAt or now",
+          "payloadJson": "original dataset record; title:null remains null here"
         }
       },
       "idempotencyKey": "ted:run:runId:row:bundleOrder",
-      "nativeIdempotency": "Add/Replace with overwrite enabled leaves exactly one record for the deterministic run-row key, including after an ambiguous retry."
+      "nativeIdempotency": "Add/Replace with overwrite enabled leaves exactly one record for the stable run-row key, including after an ambiguous retry."
     },
     {
-      "order": 10,
+      "order": 15,
       "module": "Router",
-      "route": "after module 9",
+      "route": "after module 14",
       "routes": {
         "invalidTenderDiagnostic": "recordType = tender AND publicationNumber missing",
         "terminalFailureDiagnostic": "status != SUCCEEDED"
       }
     },
     {
-      "order": 11,
+      "order": 16,
       "app": "Tools",
       "module": "Set Multiple Variables",
-      "route": "module 10 invalidTenderDiagnostic",
-      "purpose": "Record that the malformed tender was persisted under its deterministic run-row fallback key but is not exposed as a tender.",
-      "fields": ["Make execution ID", "Task run ID", "fallback delivery key", "missing publicationNumber", "record persisted = true", "timestamp"]
+      "route": "module 15 invalidTenderDiagnostic",
+      "purpose": "Report the fallback key and that the malformed tender was persisted but is not exposed.",
+      "fields": [
+        "Make execution ID",
+        "Task run ID",
+        "fallback key",
+        "missing publicationNumber",
+        "record persisted = true",
+        "timestamp"
+      ]
     },
     {
-      "order": 12,
+      "order": 17,
       "app": "Tools",
       "module": "Set Multiple Variables",
-      "route": "module 10 terminalFailureDiagnostic",
-      "purpose": "Report the non-success terminal status only after module 9 persisted the run-scoped TED dataset row.",
-      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId", "fallback delivery key", "record persisted = true", "timestamp"]
+      "route": "module 15 terminalFailureDiagnostic",
+      "purpose": "Report terminal status after module 14 persisted the run-scoped row.",
+      "fields": [
+        "Make execution ID",
+        "Task run ID",
+        "Task run status",
+        "run-scoped key",
+        "record persisted = true",
+        "timestamp"
+      ]
     },
     {
-      "order": 13,
+      "order": 18,
       "app": "Tools",
       "module": "Set Multiple Variables",
-      "route": "after module 8 when status != SUCCEEDED",
-      "purpose": "Report the non-success terminal status only after the identified TED tender has been idempotently persisted.",
-      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId", "delivery key", "record persisted = true", "timestamp"]
+      "route": "after module 13 when status != SUCCEEDED",
+      "purpose": "Report terminal status after module 13 persisted the identified tender.",
+      "fields": [
+        "Make execution ID",
+        "Task run ID",
+        "Task run status",
+        "identified tender key",
+        "record persisted = true",
+        "timestamp"
+      ]
     },
     {
-      "order": 14,
+      "order": 19,
       "app": "Tools",
       "module": "Set Multiple Variables",
-      "route": "quiet when status != SUCCEEDED",
-      "purpose": "Report a non-success terminal run whose fetched dataset contains no rows; no destination write is attempted.",
-      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId", "dataset record count = 0", "timestamp"]
+      "route": "emptyDataset",
+      "purpose": "Report a fetched zero-row dataset.",
+      "fields": [
+        "Make execution ID",
+        "Task run ID",
+        "Task run status",
+        "defaultDatasetId",
+        "dataset record count = 0",
+        "timestamp"
+      ]
     },
     {
-      "order": 15,
+      "order": 20,
       "app": "Tools",
       "module": "Set Multiple Variables",
       "route": "missingDataset",
       "purpose": "Report any terminal run without a defaultDatasetId and end safely without requesting dataset items.",
-      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId = null", "dataset request attempted = false", "timestamp"]
+      "fields": [
+        "Make execution ID",
+        "Task run ID",
+        "Task run status",
+        "defaultDatasetId = null",
+        "dataset request attempted = false",
+        "timestamp"
+      ]
+    },
+    {
+      "order": 21,
+      "app": "Data store",
+      "module": "Add/Replace a Record",
+      "label": "Write Run Checkpoint",
+      "route": "after all uncheckpointed terminal branches finish row persistence and diagnostics",
+      "configuration": {
+        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
+        "key": "ted:run:{{module 5 id}}",
+        "overwriteExistingRecord": true,
+        "record": {
+          "product": "ted-run",
+          "sourceId": "module 5 id",
+          "sourceUrl": "Apify Task run URL when available",
+          "title": "Task run checkpoint",
+          "observedAt": "module 5 finishedAt or now",
+          "payloadJson": "JSON string of run id, status, defaultDatasetId, processedAt, and row counts"
+        }
+      },
+      "idempotencyKey": "ted:run:runId",
+      "checkpointInvariant": "Write this checkpoint only after all product row upserts and diagnostics for the run have completed. If Make fails before this module, the next poll must replay the run idempotently."
     }
   ],
   "terminalFailureRoute": {
-    "identifiedTenderRows": "module 13 runs after module 8 persisted ted:<publicationNumber>",
-    "runScopedRows": "module 12 runs from module 10 after module 9 persisted ted:run:<runId>:row:<bundleOrder>",
-    "emptyDataset": "module 14 reports the fetched zero-row dataset",
-    "missingDataset": "module 15 does not request dataset items",
-    "then": "end each instant-triggered branch successfully after exposing the terminal failure diagnostic; do not throw an error that could disable the scenario"
+    "identifiedTenderRows": "module 18 after module 13 persisted ted:<publicationNumber>",
+    "runScopedRows": "module 17 after module 14 persisted ted:run:<runId>:row:<bundleOrder>",
+    "emptyDataset": "module 19 reports the fetched zero-row dataset",
+    "missingDataset": "module 20 does not request dataset items",
+    "then": "write module 21 run checkpoint last; do not throw an error that could disable the scenario"
   },
-  "invalidTenderRoute": {
-    "source": "module 10 invalidTenderDiagnostic after module 9 run-scoped persistence",
-    "module": 11,
-    "then": "record the missing publicationNumber and fallback key; do not expose the malformed row as a tender"
-  },
-  "nonTenderRoute": "Prime and summary records are persisted under deterministic ted:run:<runId>:row:<bundleOrder> keys but are not exposed as tenders.",
+  "invalidTenderRoute": "Tender-shaped records without publicationNumber are persisted under deterministic run-scoped keys and reported as diagnostics; they are not exposed as identified tenders.",
+  "nonTenderRoute": "Summary and other non-tender dataset records are persisted under deterministic run-row keys.",
   "errorHandlers": {
-    "scenario": "Set Store incomplete executions to Yes.",
+    "scenario": "Set Store incomplete executions to Yes and process in order/no overlap.",
+    "listTaskRuns": {
+      "handler": "Retry",
+      "automaticCompletion": true,
+      "maximumAttempts": 3,
+      "delayMinutes": 15,
+      "resumeAt": "module 1",
+      "never": "rerun the Apify Task"
+    },
     "getDatasetItems": {
       "handler": "Retry",
       "automaticCompletion": true,
       "maximumAttempts": 3,
       "delayMinutes": 15,
-      "resumeAt": "module 3 with the same defaultDatasetId",
-      "temporaryErrors": "ConnectionError, RateLimitError, and ModuleTimeoutError use Make's automatic exponential-backoff schedule; other errors captured by Retry use the configured 3 attempts at 15-minute intervals.",
+      "resumeAt": "module 8 with the same defaultDatasetId",
       "never": "rerun the Apify Task"
     },
     "destination": {
@@ -230,25 +404,43 @@
       "automaticCompletion": true,
       "maximumAttempts": 3,
       "delayMinutes": 15,
-      "modules": [8, 9],
-      "resumeAt": "the failed Data store module with the same dataset bundle",
+      "modules": [
+        13,
+        14
+      ],
       "idempotencyKeys": {
-        "module8": "ted:publicationNumber",
-        "module9": "ted:run:runId:row:bundleOrder"
+        "module13": "ted:publicationNumber",
+        "module14": "ted:run:runId:row:bundleOrder"
       },
-      "requiredProof": "Inject a timeout after each Data store commit, retry module 8 with ted:<publicationNumber> and module 9 with ted:run:<runId>:row:<bundleOrder>, and verify exactly one record exists for each stable product-prefixed key."
+      "resumeAt": "failed Data store module with the same dataset bundle",
+      "requiredProof": "Inject a timeout after each Data store commit; prove exactly one record for module 13 with ted:<publicationNumber> and module 14 with ted:run:<runId>:row:<bundleOrder>."
     },
-    "quiet": "Succeed with no destination operation."
+    "runCheckpoint": {
+      "handler": "Retry",
+      "automaticCompletion": true,
+      "maximumAttempts": 3,
+      "delayMinutes": 15,
+      "idempotencyKey": "ted:run:runId",
+      "requiredProof": "Run checkpoint is written last; duplicate polls leave exactly one checkpoint."
+    },
+    "preflightCheckpointSearch": {
+      "handler": "Retry",
+      "automaticCompletion": true,
+      "maximumAttempts": 3,
+      "delayMinutes": 15,
+      "resumeAt": "module 2 before any product or run-checkpoint write",
+      "never": "write product rows or run checkpoints before preflight succeeds"
+    }
   },
-  "credentials": [],
   "publicationGate": [
-    "Build in a user-owned Make account, confirm saved Task maxNewPerRun is no greater than 999 so 999 tender rows plus the Actor's one summary control row fit the fixed non-paginated retrieval limit of 1000, and set Store incomplete executions to Yes.",
-    "Run tender, quiet, prime/summary, invalid-tender, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, dataset-retry, and Data-store-retry tests; prove module 8 writes only ted:<publicationNumber> and module 9 writes only ted:run:<runId>:row:<bundleOrder>, both with overwrite enabled.",
-    "Inject a post-commit timeout independently at modules 8 and 9 and prove retry leaves exactly one record for each route's stable key without rerunning the Apify Task.",
+    "Build in a user-owned Make account, configure the scenario schedule, confirm maxNewPerRun is no greater than 999, and set Store incomplete executions to Yes plus process-in-order/no-overlap behavior.",
+    "Use HTTP polling, not the Make Apify connector: list recent Task runs with desc=1&limit=1000&offset=0, reverse the fetched page before processing, skip checkpointed run IDs, stop loudly if a full 1000-run page has no checkpoint boundary, and fetch dataset items with the fixed non-paginated retrieval limit of 1000.",
+    "Prove the reviewed limited Apify token can list Task runs and fetch default dataset items; scrub Authorization headers, Task IDs, data-store IDs, execution data, and sample payloads from exports.",
+    "Run non-empty, quiet, invalid-record, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, duplicate-poll replay, dataset-retry, run-window, preflight overflow-stop using only pre-existing checkpoint keys, run-checkpoint, and Data-store-retry tests; inject a post-commit timeout and prove exactly one record for the product key and exactly one run checkpoint exist for the stable keys.",
+    "Confirm module 13 writes only ted:<publicationNumber>, module 14 writes only ted:run:<runId>:row:<bundleOrder>, and post-commit timeout independently at modules 13 and 14.",
     "Export and scrub the candidate blueprint.",
     "Import that exact file into a fresh empty validation organization/team or clean account.",
-    "Reconnect credentials, save and activate the scenario, and verify Make recreated the Task-scoped Watch Task Runs webhook.",
-    "Repeat tender, quiet, prime/summary, invalid-tender, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, dataset-retry, and both module 8 and module 9 Data-store-retry tests after exact-file import, including exactly one record for each key after its post-commit timeout.",
+    "Reconnect the limited HTTP credential/header placeholder, save and activate only for validation, then repeat the full matrix after exact-file import.",
     "Obtain independent validator PASS and separate adversarial PASS before publication."
   ]
 }
