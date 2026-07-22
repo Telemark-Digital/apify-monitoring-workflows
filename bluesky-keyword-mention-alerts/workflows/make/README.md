@@ -26,7 +26,7 @@ Keep `maxRunsPerScenarioExecution` at `1` for the publication template. Normal c
 
 | Order | Make module or control | Configuration |
 | --- | --- | --- |
-| 1 | HTTP - Make a request | List Task runs: `GET https://api.apify.com/v2/actor-tasks/{{TASK_ID}}/runs?desc=1&limit=1000&offset=0` with the scrubbed Authorization placeholder. |
+| 1 | HTTP - Make a request | List terminal Task runs: `GET https://api.apify.com/v2/actor-tasks/{{TASK_ID}}/runs?desc=1&limit=1000&offset=0&status=SUCCEEDED,FAILED,ABORTED,TIMED-OUT` with the scrubbed Authorization placeholder. |
 | 2 | Data store - Get a Record | Read exact cursor key `bluesky:cursor:{{TASK_ID}}`. The cursor record stores the last processed run ID in `sourceId`. Do not use Search Records or key-prefix filtering. |
 | 3 | Tools - Set Multiple Variables | Compute `cursorExists`, `cursorPrimingStop`, `cursorBoundaryMissing`, `overflowStop`, and up to one `reversedRuns[]` entry because `maxRunsPerScenarioExecution=1`. First activation must prime the cursor unless an intentional bounded backfill is documented. |
 | 4 | Router | Proceed when `overflowStop=false`. Stop on missing first-run cursor or missing cursor boundary; end with a diagnostic and do not reach module 5 or any write. |
@@ -36,7 +36,8 @@ Keep `maxRunsPerScenarioExecution` at `1` for the publication template. Normal c
 | 8 | HTTP - Make a request | Dataset-available route. Fetch `{{module 5 defaultDatasetId}}` items as clean JSON with offset `0`, fixed limit `100`, and pagination disabled. |
 | 9 | Tools - Iterator | Split module 8 parsed JSON array into one dataset-item bundle per row. |
 | 10 | Tools - Set Multiple Variables | Prepare one delivery record per Bluesky row. Valid rows use `bluesky:<postUri>` from `uri`; invalid rows use `bluesky:run:<runId>:row:<bundleOrder>` and sanitized diagnostics. |
-| 11 | Data store - Add/Replace a Record | Module 11 writes every prepared delivery record. Key `{{module 10 recordKey}}`; **Overwrite an existing record = Yes**; map the module 10 record fields into the shared monitor-deliveries structure. |
+| 10a / 17 | JSON - Transform to JSON | Serialize the module 10 normalized output plus Task run status, defaultDatasetId, validity, row bundle order, and sanitized diagnostics. Module 11 stores this module's `json` output as `payloadJson`. |
+| 11 | Data store - Add/Replace a Record | Module 11 writes every prepared delivery record. Key `{{module 10 recordKey}}`; **Overwrite an existing record = Yes**; map the module 10 record fields and module 17 `json` output into the shared monitor-deliveries structure. |
 | 12 | Tools - Array Aggregator | Source module `11`; **Stop processing after an empty aggregation = No**. This module 12 aggregates completed module 11 writes and emits Make's `Array[]`. It is the cursor completion barrier. |
 | 13 | Tools - Set Multiple Variables | Dataset outcome after module 12. Record Task run status, defaultDatasetId, attempted dataset rows, completed delivery writes, valid product row count, diagnostic/run-scoped row count, and timestamp. Set `cursorWriteAllowed=true` only when `completedDeliveryWrites equals attemptedDatasetRows` and module 11 has zero incomplete executions. |
 | 14 | Data store - Add/Replace a Record | Dataset-run cursor. Write `bluesky:cursor:{{TASK_ID}}` only after module 13 when `cursorWriteAllowed=true`. |
@@ -47,7 +48,7 @@ Valid Bluesky records preserve `uri`, `url`, author handle/display name, text, c
 
 ## Failure and retry routes
 
-- Non-`SUCCEEDED` run with a dataset ID: module 8 fetches it, module 10 prepares every row, module 11 writes every prepared delivery record, module 12 aggregates completed module 11 writes, module 13 verifies `completedDeliveryWrites equals attemptedDatasetRows` with zero module 11 incomplete executions, and module 14 writes the cursor only when that guard passes.
+- Non-`SUCCEEDED` run with a dataset ID: module 8 fetches it, module 10 prepares every row, module 17 serializes each payload, module 11 writes every prepared delivery record, module 12 aggregates completed module 11 writes, module 13 verifies `completedDeliveryWrites equals attemptedDatasetRows` with zero module 11 incomplete executions, and module 14 writes the cursor only when that guard passes.
 - Empty dataset: module 12 emits an empty `Array[]`, module 13 records zero completed delivery writes, and module 14 writes the cursor.
 - Missing dataset ID: module 15 records that no dataset request was attempted, and module 16 writes the cursor without requesting dataset items.
 - Scenario settings: set **Store incomplete executions = Yes** and process in order / no overlap.
