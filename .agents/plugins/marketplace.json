@@ -1,0 +1,44 @@
+{
+  "name": "telemark-digital-apify",
+  "interface": {
+    "displayName": "Telemark Digital Apify"
+  },
+  "plugins": [
+    {
+      "name": "bluesky-keyword-alerts",
+      "source": {
+        "source": "local",
+        "path": "./plugins/bluesky-keyword-alerts"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "rss-keyword-monitor",
+      "source": {
+        "source": "local",
+        "path": "./plugins/rss-keyword-monitor"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "ted-tender-monitor",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ted-tender-monitor"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
