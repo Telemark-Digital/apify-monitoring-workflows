@@ -1,0 +1,14 @@
+{
+  "name": "ted-tender-monitor",
+  "version": "0.1.0",
+  "description": "Preview EU procurement notices from TED through Telemark Digital's Apify Actor.",
+  "author": {
+    "name": "Telemark Digital",
+    "email": "thetelemarkdigital@gmail.com",
+    "url": "https://github.com/Telemark-Digital"
+  },
+  "homepage": "https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/plugins/ted-tender-monitor",
+  "repository": "https://github.com/Telemark-Digital/apify-monitoring-workflows",
+  "license": "MIT"
+}
+
