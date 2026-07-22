@@ -21,7 +21,7 @@ The user supplies these values outside the public workflow files:
 Two launch profiles satisfy this contract:
 
 - n8n: an n8n schedule starts the workflow, which runs the persistent Task.
-- Make: an Apify Schedule runs the persistent Task; **Watch Task Runs** starts the Make scenario for every finished run of that Task. The Apify Schedule interval must be strictly longer than the saved Task's configured hard timeout.
+- Make: an Apify Schedule runs the persistent Task; a Make scenario schedule polls recent Task runs over HTTP, skips checkpointed run IDs, fetches default dataset items, writes product rows, and writes the run checkpoint last. The Apify Schedule interval must be strictly longer than the saved Task's configured hard timeout.
 
 The Actor's Task-state lease is the mutual-exclusion mechanism: a contender stops before delivery or charging. The longer schedule interval is a separate cadence guard that reduces contention; it is not itself a lock.
 
