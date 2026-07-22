@@ -2,9 +2,11 @@
   "schemaVersion": 2,
   "status": "DRAFT_NOT_IMPORTED_RUN_OR_EXPORTED_BY_MAKE",
   "scenarioName": "RSS Keyword Alerts from a Persistent Apify Task",
-  "architecture": "APIFY_SCHEDULE_TO_WATCH_TASK_RUNS",
+  "architecture": "APIFY_SCHEDULE_TO_HTTP_POLLING_RECONCILER",
   "scenarioSettings": {
-    "storeIncompleteExecutions": true
+    "storeIncompleteExecutions": true,
+    "processInOrder": true,
+    "schedule": "Make scenario schedule; do not overlap executions for the same Task"
   },
   "taskLaunch": {
     "owner": "Apify Schedule",
@@ -15,45 +17,167 @@
       "maxItemsPerRunAtMost": 200,
       "datasetRetrievalLimit": 200,
       "paginationEnabled": false,
-      "scheduleIntervalExceedsTaskTimeout": true
+      "pollRunLimit": 1000,
+      "runCheckpointKey": "rss:run:<runId>",
+      "makePollIntervalCoversRunWindow": true,
+      "scheduleIntervalExceedsTaskTimeout": true,
+      "overflowStopIfNoCheckpointBoundary": true,
+      "runOrdering": "reverse-fetched-desc-page-before-processing",
+      "pollWindowFormula": "covered_minutes = pollRunLimit * Apify Schedule interval minutes; if expected outage can exceed this, implement paginated backfill before activation",
+      "preflightExistingCheckpointRead": true,
+      "overflowStopBeforeProcessing": true,
+      "preflightModules": [
+        2,
+        3,
+        4
+      ]
     }
   },
+  "authentication": {
+    "app": "HTTP",
+    "method": "Authorization header",
+    "value": "Bearer <APIFY_TOKEN_PLACEHOLDER>",
+    "tokenScope": "Reviewed limited Apify token; do not use Make Apify connector or full-access OAuth.",
+    "exportScrub": "Remove real Authorization values from every blueprint export and screenshot."
+  },
+  "credentials": [],
   "modules": [
     {
       "order": 1,
-      "app": "Apify",
-      "module": "Watch Task Runs",
+      "app": "HTTP",
+      "module": "Make a request",
+      "label": "HTTP List Task Runs",
       "configuration": {
-        "task": "USER_SELECTS_PERSISTENT_TASK",
-        "event": "any finished Task run"
+        "method": "GET",
+        "url": "https://api.apify.com/v2/actor-tasks/{{TASK_ID}}/runs?desc=1&limit=1000&offset=0",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer <APIFY_TOKEN_PLACEHOLDER>"
+          },
+          {
+            "name": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "parseResponse": true,
+        "limit": 1000,
+        "offset": 0,
+        "desc": true
       },
-      "requiredOutputs": ["id", "status", "defaultDatasetId"]
-    },
-    {
-      "order": 2,
-      "module": "Router",
-      "routes": {
-        "datasetAvailable": "defaultDatasetId exists (all terminal statuses)",
-        "missingDataset": "defaultDatasetId does not exist"
+      "runWindow": {
+        "limit": 1000,
+        "sort": "desc from Apify; reverse the fetched page before module 5 so uncheckpointed runs are processed oldest-to-newest within the page",
+        "terminalStatuses": [
+          "SUCCEEDED",
+          "FAILED",
+          "ABORTED",
+          "TIMED-OUT"
+        ],
+        "checkpointKey": "rss:run:<runId>",
+        "officialPagination": "Apify task-runs API supports limit and offset; limit maximum is 1000.",
+        "overflowGuard": "Modules 2-4 must read pre-existing run checkpoints and stop before module 5 if module 1 returns count=1000 and no checkpointed terminal run boundary exists. This prevents silent misses after more than 1000 uncheckpointed runs."
       }
     },
     {
+      "order": 2,
+      "app": "Data store",
+      "module": "Search Records",
+      "label": "Preflight Existing Run Checkpoints",
+      "route": "after module 1 before any product or run-checkpoint write",
+      "configuration": {
+        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
+        "keyPrefix": "rss:run:",
+        "matchAgainst": "module 1 data.items[].id",
+        "readOnly": true
+      },
+      "purpose": "Read pre-existing run checkpoint keys for the fetched Task-run page before this execution can write any new run checkpoints."
+    },
+    {
       "order": 3,
-      "app": "Apify",
-      "module": "Get Dataset Items",
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "label": "Preflight Overflow Guard",
+      "route": "after module 2 before any product or run-checkpoint write",
+      "inputs": {
+        "taskRuns": "module 1 data.items[]",
+        "preExistingCheckpointKeys": "module 2 records[].key"
+      },
+      "outputs": {
+        "pageIsFull": "module 1 data.count = 1000",
+        "preExistingCheckpointBoundaryFound": "any terminal run in module 1 has key rss:run:<runId> in module 2 records[].key",
+        "reversedRuns": "module 1 data.items[] reversed oldest-to-newest within the fetched desc page",
+        "overflowStop": "pageIsFull = true AND preExistingCheckpointBoundaryFound = false"
+      },
+      "invariant": "This guard uses only checkpoints that existed before this execution writes new checkpoints."
+    },
+    {
+      "order": 4,
+      "module": "Router",
+      "label": "Overflow Guard Router",
+      "route": "after module 3 before any product or run-checkpoint write",
+      "routes": {
+        "proceed": "module 3 overflowStop = false",
+        "overflowStop": "module 3 overflowStop = true"
+      },
+      "invariant": "The overflowStop route ends with a diagnostic and must not reach module 5 or any product/run-checkpoint write. Use paginated/manual backfill before resuming."
+    },
+    {
+      "order": 5,
+      "app": "Tools",
+      "module": "Iterator",
+      "label": "Iterator - Reversed Recent Task Runs",
+      "array": "module 3 reversedRuns[]",
+      "route": "proceed"
+    },
+    {
+      "order": 6,
+      "app": "Data store",
+      "module": "Get a Record",
+      "label": "Read Run Checkpoint",
+      "configuration": {
+        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
+        "key": "rss:run:{{module 5 id}}"
+      }
+    },
+    {
+      "order": 7,
+      "module": "Router",
+      "label": "Run Checkpoint Router",
+      "routes": {
+        "datasetAvailable": "run status is terminal AND checkpoint is missing AND defaultDatasetId exists",
+        "missingDataset": "run status is terminal AND checkpoint is missing AND defaultDatasetId does not exist",
+        "alreadyCheckpointedOrNonTerminal": "checkpoint exists OR run status is not terminal"
+      }
+    },
+    {
+      "order": 8,
+      "app": "HTTP",
+      "module": "Make a request",
+      "label": "HTTP Get Dataset Items",
       "route": "datasetAvailable",
       "configuration": {
-        "datasetId": "defaultDatasetId from module 1",
-        "dataTransformation": "Clean",
-        "format": "JSON",
+        "method": "GET",
+        "url": "https://api.apify.com/v2/datasets/{{module 5 defaultDatasetId}}/items?format=json&clean=1&offset=0&limit=200",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer <APIFY_TOKEN_PLACEHOLDER>"
+          },
+          {
+            "name": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "parseResponse": true,
         "offset": 0,
         "limit": 200,
         "paginationEnabled": false
       },
-      "capInvariant": "This specification is intentionally non-paginated. The saved Task maxItemsPerRun must be no greater than 200 so the fixed retrieval limit of 200 returns every delivered item."
+      "capInvariant": "This specification is intentionally non-paginated. The saved Task maxItemsPerRun must be no greater than 200 for this product-specific retrieval window."
     },
     {
-      "order": 4,
+      "order": 9,
       "module": "Router",
       "routes": {
         "validRecord": "itemKey exists AND feedUrl exists AND isNew = true",
@@ -61,141 +185,175 @@
       }
     },
     {
-      "order": 5,
+      "order": 10,
       "app": "Tools",
       "module": "Array Aggregator",
       "route": "validRecord",
       "configuration": {
-        "sourceModule": 3,
+        "sourceModule": 5,
         "stopProcessingAfterEmptyAggregation": false,
         "arrayOutputField": "Array[]",
         "targetStructure": "itemKey, feedUrl, feedTitle, title, link, publishedAt, firstSeenAt, matchedTerms, isNew"
       }
     },
     {
-      "order": 6,
+      "order": 11,
       "module": "Router",
       "routes": {
-        "newItems": "length(module 5 Array[]) > 0",
-        "quiet": "length(module 5 Array[]) = 0"
+        "newItems": "length(module 10 Array[]) > 0",
+        "quiet": "length(module 10 Array[]) = 0"
       }
-    },
-    {
-      "order": 7,
-      "app": "Tools",
-      "module": "Set Multiple Variables",
-      "route": "newItems",
-      "configuration": {
-        "variableLifetime": "one execution",
-        "variables": {
-          "hasNewItems": true,
-          "newItemCount": "length(module 5 Array[])",
-          "items": "module 5 Array[]"
-        }
-      },
-      "outputEnvelope": {
-        "hasNewItems": true,
-        "newItemCount": "length(module 5 Array[])",
-        "items": "module 5 Array[]"
-      }
-    },
-    {
-      "order": 8,
-      "app": "Tools",
-      "module": "Set Multiple Variables",
-      "route": "quiet",
-      "configuration": {
-        "variableLifetime": "one execution",
-        "variables": {
-          "hasNewItems": false,
-          "newItemCount": 0,
-          "items": []
-        }
-      },
-      "outputEnvelope": {
-        "hasNewItems": false,
-        "newItemCount": 0,
-        "items": []
-      }
-    },
-    {
-      "order": 9,
-      "app": "Tools",
-      "module": "Iterator",
-      "route": "newItems",
-      "requiredWhen": "module 10 per-item destination is present",
-      "array": "module 5 Array[]"
-    },
-    {
-      "order": 10,
-      "app": "Data store",
-      "module": "Add/Replace a Record",
-      "route": "newItems after module 9 Iterator",
-      "configuration": {
-        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
-        "key": "rss:{{encodeURL(module 9 feedUrl)}}:{{encodeURL(module 9 itemKey)}}",
-        "overwriteExistingRecord": true,
-        "record": {
-          "product": "rss",
-          "sourceId": "itemKey",
-          "sourceUrl": "link",
-          "title": "title",
-          "observedAt": "firstSeenAt",
-          "payloadJson": "JSON string of the RSS item bundle"
-        }
-      },
-      "idempotencyKey": "rss:encodeURL(feedUrl):encodeURL(itemKey)",
-      "nativeIdempotency": "Add/Replace with overwrite enabled leaves exactly one record for the stable key, including after an ambiguous retry.",
-      "fields": ["itemKey", "feedUrl", "feedTitle", "title", "link", "publishedAt", "firstSeenAt", "matchedTerms", "isNew"]
-    },
-    {
-      "order": 11,
-      "app": "Tools",
-      "module": "Set Multiple Variables",
-      "route": "invalidRecord",
-      "purpose": "Credential-free diagnostic visible in Make execution history; end this branch successfully.",
-      "fields": ["Task run ID", "itemKey when present", "feedUrl when present", "missing or invalid field names", "timestamp"]
     },
     {
       "order": 12,
       "app": "Tools",
       "module": "Set Multiple Variables",
-      "route": "after module 10 when status != SUCCEEDED",
-      "purpose": "Report the non-success terminal status only after the committed RSS item bundle has been idempotently persisted.",
-      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId", "delivery key", "record persisted = true", "timestamp"]
+      "route": "newItems",
+      "purpose": "Expose the true RSS output envelope before per-item writes.",
+      "outputEnvelope": {
+        "hasNewItems": true,
+        "newItemCount": "length(module 10 Array[])",
+        "items": "module 10 Array[]"
+      }
     },
     {
       "order": 13,
       "app": "Tools",
-      "module": "Set Multiple Variables",
-      "route": "quiet when status != SUCCEEDED",
-      "purpose": "Report a non-success terminal run whose fetched dataset contains no valid rows; no destination write is attempted.",
-      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId", "dataset record count = 0", "timestamp"]
+      "module": "Iterator",
+      "route": "newItems",
+      "array": "module 10 Array[]"
     },
     {
       "order": 14,
+      "app": "Data store",
+      "module": "Add/Replace a Record",
+      "route": "module 13 Iterator valid RSS item",
+      "configuration": {
+        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
+        "key": "rss:{{encodeURL(module 13 feedUrl)}}:{{encodeURL(module 13 itemKey)}}",
+        "overwriteExistingRecord": true,
+        "record": {
+          "product": "rss",
+          "sourceId": "itemKey",
+          "sourceUrl": "link or feedUrl",
+          "title": "title or feedTitle",
+          "observedAt": "firstSeenAt",
+          "payloadJson": "JSON string of normalizedOutput"
+        }
+      },
+      "idempotencyKey": "rss:encodeURL(feedUrl):encodeURL(itemKey)",
+      "nativeIdempotency": "Add/Replace with overwrite enabled leaves exactly one record for the stable key, including after an ambiguous retry."
+    },
+    {
+      "order": 15,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "invalidRecord",
+      "purpose": "Credential-free diagnostic visible in Make execution history; end this branch successfully.",
+      "fields": [
+        "Task run ID",
+        "feedUrl when present",
+        "itemKey when present",
+        "missing or invalid field names",
+        "timestamp"
+      ]
+    },
+    {
+      "order": 16,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "after module 14 when status != SUCCEEDED",
+      "purpose": "Report non-success terminal status only after the RSS item has been idempotently persisted.",
+      "fields": [
+        "Make execution ID",
+        "Task ID",
+        "Task run ID",
+        "Task run status",
+        "defaultDatasetId",
+        "delivery key",
+        "record persisted = true",
+        "timestamp"
+      ]
+    },
+    {
+      "order": 17,
+      "app": "Tools",
+      "module": "Set Multiple Variables",
+      "route": "quiet",
+      "purpose": "Return a false envelope for a terminal run whose fetched dataset contains no rows.",
+      "outputEnvelope": {
+        "hasNewItems": false,
+        "newItemCount": 0,
+        "items": []
+      },
+      "fields": [
+        "Task run ID",
+        "Task run status",
+        "dataset record count = 0",
+        "timestamp"
+      ]
+    },
+    {
+      "order": 18,
       "app": "Tools",
       "module": "Set Multiple Variables",
       "route": "missingDataset",
       "purpose": "Report any terminal run without a defaultDatasetId and end safely without requesting dataset items.",
-      "fields": ["Make execution ID", "Task ID", "Task run ID", "Task run status", "defaultDatasetId = null", "dataset request attempted = false", "timestamp"]
+      "fields": [
+        "Make execution ID",
+        "Task ID",
+        "Task run ID",
+        "Task run status",
+        "defaultDatasetId = null",
+        "dataset request attempted = false",
+        "timestamp"
+      ]
+    },
+    {
+      "order": 19,
+      "app": "Data store",
+      "module": "Add/Replace a Record",
+      "label": "Write Run Checkpoint",
+      "route": "after all uncheckpointed terminal branches finish row persistence and diagnostics",
+      "configuration": {
+        "dataStore": "USER_SELECTS_SHARED_MONITOR_DELIVERIES_STORE",
+        "key": "rss:run:{{module 5 id}}",
+        "overwriteExistingRecord": true,
+        "record": {
+          "product": "rss-run",
+          "sourceId": "module 5 id",
+          "sourceUrl": "Apify Task run URL when available",
+          "title": "Task run checkpoint",
+          "observedAt": "module 5 finishedAt or now",
+          "payloadJson": "JSON string of run id, status, defaultDatasetId, processedAt, and row counts"
+        }
+      },
+      "idempotencyKey": "rss:run:runId",
+      "checkpointInvariant": "Write this checkpoint only after all product row upserts and diagnostics for the run have completed. If Make fails before this module, the next poll must replay the run idempotently."
     }
   ],
   "terminalFailureRoute": {
-    "datasetWithRows": "module 12 runs after module 10 persisted the stable URL-encoded rss:<feedUrl>:<itemKey> tuple key",
-    "emptyDataset": "module 13 reports the fetched zero-row dataset",
-    "missingDataset": "module 14 does not request dataset items",
-    "then": "end each instant-triggered branch successfully after exposing the terminal failure diagnostic; do not throw an error that could disable the scenario"
+    "datasetWithRows": "module 16 runs after module 14 persisted the stable rss:<encodedFeedUrl>:<encodedItemKey> key",
+    "emptyDataset": "module 17 reports the fetched zero-row dataset",
+    "missingDataset": "module 18 does not request dataset items",
+    "then": "write module 19 run checkpoint last; do not throw an error that could disable the scenario"
   },
   "errorHandlers": {
-    "scenario": "Set Store incomplete executions to Yes.",
+    "scenario": "Set Store incomplete executions to Yes and process in order/no overlap.",
+    "listTaskRuns": {
+      "handler": "Retry",
+      "automaticCompletion": true,
+      "maximumAttempts": 3,
+      "delayMinutes": 15,
+      "resumeAt": "module 1",
+      "never": "rerun the Apify Task"
+    },
     "getDatasetItems": {
       "handler": "Retry",
       "automaticCompletion": true,
       "maximumAttempts": 3,
       "delayMinutes": 15,
-      "resumeAt": "module 3 with the same defaultDatasetId",
-      "temporaryErrors": "ConnectionError, RateLimitError, and ModuleTimeoutError use Make's automatic exponential-backoff schedule; other errors captured by Retry use the configured 3 attempts at 15-minute intervals.",
+      "resumeAt": "module 8 with the same defaultDatasetId",
       "never": "rerun the Apify Task"
     },
     "destination": {
@@ -203,20 +361,35 @@
       "automaticCompletion": true,
       "maximumAttempts": 3,
       "delayMinutes": 15,
-      "resumeAt": "module 10 with the same RSS item bundle",
+      "resumeAt": "module 14 with the same RSS item bundle",
       "idempotencyKey": "rss:encodeURL(feedUrl):encodeURL(itemKey)",
       "requiredProof": "Inject a timeout after the Data store commit, retry, and verify exactly one record exists for the URL-encoded rss:<feedUrl>:<itemKey> key."
     },
-    "quiet": "Return the false envelope and finish successfully."
+    "runCheckpoint": {
+      "handler": "Retry",
+      "automaticCompletion": true,
+      "maximumAttempts": 3,
+      "delayMinutes": 15,
+      "idempotencyKey": "rss:run:runId",
+      "requiredProof": "Run checkpoint is written last; duplicate polls leave exactly one checkpoint."
+    },
+    "preflightCheckpointSearch": {
+      "handler": "Retry",
+      "automaticCompletion": true,
+      "maximumAttempts": 3,
+      "delayMinutes": 15,
+      "resumeAt": "module 2 before any product or run-checkpoint write",
+      "never": "write product rows or run checkpoints before preflight succeeds"
+    }
   },
-  "credentials": [],
   "publicationGate": [
-    "Build in a user-owned Make account, confirm saved Task maxItemsPerRun is no greater than 200 for the fixed non-paginated retrieval limit of 200, and set Store incomplete executions to Yes.",
-    "Run non-empty, quiet, invalid-record, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, dataset-retry, and Data-store-retry tests; inject a post-commit timeout and prove exactly one record exists for the stable key.",
+    "Build in a user-owned Make account, configure the scenario schedule, confirm maxItemsPerRun is no greater than 200, and set Store incomplete executions to Yes plus process-in-order/no-overlap behavior.",
+    "Use HTTP polling, not the Make Apify connector: list recent Task runs with desc=1&limit=1000&offset=0, reverse the fetched page before processing, skip checkpointed run IDs, stop loudly if a full 1000-run page has no checkpoint boundary, and fetch dataset items with the fixed non-paginated retrieval limit of 200.",
+    "Prove the reviewed limited Apify token can list Task runs and fetch default dataset items; scrub Authorization headers, Task IDs, data-store IDs, execution data, and sample payloads from exports.",
+    "Run non-empty, quiet, invalid-record, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, duplicate-poll replay, dataset-retry, run-window, preflight overflow-stop using only pre-existing checkpoint keys, run-checkpoint, and Data-store-retry tests; inject a post-commit timeout and prove exactly one record for the product key and exactly one run checkpoint exist for the stable keys.",
     "Export and scrub the candidate blueprint.",
     "Import that exact file into a fresh empty validation organization/team or clean account.",
-    "Reconnect credentials, save and activate the scenario, and verify Make recreated the Task-scoped Watch Task Runs webhook.",
-    "Repeat non-empty, quiet, invalid-record, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, dataset-retry, and Data-store-retry tests after exact-file import, including exactly one record after a post-commit timeout.",
+    "Reconnect the limited HTTP credential/header placeholder, save and activate only for validation, then repeat the full matrix after exact-file import.",
     "Obtain independent validator PASS and separate adversarial PASS before publication."
   ]
 }
