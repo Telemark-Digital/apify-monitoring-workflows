@@ -94,39 +94,63 @@ assert.equal(workflowText.includes('"credentials"'), false, 'n8n workflow must n
 
 const make = JSON.parse(await readFile(path.join(root, 'make', 'module-spec.json'), 'utf8'));
 const makeDatasetRouter = make.modules.find((module) => module.routes?.datasetAvailable);
-const makeDataset = make.modules.find((module) => module.module === 'Get Dataset Items');
+const makeDataset = make.modules.find((module) => module.label === 'HTTP Get Dataset Items');
+const makeListRuns = make.modules.find((module) => module.label === 'HTTP List Task Runs');
+const makeRunCheckpoint = make.modules.find((module) => module.label === 'Write Run Checkpoint');
 const makeModulesByOrder = new Map(make.modules.map((module) => [module.order, module]));
-const makeDestinations = make.modules.filter((module) => module.app === 'Data store' && module.module === 'Add/Replace a Record');
-const identifiedTenderDestination = makeModulesByOrder.get(8);
-const runScopedDestination = makeModulesByOrder.get(9);
-const classificationRouter = makeModulesByOrder.get(7);
-const diagnosticRouter = makeModulesByOrder.get(10);
+const makeDestinations = make.modules.filter((module) => module.app === 'Data store' && module.module === 'Add/Replace a Record' && module.label !== 'Write Run Checkpoint');
+const identifiedTenderDestination = makeModulesByOrder.get(13);
+const runScopedDestination = makeModulesByOrder.get(14);
+const classificationRouter = makeModulesByOrder.get(12);
+const diagnosticRouter = makeModulesByOrder.get(15);
 const destinationRetry = make.errorHandlers.destination;
 const implementationText = await readFile(path.join(root, 'make', 'implementation.md'), 'utf8');
-assert.match(makeDatasetRouter.routes.datasetAvailable, /all terminal statuses/i);
+assert.equal(make.architecture, 'APIFY_SCHEDULE_TO_HTTP_POLLING_RECONCILER');
+assert.equal(make.scenarioSettings.processInOrder, true, 'Make must avoid overlapping executions for run checkpoints');
+assert.equal(make.modules.some((module) => module.app === 'Apify' || module.module === 'Watch Task Runs' || module.module === 'Get Dataset Items'), false, 'Make must not use the official Apify connector modules');
+assert.equal(makeListRuns.configuration.method, 'GET');
+assert.match(makeListRuns.configuration.url, /\/actor-tasks\/\{\{TASK_ID\}\}\/runs\?desc=1&limit=1000&offset=0$/);
+assert.equal(makeListRuns.configuration.headers.find((header) => header.name === 'Authorization').value, 'Bearer <APIFY_TOKEN_PLACEHOLDER>');
+assert.equal(makeListRuns.runWindow.limit, 1000);
+assert.match(makeListRuns.runWindow.sort, /reverse the fetched page/i);
+assert.match(makeListRuns.runWindow.overflowGuard, /no checkpointed terminal run boundary/i);
+assert.equal(make.taskLaunch.requirements.pollRunLimit, 1000);
+assert.equal(make.taskLaunch.requirements.overflowStopIfNoCheckpointBoundary, true);
+assert.equal(make.taskLaunch.requirements.overflowStopBeforeProcessing, true);
+assert.equal(make.taskLaunch.requirements.preflightExistingCheckpointRead, true);
+assert.equal(make.taskLaunch.requirements.runOrdering, 'reverse-fetched-desc-page-before-processing');
+assert.deepEqual(make.taskLaunch.requirements.preflightModules, [2, 3, 4]);
+assert.equal(make.modules.find((module) => module.label === 'Preflight Existing Run Checkpoints').order, 2);
+assert.equal(make.modules.find((module) => module.label === 'Preflight Overflow Guard').order, 3);
+assert.match(JSON.stringify(make.modules.find((module) => module.label === 'Overflow Guard Router')), /must not reach module 5/);
+assert.match(makeDatasetRouter.routes.datasetAvailable, /run status is terminal/i);
 assert.doesNotMatch(makeDatasetRouter.routes.datasetAvailable, /SUCCEEDED/);
 assert.equal(makeDataset.route, 'datasetAvailable');
 assert.equal(make.taskLaunch.requirements.maxNewPerRunAtMost, 999);
 assert.equal(make.taskLaunch.requirements.summaryRowsPerRun, 1);
 assert.equal(make.taskLaunch.requirements.datasetRetrievalLimit, 1000);
 assert.equal(make.taskLaunch.requirements.paginationEnabled, false);
+assert.equal(make.taskLaunch.requirements.makePollIntervalCoversRunWindow, true);
+assert.equal(makeDataset.configuration.method, 'GET');
+assert.match(makeDataset.configuration.url, /\/datasets\/\{\{module 5 defaultDatasetId\}\}\/items\?format=json&clean=1&offset=0&limit=1000$/);
+assert.equal(makeDataset.configuration.headers.find((header) => header.name === 'Authorization').value, 'Bearer <APIFY_TOKEN_PLACEHOLDER>');
 assert.equal(makeDataset.configuration.limit, 1000);
 assert.equal(makeDataset.configuration.paginationEnabled, false);
 assert.equal(make.taskLaunch.requirements.maxNewPerRunAtMost + make.taskLaunch.requirements.summaryRowsPerRun, makeDataset.configuration.limit, 'TED 999 tender rows plus one summary must exactly fit retrieval limit 1000');
 assert.match(makeDataset.capInvariant, /exactly one summary control row/i);
-assert.deepEqual(make.modules.map((module) => module.order), Array.from({ length: 15 }, (_, index) => index + 1), 'Make module orders must be unique and contiguous');
+assert.deepEqual(make.modules.map((module) => module.order), Array.from({ length: 21 }, (_, index) => index + 1), 'Make module orders must be unique and contiguous');
 assert.equal(makeDestinations.length, 2, 'Make must define exactly two Data store Add/Replace sinks');
-assert.equal(identifiedTenderDestination, makeDestinations[0], 'Module 8 must be the identified-tender sink');
-assert.equal(runScopedDestination, makeDestinations[1], 'Module 9 must be the run-scoped sink');
+assert.equal(identifiedTenderDestination, makeDestinations[0], 'Module 13 must be the identified-tender sink');
+assert.equal(runScopedDestination, makeDestinations[1], 'Module 14 must be the run-scoped sink');
 assert.deepEqual(classificationRouter.routes, {
   identifiedTender: 'recordType = tender AND publicationNumber exists',
   runScopedRecord: 'recordType != tender OR publicationNumber missing',
 });
 assert.equal(identifiedTenderDestination.route, 'identifiedTender');
-assert.equal(identifiedTenderDestination.configuration.key, 'ted:{{module 6 publicationNumber}}');
+assert.equal(identifiedTenderDestination.configuration.key, 'ted:{{module 11 publicationNumber}}');
 assert.equal(identifiedTenderDestination.idempotencyKey, 'ted:publicationNumber');
 assert.equal(runScopedDestination.route, 'runScopedRecord');
-assert.equal(runScopedDestination.configuration.key, 'ted:run:{{module 1 id}}:row:{{module 6 bundle order}}');
+assert.equal(runScopedDestination.configuration.key, 'ted:run:{{module 5 id}}:row:{{module 11 bundle order}}');
 assert.equal(runScopedDestination.idempotencyKey, 'ted:run:runId:row:bundleOrder');
 for (const destination of makeDestinations) {
   assert.equal(destination.configuration.overwriteExistingRecord, true, `Module ${destination.order} must enable overwrite`);
@@ -135,41 +159,48 @@ for (const destination of makeDestinations) {
 }
 assert.match(identifiedTenderDestination.normalizedOutput.title, /string or null, preserved/);
 assert.equal(diagnosticRouter.module, 'Router');
-assert.equal(diagnosticRouter.route, 'after module 9');
+assert.equal(diagnosticRouter.route, 'after module 14');
 assert.deepEqual(diagnosticRouter.routes, {
   invalidTenderDiagnostic: 'recordType = tender AND publicationNumber missing',
   terminalFailureDiagnostic: 'status != SUCCEEDED',
 });
-assert.equal(makeModulesByOrder.get(11).route, 'module 10 invalidTenderDiagnostic');
-assert.equal(makeModulesByOrder.get(12).route, 'module 10 terminalFailureDiagnostic');
-assert.equal(makeModulesByOrder.get(13).route, 'after module 8 when status != SUCCEEDED');
-assert.equal(makeModulesByOrder.get(14).route, 'quiet when status != SUCCEEDED');
-assert.equal(makeModulesByOrder.get(15).route, 'missingDataset');
-assert.match(make.terminalFailureRoute.identifiedTenderRows, /module 13.*module 8 persisted ted:<publicationNumber>/);
-assert.match(make.terminalFailureRoute.runScopedRows, /module 12.*module 9 persisted ted:run:<runId>:row:<bundleOrder>/);
-assert.match(make.terminalFailureRoute.emptyDataset, /module 14.*zero-row dataset/);
-assert.match(make.terminalFailureRoute.missingDataset, /module 15.*does not request dataset items/);
-assert.deepEqual(destinationRetry.modules, [8, 9]);
+assert.equal(makeModulesByOrder.get(16).route, 'module 15 invalidTenderDiagnostic');
+assert.equal(makeModulesByOrder.get(17).route, 'module 15 terminalFailureDiagnostic');
+assert.equal(makeModulesByOrder.get(18).route, 'after module 13 when status != SUCCEEDED');
+assert.equal(makeModulesByOrder.get(19).route, 'emptyDataset');
+assert.equal(makeModulesByOrder.get(20).route, 'missingDataset');
+assert.match(make.terminalFailureRoute.identifiedTenderRows, /module 18.*module 13 persisted ted:<publicationNumber>/);
+assert.match(make.terminalFailureRoute.runScopedRows, /module 17.*module 14 persisted ted:run:<runId>:row:<bundleOrder>/);
+assert.match(make.terminalFailureRoute.emptyDataset, /module 19.*zero-row dataset/);
+assert.match(make.terminalFailureRoute.missingDataset, /module 20.*does not request dataset items/);
+assert.deepEqual(destinationRetry.modules, [13, 14]);
 assert.deepEqual(destinationRetry.idempotencyKeys, {
-  module8: 'ted:publicationNumber',
-  module9: 'ted:run:runId:row:bundleOrder',
+  module13: 'ted:publicationNumber',
+  module14: 'ted:run:runId:row:bundleOrder',
 });
 assert.match(destinationRetry.resumeAt, /failed Data store module with the same dataset bundle/);
 assert.match(destinationRetry.requiredProof, /each Data store commit/);
-assert.match(destinationRetry.requiredProof, /module 8 with ted:<publicationNumber>/);
-assert.match(destinationRetry.requiredProof, /module 9 with ted:run:<runId>:row:<bundleOrder>/);
+assert.match(destinationRetry.requiredProof, /module 13 with ted:<publicationNumber>/);
+assert.match(destinationRetry.requiredProof, /module 14 with ted:run:<runId>:row:<bundleOrder>/);
 for (const router of make.modules.filter((module) => module.module === 'Router')) {
   assert.doesNotMatch(JSON.stringify(router), /ted:(?:<|\{\{|publicationNumber|run:)/, `Router module ${router.order} must not assign a persistence key`);
 }
 assert.doesNotMatch(implementationText, /\| Router \| Assign `ted:/, 'Implementation guide must not claim a Router assigns a key');
-assert.match(implementationText, /Module 8 alone uses `ted:<publicationNumber>`/);
-assert.match(implementationText, /Module 9 alone uses `ted:run:<runId>:row:<bundleOrder>`/);
+assert.match(implementationText, /Module 13 alone uses `ted:<publicationNumber>`/);
+assert.match(implementationText, /Module 14 alone uses `ted:run:<runId>:row:<bundleOrder>`/);
 const publicationGate = make.publicationGate.join(' ');
-assert.match(publicationGate, /module 8 writes only ted:<publicationNumber>/);
-assert.match(publicationGate, /module 9 writes only ted:run:<runId>:row:<bundleOrder>/);
-assert.match(publicationGate, /post-commit timeout independently at modules 8 and 9/);
+assert.match(publicationGate, /module 13 writes only ted:<publicationNumber>/);
+assert.match(publicationGate, /module 14 writes only ted:run:<runId>:row:<bundleOrder>/);
+assert.match(publicationGate, /post-commit timeout independently at modules 13 and 14/);
 assert.match(publicationGate, /maxNewPerRun is no greater than 999/i);
 assert.match(publicationGate, /non-paginated retrieval limit of 1000/i);
+assert.match(publicationGate, /HTTP polling/i);
+assert.match(publicationGate, /run checkpoint/i);
+assert.match(publicationGate, /desc=1&limit=1000&offset=0/i);
+assert.match(publicationGate, /overflow-stop/i);
+assert.equal(makeRunCheckpoint.idempotencyKey, 'ted:run:runId');
+assert.match(makeRunCheckpoint.checkpointInvariant, /after all product row upserts/i);
+assert.equal(makeRunCheckpoint.order, 21);
 assert.match(make.nonTenderRoute, /persisted under deterministic/);
 assert.doesNotMatch(JSON.stringify(makeDatasetRouter.routes), /title exists/i);
 
@@ -201,5 +232,5 @@ for (const file of publicFiles) {
 console.log('PASS: 3 TED Task definitions and representative output fixture');
 console.log('PASS: FAILED committed-row, replay, empty-dataset, missing-dataset, and title:null fixtures');
 console.log('PASS: n8n and Make ingest every available terminal dataset before reporting failure');
-console.log('PASS: Make modules 8 and 9 enforce disjoint TED routes, stable keys, overwrite, and retry coverage');
+console.log('PASS: Make modules 13 and 14 enforce disjoint TED routes, stable keys, overwrite, and retry coverage');
 console.log('PASS: stable TED keys and null-title payload preservation');
