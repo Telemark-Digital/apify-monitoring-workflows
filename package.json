@@ -5,11 +5,12 @@
   "description": "Credential-free Apify Task and workflow examples for public monitoring use cases.",
   "type": "module",
   "scripts": {
-    "validate": "node scripts/validate-public-assets.mjs",
+    "validate": "node scripts/validate-public-assets.mjs && node scripts/validate-plugins.mjs",
     "validate:bluesky": "node bluesky-keyword-mention-alerts/validation/validate-package.mjs",
     "validate:rss": "node rss-keyword-monitor/validation/validate-rss-package.mjs",
     "validate:ted": "node ted-tender-monitor/validation/validate-ted-package.mjs",
     "validate:products": "npm run validate:bluesky && npm run validate:rss && npm run validate:ted",
+    "validate:plugins": "node scripts/validate-plugins.mjs",
     "export:clean": "node scripts/export-clean.mjs"
   },
   "license": "MIT"
