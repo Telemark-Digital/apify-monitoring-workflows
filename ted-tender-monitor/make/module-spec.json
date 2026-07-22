@@ -41,7 +41,7 @@
       "overflowStopIfCursorMissingFromFetchedPage": true,
       "backlogDrainFormula": "makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour",
       "backlogDrainRequirement": "Because publication templates process one Task run per Make scenario execution, the Make schedule must poll faster than the Apify Task schedule for normal catch-up; if this formula is not true, pause the Apify Schedule and run a paginated/manual backfill before activation.",
-      "completionBarrier": "module 12 Array Aggregator sourceModule=11 emits only after module 11 completed delivery writes for the selected run, or emits an empty aggregation when there are zero dataset rows; module 14 cursor is downstream of module 13 outcome and only allowed when completedDeliveryWrites equals attemptedDatasetRows and no module 11 incomplete execution exists",
+      "completionBarrier": "module 12 Array Aggregator sourceModule=9 wraps the dataset-item iterator route and emits only after module 11 completed delivery writes for the selected run, or emits an empty aggregation when there are zero dataset rows; module 14 cursor is downstream of module 13 outcome and only allowed when completedDeliveryWrites equals attemptedDatasetRows and no module 11 incomplete execution exists",
       "deliveryFailureStrategy": "Module 11 must use Rollback/stop-on-error, not Make Retry/Break. Make Retry saves failed bundles as incomplete executions and lets the scenario continue, which can otherwise advance the run cursor before every dataset row is persisted."
     }
   },
@@ -283,7 +283,7 @@
       "label": "Aggregate Completed Delivery Writes",
       "route": "after module 11 delivery writes, or empty aggregation for zero-row datasets",
       "configuration": {
-        "sourceModule": 11,
+        "sourceModule": 9,
         "stopProcessingAfterEmptyAggregation": false,
         "arrayOutputField": "Array[]",
         "targetStructure": "completed module 11 delivery write records with module 10 recordKey, product, sourceId, sourceUrl, title, observedAt, validity, diagnostic fields, and task run status"
@@ -443,7 +443,7 @@
     "Use HTTP polling, not the Make Apify connector: list recent terminal Task runs with desc=1&limit=1000&offset=0&status=SUCCEEDED,FAILED,ABORTED,TIMED-OUT, reverse the fetched page before processing, read the exact run cursor, process only one newer terminal run per execution, stop loudly if the cursor is missing or if the fetched page has no cursor boundary, and fetch dataset items with the fixed non-paginated retrieval limit of 1000.",
     "Prime the exact Data store cursor before first activation by storing the latest already-accepted terminal run ID in sourceId at the <product>:cursor:<TASK_ID> key, unless an intentional bounded initial backfill is documented. Do not use Data store Search Records or key-prefix scans for cursor discovery.",
     "Keep maxRunsPerScenarioExecution at 1 for publication validation. Confirm makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour; if not, pause the Apify Schedule and perform paginated/manual backfill before activation.",
-    "Use module 10 to prepare every dataset row, module 11 as the only delivery Data store sink with Rollback/stop-on-error rather than Retry/Break, module 12 as the Array Aggregator completion barrier with sourceModule=11, module 13 to verify completedDeliveryWrites equals attemptedDatasetRows and zero module 11 incomplete executions, module 14 as the dataset-run cursor write after module 13, and module 16 as the missing-dataset cursor write after module 15.",
+    "Use module 10 to prepare every dataset row, module 11 as the only delivery Data store sink with Rollback/stop-on-error rather than Retry/Break, module 12 as the Array Aggregator completion barrier with sourceModule=9 so Make closes the module 9 dataset-item iterator scope only after module 11 writes, module 13 to verify completedDeliveryWrites equals attemptedDatasetRows and zero module 11 incomplete executions, module 14 as the dataset-run cursor write after module 13, and module 16 as the missing-dataset cursor write after module 15.",
     "Prove the reviewed limited Apify token can list Task runs and fetch default dataset items; scrub Authorization headers, Task IDs, data-store IDs, execution data, and sample payloads from exports.",
     "Run non-empty, quiet/empty-dataset, invalid-record, FAILED, ABORTED, TIMED-OUT, missing-dataset-ID, duplicate-poll replay, dataset-retry, run-window, first-run cursor priming, preflight cursor-gap stop, completion-barrier, run-cursor, and Data-store-retry tests; inject a post-commit timeout/failure at module 11 and prove module 12/module 14 do not run in that execution, the cursor remains unchanged, replay leaves exactly one record for the delivery key, and a later successful run leaves exactly one run cursor.",
     "Export and scrub the candidate blueprint.",
