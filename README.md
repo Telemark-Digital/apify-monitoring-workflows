@@ -12,7 +12,13 @@ Created and maintained by **Telemark Digital**.
 
 Each product directory contains public Apify Task inputs, a platform-neutral workflow contract, an n8n workflow, a Make implementation package, fixtures, and validation notes.
 
-Public product icons are in [assets/icons](./assets/icons/) using clean external filenames. These are the only binary files included in the allowlisted release export.
+## AI client plugins
+
+Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are included under [plugins](./plugins/). Each plugin exposes exactly one public Apify Actor through Apify MCP with OAuth and includes a product-specific skill that keeps bounded one-off discovery separate from saved-Task monitoring.
+
+These plugin files are not official marketplace submissions yet. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and validation gates.
+
+Public product icons are in [assets/icons](./assets/icons/) using clean external filenames. The AI-client plugin manifests omit optional icon fields for this release so the plugin packages remain text-only and easy to publish through GitHub's web editor.
 
 ## Terminal-run reliability
 
