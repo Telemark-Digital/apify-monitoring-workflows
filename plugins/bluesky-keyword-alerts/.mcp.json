@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "telemark-bluesky-keyword-alerts": {
+      "type": "http",
+      "url": "https://mcp.apify.com?tools=uplifted_novice_vbl/bluesky-keyword-mention-alerts"
+    }
+  }
+}
+
