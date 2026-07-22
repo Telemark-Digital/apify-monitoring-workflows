@@ -24,17 +24,17 @@ Use this checklist for each of the three product directories. A local JSON impor
 
 ## Make
 
-- Build the scenario from the structured Make specification using `Apify - Watch Task Runs` as the instant trigger.
-- Create the recommended Apify OAuth connection in Make's credential manager. Do not place a token in a module field.
-- Create a Task-scoped webhook for the selected persistent Task and choose every finished run event.
-- Set **Store incomplete executions** to **Yes**.
+- Build the scenario from the structured Make specification using HTTP modules: list recent Task runs, read run checkpoints, fetch dataset items, write product rows, then write the run checkpoint last.
+- Use a limited Apify API token only in HTTP `Authorization` headers inside the private validation scenario. Do not use Make's Apify connector and do not place a real token in any exported blueprint.
+- Configure the Make scenario schedule so expected outage coverage stays within the 1000-run polling window; if the expected outage window can exceed `1000 * Apify Schedule interval`, add paginated backfill before activation.
+- Set **Store incomplete executions** to **Yes** and enable process-in-order/no-overlap behavior.
 - Reproduce every module, filter, mapping, retrieval limit, diagnostic branch, and Retry handler in the specification.
 - Confirm pagination is disabled and the saved Task cap matches the fixed retrieval limit: Bluesky 100/100, RSS 200/200, and TED 999 tender rows plus one summary row/1000.
 - Keep the scenario inactive until a complete run-once test has passed.
-- Run the non-empty, quiet, invalid-record, terminal-with-committed-rows, replay, failed-empty, missing-dataset, dataset-retry, and data-store-retry cases listed by the product package. Confirm status diagnostics follow persistence. Inject a post-commit timeout and prove the stable key leaves exactly one record.
-- Export the blueprint, remove connection and webhook identifiers, and scan it for credentials, private URLs, internal names, and personal data.
+- Run the non-empty, quiet, invalid-record, terminal-with-committed-rows, duplicate-poll replay, failed-empty, missing-dataset, list-runs-retry, dataset-retry, run-checkpoint, and data-store-retry cases listed by the product package. Confirm status diagnostics follow persistence. Inject a post-commit timeout and prove the stable product key leaves exactly one record and the run checkpoint leaves exactly one checkpoint.
+- Export the blueprint, remove connection identifiers, Authorization headers, private Task IDs, data-store IDs, execution data, and sample payloads, and scan it for credentials, private URLs, internal names, and personal data.
 - Import that exact scrubbed blueprint into a fresh empty team or clean account, reconnect credentials, save, and activate it.
-- Verify Make recreated the Task-scoped watcher webhook, then repeat the full test matrix.
+- Verify the imported scenario still uses HTTP polling with `desc=1&limit=1000&offset=0`, reverses the fetched page before processing, and stops loudly when a full page has no checkpoint boundary, then repeat the full test matrix.
 - Complete the public template submission fields using the public product name and evidence. Record the submission URL and status.
 
 ## Publication evidence

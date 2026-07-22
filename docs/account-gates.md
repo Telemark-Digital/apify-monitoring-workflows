@@ -45,11 +45,11 @@ Make has no local runtime equivalent for authoritative blueprint validation. The
 2. Register the human user accurately, set the organization timezone to `Europe/Oslo`, and use `Public Integrations` as the sole/default team on lower plans or a dedicated team when the plan supports multiple teams.
 3. Keep the organization free of private scenarios, customer data, connections, webhooks, keys, and data stores.
 4. Build or import the scenario in Make.
-5. Connect the user's limited Apify connection, select the persistent Task, and verify its delivery cap: Bluesky `maxPostsPerRun <= 100`, RSS `maxItemsPerRun <= 200`, or TED `maxNewPerRun <= 999` because TED appends one summary row.
+5. Configure HTTP modules with the user's limited Apify token in private `Authorization` headers, select the persistent Task ID, and verify its delivery cap: Bluesky `maxPostsPerRun <= 100`, RSS `maxItemsPerRun <= 200`, or TED `maxNewPerRun <= 999` because TED appends one summary row. Do not use Make's Apify connector for these templates.
 6. Create or select the shared monitor-deliveries Make data store with `product`, `sourceId`, `sourceUrl`, `title`, `observedAt`, and `payloadJson` fields.
 7. Run once with sample data and once with an empty result.
-8. Validate mappings, filters, error handling, scheduling, operation counts, disabled pagination, and the fixed retrieval limit: 100 for Bluesky, 200 for RSS, or 1000 for TED. Inject a post-commit timeout at **Add/Replace a Record** and prove retry leaves exactly one product-prefixed stable key.
-9. Export the blueprint from Make, remove connection identifiers and private data, and scan the exact file. It remains a candidate at this point.
+8. Validate mappings, filters, HTTP list-runs polling with `desc=1&limit=1000&offset=0`, reverse-page run ordering, overflow-stop behavior, run checkpointing, error handling, scheduling, operation counts, disabled pagination, and the fixed retrieval limit: 100 for Bluesky, 200 for RSS, or 1000 for TED. Inject a post-commit timeout at **Add/Replace a Record** and prove retry leaves exactly one product-prefixed stable key and exactly one run checkpoint.
+9. Export the blueprint from Make, remove connection identifiers, Authorization headers, private Task IDs, data-store IDs, execution data, and sample payloads, and scan the exact file. It remains a candidate at this point.
 10. Import that exact scrubbed export into a fresh empty validation organization/team or separate clean Make account and reconnect credentials there.
 11. Complete both a result-producing run and a valid empty-result run from the re-imported export, then repeat the exactly-one-record post-commit test.
 12. Obtain independent validator PASS and separate adversarial PASS on that exact export and its run evidence.
@@ -58,4 +58,3 @@ Make has no local runtime equivalent for authoritative blueprint validation. The
 15. Select **Request approval** to submit the tested template to Make's public library.
 
 Publishing a team template creates a shareable link. Inclusion in Make's public template library is a separate review and approval step.
-
