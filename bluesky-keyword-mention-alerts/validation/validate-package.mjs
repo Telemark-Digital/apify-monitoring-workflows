@@ -214,7 +214,7 @@ assert.equal(make.taskLaunch.requirements.noDataStoreSearchForCursor, true);
 assert.equal(make.taskLaunch.requirements.maxRunsPerScenarioExecution, 1);
 assert.equal(make.taskLaunch.requirements.operationBudgetValidation, true);
 assert.equal(make.taskLaunch.requirements.backlogDrainFormula, 'makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour');
-assert.match(make.taskLaunch.requirements.completionBarrier, /module 12 Array Aggregator sourceModule=11/);
+assert.match(make.taskLaunch.requirements.completionBarrier, /module 12 Array Aggregator sourceModule=9/);
 assert.match(make.taskLaunch.requirements.completionBarrier, /completedDeliveryWrites equals attemptedDatasetRows/);
 assert.match(make.taskLaunch.requirements.deliveryFailureStrategy, /Rollback\/stop-on-error/);
 assert.equal(make.taskLaunch.requirements.runOrdering, 'reverse-fetched-desc-page-after-cursor-filter');
@@ -236,7 +236,7 @@ assert.equal(makeDelivery.configuration.key, '{{module 10 recordKey}}');
 assert.equal(makeDelivery.configuration.record.payloadJson, '{{module 17 json}}');
 assert.match(makeDelivery.destinationKeyProof, /bluesky:<postUri>/);
 assert.equal(makeBarrier.order, 12);
-assert.equal(makeBarrier.configuration.sourceModule, 11);
+assert.equal(makeBarrier.configuration.sourceModule, 9);
 assert.match(makeBarrier.barrierInvariant, /Make-native completion barrier/);
 assert.match(makeBarrier.barrierInvariant, /completedDeliveryWrites equals attemptedDatasetRows/);
 assert.equal(make.modules.find((module) => module.label === 'Dataset Run Outcome').outputs.cursorWriteAllowed, 'completedDeliveryWrites = attemptedDatasetRows AND module11IncompleteExecutions = 0');
@@ -267,7 +267,7 @@ assert.match(make.publicationGate.join(' '), /HTTP polling/i);
 assert.match(make.publicationGate.join(' '), /run-cursor/i);
 assert.match(make.publicationGate.join(' '), /desc=1&limit=1000&offset=0/i);
 assert.match(make.publicationGate.join(' '), /cursor-gap stop/i);
-assert.match(make.publicationGate.join(' '), /module 12 as the Array Aggregator completion barrier with sourceModule=11/i);
+assert.match(make.publicationGate.join(' '), /module 12 as the Array Aggregator completion barrier with sourceModule=9/i);
 assert.match(make.publicationGate.join(' '), /Rollback\/stop-on-error rather than Retry\/Break/i);
 
 for (const relativePath of [
