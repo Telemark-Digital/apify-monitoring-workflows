@@ -1,0 +1,32 @@
+{
+  "name": "ted-tender-monitor",
+  "version": "0.1.0",
+  "description": "Preview EU procurement notices from TED through Telemark Digital's Apify Actor.",
+  "author": {
+    "name": "Telemark Digital",
+    "email": "thetelemarkdigital@gmail.com",
+    "url": "https://github.com/Telemark-Digital"
+  },
+  "homepage": "https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/plugins/ted-tender-monitor",
+  "repository": "https://github.com/Telemark-Digital/apify-monitoring-workflows",
+  "license": "MIT",
+  "keywords": ["apify", "ted", "tenders", "procurement", "monitoring"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "TED Tender Monitor",
+    "shortDescription": "Bounded EU procurement notice discovery.",
+    "longDescription": "Preview EU procurement notices by CPV code, country, notice type, keyword, and value, then use the published Apify Task workflows when recurring tender monitoring is needed.",
+    "developerName": "Telemark Digital",
+    "category": "Productivity",
+    "capabilities": ["MCP", "Apify Actor", "Workflow guidance"],
+    "websiteURL": "https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/plugins/ted-tender-monitor",
+    "brandColor": "#2563EB",
+    "defaultPrompt": [
+      "Preview EU software tenders from TED.",
+      "Find recent procurement notices by CPV code.",
+      "Set up recurring TED tender monitoring."
+    ]
+  }
+}
+
