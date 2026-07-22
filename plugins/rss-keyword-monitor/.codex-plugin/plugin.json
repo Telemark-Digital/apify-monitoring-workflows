@@ -1,0 +1,32 @@
+{
+  "name": "rss-keyword-monitor",
+  "version": "0.1.0",
+  "description": "Preview RSS, Atom, and RDF keyword or regex matches through Telemark Digital's Apify Actor.",
+  "author": {
+    "name": "Telemark Digital",
+    "email": "thetelemarkdigital@gmail.com",
+    "url": "https://github.com/Telemark-Digital"
+  },
+  "homepage": "https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/plugins/rss-keyword-monitor",
+  "repository": "https://github.com/Telemark-Digital/apify-monitoring-workflows",
+  "license": "MIT",
+  "keywords": ["apify", "rss", "atom", "alerts", "monitoring"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "RSS Keyword Monitor",
+    "shortDescription": "Bounded RSS and Atom keyword discovery.",
+    "longDescription": "Preview keyword, regex, and exclusion matches from RSS, Atom, or RDF feeds, then use the published Apify Task workflows when recurring only-new delivery is needed.",
+    "developerName": "Telemark Digital",
+    "category": "Productivity",
+    "capabilities": ["MCP", "Apify Actor", "Workflow guidance"],
+    "websiteURL": "https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/plugins/rss-keyword-monitor",
+    "brandColor": "#F97316",
+    "defaultPrompt": [
+      "Preview AI stories from these RSS feeds.",
+      "Find regex matches in these Atom feeds.",
+      "Set up only-new RSS monitoring."
+    ]
+  }
+}
+
