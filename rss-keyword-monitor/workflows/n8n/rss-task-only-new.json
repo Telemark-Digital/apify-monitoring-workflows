@@ -1,7 +1,20 @@
 {
   "id": "rssKeywordAlerts02",
-  "name": "RSS alerts - ingest every terminal Task dataset",
+  "name": "Monitor RSS feeds with Apify and store new items in n8n",
   "nodes": [
+    {
+      "parameters": {
+        "content": "## Monitor RSS feeds with Apify and store new items in n8n\n\n### Who this is for\nTeams that need scheduled RSS, Atom, or RDF keyword monitoring without processing the same item twice.\n\n### How it works\nThe schedule runs one persistent Apify Task and waits for its terminal result. If a dataset exists, the workflow fetches it separately, normalizes each record, and upserts it into the `monitor-deliveries` Data Table before reporting success or failure. Replaying the same run updates the same delivery key instead of creating a duplicate.\n\n### Setup\n1. Install `@apify/n8n-nodes-apify` 0.6.10 or later.\n2. Add your Apify credential in n8n's credential store.\n3. Replace `PASTEYOURTASKID` with a saved RSS Monitor Task configured with `onlyNew: true` and `maxItemsPerRun` no greater than 200.\n4. Create the `monitor-deliveries` Data Table using the columns shown in the upsert node.\n5. Test twice before activation; a quiet second run can legitimately contain zero items.\n\n### Requirements and customization\nAdjust the schedule, Task filters, and downstream storage only after the default two-run test passes. The export contains no credentials or private identifiers.\n\nCommunity-node note: Creator Hub treats community-node templates as self-hosted. Use self-hosted n8n unless your n8n Cloud workspace already provides this verified Apify node.",
+        "height": 600,
+        "width": 850,
+        "color": 3
+      },
+      "id": "1e0189d0-7c96-4b75-98d6-4cff06615723",
+      "name": "Template setup guide",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-900, -600]
+    },
     {
       "parameters": {
         "rule": {
