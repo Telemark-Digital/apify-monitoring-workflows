@@ -146,8 +146,18 @@ const scheduleDocs = await Promise.all([
     ['TED n8n README', path.join(root, 'ted-tender-monitor', 'n8n', 'README.md')],
     ['TED Make implementation', path.join(root, 'ted-tender-monitor', 'make', 'implementation.md')],
 ].map(async ([label, file]) => [label, await readFile(file, 'utf8')]));
-if (/Make blueprints are marked as drafts/i.test(rootReadme) || !/Make construction specifications, not blueprints/i.test(rootReadme)) {
-    errors.push('README.md: Make assets must be described as specifications until a real blueprint exists');
+const publicMakeScenarioUrls = [
+    'https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from',
+    'https://us2.make.com/public/shared-scenario/3rwZCcptirx/rss-keyword-alerts-from-a-persistent-api',
+    'https://us2.make.com/public/shared-scenario/udxoD7qdzBB/ted-tender-alerts-from-a-persistent-apif',
+];
+if (!/repository retains their credential-free construction specifications rather than exported Make blueprint files/i.test(rootReadme)) {
+    errors.push('README.md: must distinguish repository specifications from exported Make blueprint files');
+}
+for (const scenarioUrl of publicMakeScenarioUrls) {
+    if (!rootReadme.includes(scenarioUrl)) {
+        errors.push(`README.md: missing verified public Make shared scenario ${scenarioUrl}`);
+    }
 }
 if (!/Enable private vulnerability reporting/i.test(accountGates) || !/security-advisory notifications/i.test(accountGates)) {
     errors.push('docs/account-gates.md: GitHub publication gate must verify private vulnerability reporting and notifications');
@@ -189,8 +199,10 @@ for (const contract of documentedCapContracts) {
 if (!/TED[\s\S]*999[\s\S]*(?:one|1)[^\n]*summary[\s\S]*1000/i.test(rootReadme)) {
     errors.push('README.md: TED cap table must reserve one summary row within retrieval limit 1000');
 }
-if (!/current revised files have not all been imported exactly/i.test(accountGates)) {
-    errors.push('docs/account-gates.md: current n8n exact-file imports must remain external account gates');
+if (!/All three workflow graphs were imported and validated/i.test(accountGates)
+    || !/submission `17430`/i.test(accountGates)
+    || !/one-pending-template policy queues Bluesky and TED/i.test(accountGates)) {
+    errors.push('docs/account-gates.md: must preserve current n8n validation, RSS submission, and policy-queue status');
 }
 
 const taskFiles = jsonFiles.filter(({ relativePath }) => relativePath.includes(`${path.sep}apify-tasks${path.sep}`));
