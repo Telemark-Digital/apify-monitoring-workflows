@@ -1,6 +1,6 @@
 # Account Gates
 
-Most assets in this repository can be prepared without cloud workflow accounts. Publication and final platform validation happen only after the account owner completes account creation, recovery, and two-factor authentication.
+Most assets in this repository can be prepared without cloud workflow accounts. The repository assets have passed local validation; platform accounts are still required when a user imports a workflow or when Telemark Digital requests an official library listing.
 
 ## GitHub
 
@@ -21,7 +21,7 @@ The organization and maintainer should be transparently attributable to `Telemar
 
 ## n8n
 
-Earlier workflow revisions imported successfully into an isolated local n8n 2.30.8 instance. The current revised files have not all been imported exactly; exact-file import is an external account gate for each current candidate. The n8n Creator Portal is the public template-submission surface; n8n Cloud is a separate, optional hosted validation workspace.
+All three workflow graphs were imported and validated in an isolated n8n 2.30.8 instance. The final publication files add documentation notes without changing executable nodes. The exact RSS file passed Creator AI review and was submitted for human review as submission `17430` on 2026-07-23. n8n's one-pending-template policy queues Bluesky and TED until RSS is approved. The n8n Creator Portal is the public template-submission surface; n8n Cloud is a separate, optional hosted execution workspace.
 
 1. Create a Creator Portal account and set the public creator name to `Telemark Digital`.
 2. Choose one mandatory live-validation environment: n8n Cloud, or the retained isolated local/self-hosted n8n instance. Creator Portal alone cannot execute workflows.
@@ -39,7 +39,13 @@ Creator Portal: <https://creators.n8n.io/hub>
 
 ## Make
 
-Make has no local runtime equivalent for authoritative blueprint validation. The implementation packages in this repository therefore remain drafts until the following steps pass:
+All three implementation packages were built, imported, run, exported, scrubbed, republished as inactive public shared scenarios, and anonymously verified on 2026-07-23:
+
+- [Bluesky Keyword and Mention Alerts](https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from)
+- [RSS Keyword Alerts](https://us2.make.com/public/shared-scenario/3rwZCcptirx/rss-keyword-alerts-from-a-persistent-api)
+- [TED Tender Alerts](https://us2.make.com/public/shared-scenario/udxoD7qdzBB/ted-tender-alerts-from-a-persistent-apif)
+
+The remaining Make public-library gate requires a Teams-plan upgrade before **Request approval** becomes available. The following checklist applies when reproducing or extending a scenario:
 
 1. Create the `Telemark Digital` Make organization. Select the EU data region carefully because Make does not allow changing it later.
 2. Register the human user accurately, set the organization timezone to `Europe/Oslo`, and use `Public Integrations` as the sole/default team on lower plans or a dedicated team when the plan supports multiple teams.
@@ -49,12 +55,12 @@ Make has no local runtime equivalent for authoritative blueprint validation. The
 6. Create or select the shared monitor-deliveries Make data store with `product`, `sourceId`, `sourceUrl`, `title`, `observedAt`, and `payloadJson` fields.
 7. Run once with sample data and once with an empty result.
 8. Validate mappings, filters, HTTP list-runs polling with `desc=1&limit=1000&offset=0`, exact run-cursor priming/read/write, cursor-filtered reverse-page run ordering, `maxRunsPerScenarioExecution = 1`, cursor-gap stop behavior, module 11 single-sink delivery writes with Rollback/stop-on-error, module 12 completion barrier, module 13 `completedDeliveryWrites equals attemptedDatasetRows` guard, scheduling, operation counts, disabled pagination, and the fixed retrieval limit: 100 for Bluesky, 200 for RSS, or 1000 for TED. Confirm `makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour`, or pause the Apify Schedule and backfill before activation. Inject a module 11 post-commit timeout/failure and prove module 12/module 14 do not run in that execution, the run cursor remains unchanged, replay leaves exactly one product-prefixed stable key, and a later successful run leaves exactly one run cursor record.
-9. Export the blueprint from Make, remove connection identifiers, Authorization headers, private Task IDs, data-store IDs, execution data, and sample payloads, and scan the exact file. It remains a candidate at this point.
+9. Export the blueprint from Make, remove connection identifiers, Authorization headers, private Task IDs, data-store IDs, execution data, and sample payloads, and scan the exact file.
 10. Import that exact scrubbed export into a fresh empty validation organization/team or separate clean Make account and reconnect credentials there.
 11. Complete both a result-producing run and a valid empty-result run from the re-imported export, then repeat the exactly-one-record post-commit test.
 12. Obtain independent validator PASS and separate adversarial PASS on that exact export and its run evidence.
 13. Enable and inspect the public scenario page, using accurate human account fields and Telemark Digital only in a separate public display field when Make permits it.
-14. Create and publish a team template.
+14. Create and publish a team template when the account plan supports it.
 15. Select **Request approval** to submit the tested template to Make's public library.
 
-Publishing a team template creates a shareable link. Inclusion in Make's public template library is a separate review and approval step.
+The public shared-scenario links above are live and usable. Inclusion in Make's searchable public template library is a separate paid-plan review and approval step.
