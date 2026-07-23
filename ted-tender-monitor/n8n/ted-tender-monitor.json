@@ -1,6 +1,6 @@
 {
   "id": "tedTenderAlerts02",
-  "name": "TED tenders - ingest every terminal Task dataset",
+  "name": "Monitor EU tenders with Apify and store new notices in n8n",
   "nodes": [
     {
       "parameters": {},
@@ -223,12 +223,13 @@
     },
     {
       "parameters": {
-        "content": "## Setup required\n1. Install verified `@apify/n8n-nodes-apify` 0.6.10 or later.\n2. Connect an Apify API-key credential.\n3. Replace PASTEYOURTASKID with the persistent, primed Task ID.\n4. Confirm saved Task maxNewPerRun is no greater than 999; retrieval is a fixed non-paginated 1000 because exactly one summary row is appended.\n5. Create/select `monitor-deliveries` with the columns shown in **Upsert committed TED records**.\n\nEvery terminal run with a dataset is ingested before its status is reported. A null tender title is valid.",
-        "height": 340,
-        "width": 470
+        "content": "## Monitor EU tenders with Apify and store new notices in n8n\n\n### Who this is for\nProcurement, sales, and research teams that need scheduled TED notice monitoring by CPV code, country, keyword, value, or notice type.\n\n### How it works\nThe schedule runs one persistent, primed Apify Task and waits for its terminal result. When a dataset exists, the workflow fetches it separately, distinguishes tender rows from the summary row, normalizes records, and upserts them into the `monitor-deliveries` Data Table before reporting success or failure. Replaying the same run updates stable delivery keys instead of creating duplicates.\n\n### Setup\n1. Install `@apify/n8n-nodes-apify` 0.6.10 or later.\n2. Add your Apify credential in n8n's credential store.\n3. Replace `PASTEYOURTASKID` with a saved TED monitor Task that has been primed with `sampleMode: false`.\n4. Keep `maxNewPerRun` no greater than 999 because retrieval is a fixed 1,000 rows including one summary row.\n5. Create the `monitor-deliveries` Data Table using the columns shown in the upsert node.\n6. Test twice before activation.\n\n### Requirements and customization\nChange CPV filters, countries, schedule, and destination in the saved Task or downstream nodes. A null tender title is valid. The export contains no credentials or private identifiers.\n\nCommunity-node note: Creator Hub treats community-node templates as self-hosted. Use self-hosted n8n unless your n8n Cloud workspace already provides this verified Apify node.",
+        "height": 650,
+        "width": 850,
+        "color": 3
       },
       "id": "f7f259c2-45d2-4437-89ab-d40efedb8507",
-      "name": "Setup notes",
+      "name": "Template setup guide",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [-420, -340]
