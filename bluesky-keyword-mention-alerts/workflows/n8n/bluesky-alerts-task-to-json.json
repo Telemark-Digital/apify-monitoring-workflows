@@ -1,7 +1,20 @@
 {
   "id": "blueskyAlerts02",
-  "name": "Bluesky alerts - ingest every terminal Task dataset",
+  "name": "Monitor Bluesky keywords with Apify and store new posts in n8n",
   "nodes": [
+    {
+      "parameters": {
+        "content": "## Monitor Bluesky keywords with Apify and store new posts in n8n\n\n### Who this is for\nBrand, community, and research teams that need scheduled Bluesky keyword, handle, mention, or hashtag monitoring without duplicate deliveries.\n\n### How it works\nThe schedule runs one persistent Apify Task and waits for its terminal result. If a dataset exists, the workflow fetches it separately, normalizes every post, and upserts it into the `monitor-deliveries` Data Table before reporting success or failure. Replaying a run updates the same post key rather than inserting a duplicate.\n\n### Setup\n1. Install `@apify/n8n-nodes-apify` 0.6.10 or later.\n2. Add your Apify credential in n8n's credential store.\n3. Replace `PASTEYOURTASKID` with a saved Bluesky monitor Task configured with `onlyNew: true` and a bounded result cap.\n4. Create the `monitor-deliveries` Data Table using the columns shown in the upsert node.\n5. Test twice before activation; the second run may correctly contain zero posts.\n\n### Requirements and customization\nChange the schedule, Bluesky filters, and downstream destination only after the two-run test passes. The export contains no credentials, webhook secrets, or private identifiers.\n\nCommunity-node note: Creator Hub treats community-node templates as self-hosted. Use self-hosted n8n unless your n8n Cloud workspace already provides this verified Apify node.",
+        "height": 600,
+        "width": 850,
+        "color": 3
+      },
+      "id": "390b17fd-cd84-4394-9e90-e20da568519c",
+      "name": "Template setup guide",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-900, -600]
+    },
     {
       "parameters": {},
       "id": "13925d62-98c0-4e93-bb72-47f3af21ef06",
