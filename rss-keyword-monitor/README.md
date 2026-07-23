@@ -68,6 +68,7 @@ See the complete sanitized fixture in [`fixtures/rss-items.json`](./fixtures/rss
 - [`workflows/WORKFLOW-CONTRACT.md`](./workflows/WORKFLOW-CONTRACT.md) defines the platform-neutral behavior.
 - [`workflows/n8n/rss-task-only-new.json`](./workflows/n8n/rss-task-only-new.json) is an importable, credential-free n8n workflow.
 - [`workflows/make/IMPLEMENTATION.md`](./workflows/make/IMPLEMENTATION.md) gives exact Make modules, mappings, filters, error routes, and account-gated tests.
+- [RSS Keyword Alerts on Make](https://us2.make.com/public/shared-scenario/3rwZCcptirx/rss-keyword-alerts-from-a-persistent-api) is the live public shared scenario.
 
 Both integrations run a persistent Apify Task. They do not start a fresh Actor configuration for every poll. Their canonical delivery identity is the URL-encoded tuple `rss:<encodedFeedUrl>:<encodedItemKey>`, so the same `itemKey` from different feeds cannot overwrite another feed's record.
 
