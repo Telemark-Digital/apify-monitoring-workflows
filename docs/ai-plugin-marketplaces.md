@@ -2,7 +2,7 @@
 
 This repository includes foundational plugin packages for Codex, ChatGPT desktop, and Claude Code. Each plugin exposes one Telemark Digital Apify Actor through Apify's hosted MCP endpoint and adds a product-specific skill for safe use.
 
-Status: these files are ready for local and repository-source validation, but they are not official OpenAI or Anthropic marketplace submissions.
+Status: repository-source installation and live OAuth/MCP canaries passed in Codex and Claude Code on 2026-07-23. These packages are not official OpenAI or Anthropic directory listings.
 
 ## Included Plugins
 
@@ -27,13 +27,19 @@ The plugins use OAuth through Apify MCP. Do not add Apify tokens, authorization 
 
 These plugins are for one-off, bounded Actor calls inside an AI client. They do not run in the background, keep schedules, or guarantee only-new delivery across time by themselves.
 
-For monitoring, schedules, alerts, and only-new delivery, create a persistent saved Apify Task and connect the published n8n workflow or a Make implementation package after it has been built and validated in the destination Make account. Verify the saved Task cap before activation:
+For monitoring, schedules, alerts, and only-new delivery, create a persistent saved Apify Task and connect the repository n8n workflow or the matching public Make shared scenario. Verify the saved Task cap before activation:
 
 | Product | Saved Task cap |
 | --- | --- |
 | Bluesky Keyword & Mention Alerts | `maxPostsPerRun <= 100` |
 | RSS Keyword Monitor | `maxItemsPerRun <= 200` |
 | TED Tender Monitor | `maxNewPerRun <= 999` |
+
+Public Make shared scenarios:
+
+- [Bluesky Keyword and Mention Alerts](https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from)
+- [RSS Keyword Alerts](https://us2.make.com/public/shared-scenario/3rwZCcptirx/rss-keyword-alerts-from-a-persistent-api)
+- [TED Tender Alerts](https://us2.make.com/public/shared-scenario/udxoD7qdzBB/ted-tender-alerts-from-a-persistent-apif)
 
 ## Local Validation Commands
 
@@ -51,7 +57,7 @@ Claude Code supports marketplace validation with:
 claude plugin validate .
 ```
 
-Run fresh-install tests before linking users to these plugins. A complete release gate must prove that each install exposes only its own Actor tool plus Apify's paired output helper, completes OAuth without file-based secrets, produces a bounded result, handles a valid empty result, and preserves the one-off versus saved-Task monitoring boundary.
+The 2026-07-23 fresh-install canaries proved that each install exposes exactly one Actor-specific tool plus Apify's current `abort-actor-run`, `get-actor-run`, `get-dataset-items`, and `get-key-value-store-record` helpers. Each product completed OAuth without file-based secrets and passed bounded non-empty and valid empty-result calls in both Codex and Claude Code. The skills prohibit routine use of the destructive abort helper and keep one-off discovery separate from saved-Task monitoring.
 
 ## Candidate Install Paths
 
@@ -68,4 +74,3 @@ Confirm the exact CLI syntax against the current client documentation before pub
 - Codex plugin submission: <https://learn.chatgpt.com/docs/submit-plugins>
 - Claude Code plugins: <https://code.claude.com/docs/en/plugins>
 - Claude Code marketplaces: <https://code.claude.com/docs/en/plugin-marketplaces>
-
