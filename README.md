@@ -1,6 +1,6 @@
 # Apify Monitoring Workflows
 
-Public Apify Task configurations, validated n8n workflow examples, and Make construction specifications for monitoring Bluesky posts, RSS feeds, and TED procurement notices.
+Public Apify Task configurations, validated n8n workflow examples, Make construction specifications, and live Make shared scenarios for monitoring Bluesky posts, RSS feeds, and TED procurement notices.
 
 Created and maintained by **Telemark Digital**.
 
@@ -12,11 +12,17 @@ Created and maintained by **Telemark Digital**.
 
 Each product directory contains public Apify Task inputs, a platform-neutral workflow contract, an n8n workflow, a Make implementation package, fixtures, and validation notes.
 
+Live Make shared scenarios:
+
+- [Bluesky Keyword and Mention Alerts](https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from)
+- [RSS Keyword Alerts](https://us2.make.com/public/shared-scenario/3rwZCcptirx/rss-keyword-alerts-from-a-persistent-api)
+- [TED Tender Alerts](https://us2.make.com/public/shared-scenario/udxoD7qdzBB/ted-tender-alerts-from-a-persistent-apif)
+
 ## AI client plugins
 
 Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are included under [plugins](./plugins/). Each plugin exposes exactly one public Apify Actor through Apify MCP with OAuth and includes a product-specific skill that keeps bounded one-off discovery separate from saved-Task monitoring.
 
-These plugin files are not official marketplace submissions yet. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and validation gates.
+The plugin packages passed repository-source installation plus live OAuth/MCP calls in Codex and Claude Code on 2026-07-23. They are not official OpenAI or Anthropic directory listings. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and validation gates.
 
 Public product icons are in [assets/icons](./assets/icons/) using clean external filenames. The AI-client plugin manifests omit optional icon fields for this release so the plugin packages remain text-only and easy to publish through GitHub's web editor.
 
@@ -46,6 +52,6 @@ These examples contain no credentials. Connect your own Apify and destination ac
 
 ## Repository status
 
-The examples are prepared and validated locally before publication. The repository currently contains Make construction specifications, not blueprints. A blueprint will exist only after the corresponding scenario has been built, run, exported from Make, scrubbed, and re-imported successfully.
+The examples are prepared and validated locally before publication. All three Make scenarios have been built and are publicly shared through the links above. The repository retains their credential-free construction specifications rather than exported Make blueprint files.
 
 See [Account Gates](./docs/account-gates.md) for the GitHub publisher, n8n Creator Portal, optional n8n Cloud, and Make publication steps.
