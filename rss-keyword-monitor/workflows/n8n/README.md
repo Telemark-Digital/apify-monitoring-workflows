@@ -2,7 +2,7 @@
 
 [`rss-task-only-new.json`](./rss-task-only-new.json) is a credential-free n8n export. It uses verified **Run task** with **Wait for Finish** to retain every terminal status, fetches `defaultDatasetId` separately, and upserts records before reporting failure.
 
-Status: locally parsed and structurally validated against n8n 2.30.8, built-in Data Table 1.1, and `@apify/n8n-nodes-apify` 0.6.10. Exact-file import and authenticated runs of this revised export remain account gates.
+Status: imported and authenticated-run validated against n8n 2.30.8, built-in Data Table 1.1, and `@apify/n8n-nodes-apify` 0.6.10. The exact publication file passed Creator AI review and was submitted for human review as n8n submission `17430` on 2026-07-23.
 
 ## Before import
 
