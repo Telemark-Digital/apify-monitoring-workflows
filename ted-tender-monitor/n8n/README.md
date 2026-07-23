@@ -12,7 +12,7 @@
 6. Run manually and inspect the output before activating the daily trigger. Confirm the daily interval is strictly longer than the saved Task's hard timeout.
 7. Add a destination after **Report terminal outcome after ingestion** only when that destination has its own idempotency plan.
 
-The export intentionally contains no `credentials` object and no Task input, timeout, memory, or build override. Local validation confirms its JSON structure, node graph, Task operation, and tender validation. This revised file has **not** been imported exactly. Exact-file import into n8n 2.30.8 or the current release, authenticated execution, and post-run scrubbed re-import remain external account gates before template submission.
+The export intentionally contains no `credentials` object and no Task input, timeout, memory, or build override. Its executable graph was imported and authenticated-run validated in n8n 2.30.8. The final publication export adds documentation notes without changing executable nodes and passes exact-file repository validation. Its Creator submission is queued behind n8n's one-pending-template policy.
 
 Verified `@apify/n8n-nodes-apify` 0.6.10 **Run task** with **Wait for Finish** returns the run object for every terminal status. The workflow fetches its dataset separately with a fixed limit of 1000 and no pagination, upserts every row, and only then reports a non-success status. Because the Actor appends exactly one summary control row, account-gated validation must confirm `maxNewPerRun <= 999`. Identified tenders use `ted:<publicationNumber>`; control or malformed rows use `ted:run:<runId>:row:<rowIndex>`.
 
