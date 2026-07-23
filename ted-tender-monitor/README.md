@@ -9,7 +9,7 @@ This is an unofficial, independent community tool. It is not affiliated with, en
 - `apify-tasks/`: three bounded discovery Tasks for CPV, country plus keyword, and JSON notice output.
 - `workflow-contract.md`: the platform-neutral contract for reliable scheduled monitoring.
 - `n8n/ted-tender-monitor.json`: an importable, credential-free workflow using a persistent Apify Task.
-- `make/implementation.md`: an exact Make scenario specification. It remains unvalidated until built and exported from Make.
+- `make/implementation.md`: the credential-free specification for the live [TED Tender Alerts public Make scenario](https://us2.make.com/public/shared-scenario/udxoD7qdzBB/ted-tender-alerts-from-a-persistent-apif).
 - `fixtures/sample-output.json`: sanitized representative dataset records.
 - `VALIDATION.md`: completed local checks and account-gated checks still required.
 
