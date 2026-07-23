@@ -28,11 +28,10 @@ Recommended discovery input:
 }
 ```
 
-Use only the MCP Actor tool for `uplifted_novice_vbl/rss-keyword-monitor-only-new`. Do not call unrelated Apify tools or broaden the actor set. If the first tool response does not include enough dataset detail, use the paired `get-actor-output` tool for that same run only.
+Use only the MCP Actor tool for `uplifted_novice_vbl/rss-keyword-monitor-only-new`. Do not call unrelated Apify Actor tools or broaden the actor set. If the first response does not include enough dataset detail, use `get-dataset-items` only with the dataset ID from that same run and keep its limit small. Use `get-actor-run` or `get-key-value-store-record` only when needed for that same run. Never call `abort-actor-run` during normal discovery; abort only when the user explicitly asks to stop a run.
 
 ## Monitoring Boundary
 
-When the user asks to monitor, schedule, alert, or deliver only new feed items over time, explain that this plugin does not run in the background. Tell them to create a persistent saved Apify Task with `onlyNew: true`, verify `maxItemsPerRun <= 200`, and connect the published n8n workflow or the Make implementation package after it has been built and validated in their Make account.
+When the user asks to monitor, schedule, alert, or deliver only new feed items over time, explain that this plugin does not run in the background. Tell them to create a persistent saved Apify Task with `onlyNew: true`, verify `maxItemsPerRun <= 200`, and connect the repository n8n workflow or the [public Make shared scenario](https://us2.make.com/public/shared-scenario/3rwZCcptirx/rss-keyword-alerts-from-a-persistent-api).
 
 Do not place webhook URLs, tokens, private feed URLs, customer identifiers, or secrets in examples.
-
