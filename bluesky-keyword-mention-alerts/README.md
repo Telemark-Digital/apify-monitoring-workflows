@@ -53,8 +53,9 @@ See `fixtures/sample-posts.json` for sanitized example records.
 - `workflows/n8n/README.md`: account connection and test steps
 - `workflows/make/README.md`: exact Make scenario implementation package
 - `workflows/make/module-spec.json`: machine-readable module and mapping plan
+- [Bluesky Keyword and Mention Alerts on Make](https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from): live public shared scenario
 
-The n8n workflow contains no API token or credential identifier. After import, set your persistent Apify Task ID and connect your own Apify API or OAuth credential. The Make package is a design specification, not a validated or exported Make blueprint; Make validation requires an account and editor-generated export.
+The n8n workflow contains no API token or credential identifier. After import, set your persistent Apify Task ID and connect your own Apify API or OAuth credential. The repository's Make package remains a credential-free design specification; the linked scenario is the validated public Make implementation.
 
 ## Cost controls
 
