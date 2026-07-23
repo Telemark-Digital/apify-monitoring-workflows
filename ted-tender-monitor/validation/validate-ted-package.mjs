@@ -222,8 +222,8 @@ for (const relativePath of [
   assert.match(content, /maxNewPerRun\s*<=\s*999/i, `${relativePath}: must document the workflow cap`);
 }
 const n8nReadme = await readFile(path.join(root, 'n8n', 'README.md'), 'utf8');
-assert.match(n8nReadme, /This revised file has \*\*not\*\* been imported exactly/i, 'TED n8n README must not claim exact-file import');
-assert.match(n8nReadme, /external account gates/i, 'TED n8n README must retain exact-file import as an external gate');
+assert.match(n8nReadme, /executable graph was imported and authenticated-run validated/i, 'TED n8n README must preserve authenticated graph validation');
+assert.match(n8nReadme, /Creator submission is queued behind n8n's one-pending-template policy/i, 'TED n8n README must preserve current Creator submission gate');
 assert.match(n8nReadme, /manual recovery.*original.*run ID/is, 'n8n README must document exhausted-retry recovery');
 assert.match(n8nReadme, /does not provide automatic exactly-once delivery/i, 'n8n README must disclaim automatic exactly-once delivery');
 const validationNotes = await readFile(path.join(root, 'VALIDATION.md'), 'utf8');
