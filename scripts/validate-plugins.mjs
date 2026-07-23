@@ -139,8 +139,11 @@ for (const product of products) {
     assert(skill.includes('persistent saved Apify Task'), `${skillPath}: skill must direct recurring use to saved Tasks`);
     assert(skill.includes('does not run in the background'), `${skillPath}: skill must not imply background monitoring`);
     assert(skill.includes(product.capText), `${skillPath}: skill must document saved Task cap`);
-    assert(!/published\s+(?:n8n\s+or\s+)?Make\s+(?:workflow|blueprint|template)/i.test(skill), `${skillPath}: must not claim a published Make workflow, blueprint, or template`);
-    assert(/published n8n workflow or the Make implementation package after it has been built and validated/i.test(skill), `${skillPath}: must distinguish published n8n from unsubmitted Make implementation packages`);
+    assert(skill.includes('get-dataset-items'), `${skillPath}: must name the current dataset helper`);
+    assert(skill.includes('get-actor-run'), `${skillPath}: must name the current run helper`);
+    assert(skill.includes('get-key-value-store-record'), `${skillPath}: must name the current key-value-store helper`);
+    assert(/Never call `abort-actor-run` during normal discovery/i.test(skill), `${skillPath}: must prohibit routine use of the destructive abort helper`);
+    assert(/repository n8n workflow or the \[public Make shared scenario\]/i.test(skill), `${skillPath}: must distinguish repository n8n assets from the live Make shared scenario`);
     assert(/Do not place webhook URLs, tokens/.test(skill), `${skillPath}: skill must ban webhook URLs and tokens in examples`);
     assertNoCredentialShape(skillPath, skill);
 }
@@ -160,4 +163,3 @@ if (errors.length > 0) {
 } else {
     console.log(`Plugin validation passed: ${products.length} plugins, one pinned Apify MCP Actor per plugin.`);
 }
-
