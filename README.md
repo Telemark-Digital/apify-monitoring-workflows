@@ -20,7 +20,7 @@ Live Make shared scenarios:
 
 ## AI client plugins
 
-Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are included under [plugins](./plugins/). Each plugin exposes exactly one public Apify Actor through a product-specific, stateless Telemark Digital MCP gateway with Apify OAuth. The included skill keeps bounded one-off discovery separate from saved-Task monitoring.
+Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are included under [plugins](./plugins/). Each plugin exposes exactly one public Apify Actor through Apify MCP with OAuth and includes a product-specific skill that keeps bounded one-off discovery separate from saved-Task monitoring.
 
 The plugin packages passed repository-source installation plus live OAuth/MCP calls in Codex and Claude Code on 2026-07-23. They are not official OpenAI or Anthropic directory listings. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and validation gates.
 
