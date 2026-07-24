@@ -20,7 +20,7 @@ Live Make shared scenarios:
 
 ## AI client plugins
 
-Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are included under [plugins](./plugins/). Each plugin exposes exactly one public Apify Actor through Apify MCP with OAuth and includes a product-specific skill that keeps bounded one-off discovery separate from saved-Task monitoring.
+Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are included under [plugins](./plugins/). Each plugin exposes exactly one public Apify Actor through a product-specific, stateless Telemark Digital MCP gateway with Apify OAuth. The included skill keeps bounded one-off discovery separate from saved-Task monitoring.
 
 The plugin packages passed repository-source installation plus live OAuth/MCP calls in Codex and Claude Code on 2026-07-23. They are not official OpenAI or Anthropic directory listings. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and validation gates.
 
@@ -55,3 +55,9 @@ These examples contain no credentials. Connect your own Apify and destination ac
 The examples are prepared and validated locally before publication. All three Make scenarios have been built and are publicly shared through the links above. The repository retains their credential-free construction specifications rather than exported Make blueprint files.
 
 See [Account Gates](./docs/account-gates.md) for the GitHub publisher, n8n Creator Portal, optional n8n Cloud, and Make publication steps.
+
+## Support and legal
+
+- [Support](./docs/support.md)
+- [Privacy Policy](./docs/privacy.md)
+- [Terms of Use](./docs/terms.md)
