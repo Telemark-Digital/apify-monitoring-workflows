@@ -15,7 +15,7 @@ Depending on the app and your request, the service may process:
 - public feed URLs, keywords, regular expressions, exclusions, match fields, and bounded result limits;
 - public-post keywords, exclusions, language filters, and bounded result limits;
 - public-procurement classification, country, notice-type, keyword, value, date-window, and bounded result filters;
-- public result fields needed to answer the request, such as feed item titles and links, public post text and public handles, or procurement notice titles, public buyer organizations, classification codes, values, and notice links;
+- public result fields needed to answer the request, such as feed item titles and links, public post text and public URLs, or procurement notice titles, public buyer organizations, classification codes, values, and notice links;
 - technical request and response data needed to authenticate and route an MCP call; and
 - information you choose to send in a support request.
 
@@ -29,11 +29,11 @@ Run and dataset references returned by the gateway are signed, product-scoped, s
 
 ## Storage and retention
 
-The Telemark gateway code does not create application accounts, databases, or persistent application logs, and does not intentionally retain OAuth credentials, prompts, search inputs, or result rows. Its infrastructure provider may process limited network and security metadata to operate and protect the service.
+The Telemark gateway code does not create application accounts, databases, or persistent application logs, and does not intentionally retain OAuth credentials, prompts, search inputs, or result rows. Signed run and result references expire after 24 hours. The infrastructure provider may process limited network and security metadata under its published retention and security settings.
 
-Execution records are processed and retained in the connected execution account under that provider's settings and policies. The AI client may retain conversation and app-interaction data under its settings and policies. GitHub processes public support issues, and our email provider processes support email.
+Execution records are processed and retained in the connected execution account until the account owner deletes them or the execution provider's configured retention policy deletes them. The AI client retains conversation and app-interaction data according to the user's client settings and that provider's published policy. Public support issues remain public until removed under the repository's moderation and retention process.
 
-Support records are retained only as long as reasonably necessary to answer the request, maintain security, resolve disputes, and meet legal obligations.
+Private support email and privacy-request records are normally deleted within 24 months after the last substantive contact. We may retain a record longer only when required by law, needed to resolve an active dispute, or necessary to investigate a documented security incident; when that exception ends, the record is deleted.
 
 ## Purposes
 
