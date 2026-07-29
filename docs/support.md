@@ -1,10 +1,10 @@
 # Support
 
-Telemark Digital supports the following AI-client plugins and their associated public Apify Actors:
+Telemark Digital supports these bounded-search apps:
 
-- Bluesky Keyword Alerts
-- RSS Keyword Monitor
-- TED Tender Monitor
+- Telemark Feed Search
+- Telemark Public Post Search
+- Telemark Procurement Search
 
 ## Get help
 
@@ -12,16 +12,16 @@ For usage questions, bug reports, and feature requests that contain no private i
 
 For account-specific, privacy, security, or other non-public matters, email [hello@telemarkdigital.com](mailto:hello@telemarkdigital.com).
 
-When reporting a problem, include the plugin name, an approximate time, the visible error message, and steps to reproduce it. Do not include access tokens, authorization headers, webhook secrets, private Apify Task IDs, private feed URLs, customer data, or other credentials in a GitHub issue, email, screenshot, or recording.
+When reporting a problem, include the app name, an approximate time, the visible error message, and steps to reproduce it. Do not include access tokens, authorization headers, webhook secrets, private source URLs, customer data, health information, payment-card data, or other credentials or sensitive personal data in an issue, email, screenshot, or recording.
 
 ## Scope
 
-The plugins provide bounded, on-demand access to one Telemark Digital Apify Actor each. They do not run continuously in the background. Recurring monitoring requires a saved Apify Task and a compatible workflow.
+The apps provide bounded, on-demand searches through one product-specific Telemark Digital gateway each. They do not run continuously in the background or accept webhook, secret, reset-state, or shared-state inputs.
 
-Apify account access and Actor billing are handled through Apify. OpenAI or ChatGPT account issues are handled by OpenAI. Telemark Digital can investigate the plugin, its product-specific gateway, its documentation, and the associated Actor, but cannot change another provider's account or billing records.
+Connected-account access and remote-run billing are handled by the execution provider. AI-client account issues are handled by that provider. Telemark Digital can investigate the app, its gateway, its documentation, and the associated search service, but cannot change another provider's account or billing records.
 
 Support is provided on a reasonable-efforts basis. No response-time or resolution-time service level is promised unless agreed separately in writing.
 
 See the [Privacy Policy](./privacy.md) and [Terms of Use](./terms.md).
 
-Last updated: July 24, 2026.
+Last updated: July 29, 2026.
