@@ -1,7 +1,7 @@
 {
   "name": "rss-keyword-monitor",
   "version": "0.1.0",
-  "description": "Preview RSS, Atom, and RDF keyword or regex matches through Telemark Digital's Apify Actor.",
+  "description": "Run bounded, on-demand searches of public RSS, Atom, and RDF feeds.",
   "author": {
     "name": "Telemark Digital",
     "email": "thetelemarkdigital@gmail.com",
@@ -10,23 +10,22 @@
   "homepage": "https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/plugins/rss-keyword-monitor",
   "repository": "https://github.com/Telemark-Digital/apify-monitoring-workflows",
   "license": "MIT",
-  "keywords": ["apify", "rss", "atom", "alerts", "monitoring"],
+  "keywords": ["rss", "atom", "feeds", "search", "regex"],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "RSS Keyword Monitor",
-    "shortDescription": "Bounded RSS and Atom keyword discovery.",
-    "longDescription": "Preview keyword, regex, and exclusion matches from RSS, Atom, or RDF feeds, then use the published Apify Task workflows when recurring only-new delivery is needed.",
+    "displayName": "Telemark Feed Search",
+    "shortDescription": "Bounded public feed search.",
+    "longDescription": "Search public RSS, Atom, or RDF feed URLs supplied by the user using keywords, regular expressions, exclusions, and field selection. Searches are on demand and capped at 100 results.",
     "developerName": "Telemark Digital",
     "category": "Productivity",
-    "capabilities": ["MCP", "Apify Actor", "Workflow guidance"],
+    "capabilities": ["MCP", "Public feed search", "Bounded results"],
     "websiteURL": "https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/plugins/rss-keyword-monitor",
     "brandColor": "#F97316",
     "defaultPrompt": [
-      "Preview AI stories from these RSS feeds.",
-      "Find regex matches in these Atom feeds.",
-      "Set up only-new RSS monitoring."
+      "Search these public RSS feeds for AI stories and return at most 10 results.",
+      "Find up to 10 regular-expression matches in these public Atom feeds.",
+      "Search this public feed while excluding sports items and return at most 10 results."
     ]
   }
 }
-
