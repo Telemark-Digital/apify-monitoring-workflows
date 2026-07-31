@@ -16,9 +16,9 @@
     {
       "name": "rss-keyword-monitor",
       "source": "./plugins/rss-keyword-monitor",
-      "description": "Preview RSS, Atom, and RDF keyword or regex matches through Apify MCP.",
+      "description": "Search public RSS, Atom, and RDF feeds on demand with keywords, regular expressions, exclusions, and bounded results.",
       "category": "Productivity",
-      "tags": ["apify", "rss", "monitoring"]
+      "tags": ["rss", "feeds", "search"]
     },
     {
       "name": "ted-tender-monitor",
@@ -29,4 +29,3 @@
     }
   ]
 }
-
