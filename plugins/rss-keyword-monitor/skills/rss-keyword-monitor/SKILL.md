@@ -1,17 +1,23 @@
 ---
 name: rss-keyword-monitor
-description: "Use when a user wants bounded RSS, Atom, or RDF keyword discovery or needs guidance for recurring saved-Task feed monitoring."
+description: "Use when a user wants a bounded search of public RSS, Atom, or RDF feed items by keyword, regular expression, exclusion, or field."
 ---
 
-# RSS Keyword Monitor
+# Telemark Feed Search
 
-Use this skill for bounded one-off discovery from public RSS, Atom, and RDF feeds through the Apify Actor `uplifted_novice_vbl/rss-keyword-monitor-only-new`.
+Use this skill only for bounded, on-demand searches of public feed URLs supplied by the user. It does not access private feeds, create webhooks, reset state, or keep monitoring after the conversation ends.
 
-## Direct Actor Use
+## Search workflow
 
-Before calling the MCP Actor tool, identify the feed URLs and match criteria. Keep the run small unless the user explicitly approves a larger preview. Apify charges can apply to Actor runs and delivered items.
+1. Require one or more complete public feed URLs.
+2. Map the user's keywords, regular expressions, exclusions, and requested match fields exactly.
+3. If the user asks for all, every, unlimited, or no-limit results without a positive numeric cap, do not call a tool. Explain the 100-result maximum and ask the user to choose a cap from 1 to 100.
+4. Otherwise keep `maxResults` explicit and no greater than the user's requested cap. Use 3 for a small preview.
+5. Call `search_public_feed_items`. Telemark Digital funds this bounded search; the user is not charged and no user execution account is connected. Availability is subject to the shared daily and monthly capacity limits.
+6. If the returned status is nonterminal, call `get_public_feed_search_status` only with the signed `runId` from that search.
+7. After status `SUCCEEDED`, call `get_public_feed_search_results` only with the signed `datasetId` returned for the same run and a limit no greater than `maxResults`.
 
-Recommended discovery input:
+Recommended bounded input:
 
 ```json
 {
@@ -20,18 +26,15 @@ Recommended discovery input:
   "regexPatterns": [],
   "excludeTerms": [],
   "matchFields": ["title", "description"],
-  "onlyNew": false,
-  "maxItemsPerRun": 10,
-  "dedupWindow": 45,
-  "includeContent": false,
-  "resetState": false
+  "maxResults": 3,
+  "waitSecs": 45
 }
 ```
 
-Use only the MCP Actor tool for `uplifted_novice_vbl/rss-keyword-monitor-only-new`. Do not call unrelated Apify Actor tools or broaden the actor set. If the first response does not include enough dataset detail, use `get-dataset-items` only with the dataset ID from that same run and keep its limit small. Use `get-actor-run` or `get-key-value-store-record` only when needed for that same run. Never call `abort-actor-run` during normal discovery; abort only when the user explicitly asks to stop a run.
+Treat an empty result as valid when no public item matches. Never invent feed items or claim background monitoring.
 
-## Monitoring Boundary
+This is an original bounded-search workflow, not an account connector or arbitrary pass-through. It fetches only the public feed URLs supplied for the request, applies Telemark Digital's keyword, regular-expression, exclusion, field-selection, bounding, and result-minimization logic, and returns only the documented public fields.
 
-When the user asks to monitor, schedule, alert, or deliver only new feed items over time, explain that this plugin does not run in the background. Tell them to create a persistent saved Apify Task with `onlyNew: true`, verify `maxItemsPerRun <= 200`, and connect the repository n8n workflow or the [public Make shared scenario](https://us2.make.com/public/shared-scenario/3rwZCcptirx/rss-keyword-alerts-from-a-persistent-api).
+## Safety and privacy
 
-Do not place webhook URLs, tokens, private feed URLs, customer identifiers, or secrets in examples.
+Do not use authenticated or private feed URLs. Do not request or transmit credentials, restricted data, sensitive personal data, webhook settings, or confidential source data. Returned rows are limited to public feed, title, link, date, description, and match fields.
