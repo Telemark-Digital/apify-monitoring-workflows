@@ -1,7 +1,7 @@
 {
   "name": "rss-keyword-monitor",
   "version": "0.1.0",
-  "description": "Preview RSS, Atom, and RDF keyword or regex matches through Telemark Digital's Apify Actor.",
+  "description": "Run bounded, on-demand searches of public RSS, Atom, and RDF feeds.",
   "author": {
     "name": "Telemark Digital",
     "email": "thetelemarkdigital@gmail.com",
@@ -11,4 +11,3 @@
   "repository": "https://github.com/Telemark-Digital/apify-monitoring-workflows",
   "license": "MIT"
 }
-
