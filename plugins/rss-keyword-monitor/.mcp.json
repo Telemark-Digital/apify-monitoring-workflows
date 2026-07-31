@@ -1,9 +1,8 @@
 {
   "mcpServers": {
-    "telemark-rss-keyword-monitor": {
+    "telemark-feed-search": {
       "type": "http",
-      "url": "https://mcp.apify.com?tools=uplifted_novice_vbl/rss-keyword-monitor-only-new"
+      "url": "https://telemark-feed-search-mcp.katfu111111.workers.dev/mcp"
     }
   }
 }
-
