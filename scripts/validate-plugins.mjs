@@ -15,10 +15,10 @@ const products = [
     },
     {
         name: 'rss-keyword-monitor',
-        displayName: 'RSS Keyword Monitor',
-        actorId: 'uplifted_novice_vbl/rss-keyword-monitor-only-new',
-        mcpServerName: 'telemark-rss-keyword-monitor',
-        capText: 'maxItemsPerRun <= 200',
+        displayName: 'Telemark Feed Search',
+        mcpUrl: 'https://telemark-feed-search-mcp.katfu111111.workers.dev/mcp',
+        mcpServerName: 'telemark-feed-search',
+        currentBoundedContract: true,
     },
     {
         name: 'ted-tender-monitor',
@@ -128,23 +128,35 @@ for (const product of products) {
     assert(Object.keys(servers).length === 1, `${mcpPath}: expected exactly one MCP server`);
     const server = servers[product.mcpServerName];
     assert(server?.type === 'http', `${mcpPath}: MCP server must use Streamable HTTP`);
-    assert(server?.url === `https://mcp.apify.com?tools=${product.actorId}`, `${mcpPath}: MCP URL must pin exactly one Actor`);
+    const expectedMcpUrl = product.mcpUrl ?? `https://mcp.apify.com?tools=${product.actorId}`;
+    assert(server?.url === expectedMcpUrl, `${mcpPath}: MCP URL mismatch`);
     assert(!JSON.stringify(mcp).match(/headers|Authorization|token|command|args/i), `${mcpPath}: MCP config must not embed local commands, headers, or tokens`);
 
     const skill = await readText(skillPath);
     assert(skill.startsWith('---\n'), `${skillPath}: skill must start with YAML frontmatter`);
     assert(skill.includes(`name: ${product.name}`), `${skillPath}: frontmatter name mismatch`);
-    assert(skill.includes(product.actorId), `${skillPath}: skill must name exact Actor ID`);
-    assert(skill.includes('Apify charges'), `${skillPath}: skill must warn about Apify charges`);
-    assert(skill.includes('persistent saved Apify Task'), `${skillPath}: skill must direct recurring use to saved Tasks`);
-    assert(skill.includes('does not run in the background'), `${skillPath}: skill must not imply background monitoring`);
-    assert(skill.includes(product.capText), `${skillPath}: skill must document saved Task cap`);
-    assert(skill.includes('get-dataset-items'), `${skillPath}: must name the current dataset helper`);
-    assert(skill.includes('get-actor-run'), `${skillPath}: must name the current run helper`);
-    assert(skill.includes('get-key-value-store-record'), `${skillPath}: must name the current key-value-store helper`);
-    assert(/Never call `abort-actor-run` during normal discovery/i.test(skill), `${skillPath}: must prohibit routine use of the destructive abort helper`);
-    assert(/repository n8n workflow or the \[public Make shared scenario\]/i.test(skill), `${skillPath}: must distinguish repository n8n assets from the live Make shared scenario`);
-    assert(/Do not place webhook URLs, tokens/.test(skill), `${skillPath}: skill must ban webhook URLs and tokens in examples`);
+    if (product.currentBoundedContract) {
+        assert(skill.includes('search_public_feed_items'), `${skillPath}: must name the bounded search tool`);
+        assert(skill.includes('get_public_feed_search_status'), `${skillPath}: must name the signed status helper`);
+        assert(skill.includes('get_public_feed_search_results'), `${skillPath}: must name the signed results helper`);
+        assert(skill.includes('100-result maximum'), `${skillPath}: must document the hard result cap`);
+        assert(skill.includes('does not access private feeds'), `${skillPath}: must prohibit private-feed access`);
+        assert(skill.includes('keep monitoring after the conversation ends'), `${skillPath}: must state the background-monitoring boundary`);
+        assert(skill.includes('user is not charged'), `${skillPath}: must accurately explain reviewer-access charging`);
+        assert(!/Apify charges|persistent saved Apify Task|get-dataset-items|abort-actor-run/i.test(skill), `${skillPath}: contains retired paid or recurring contract text`);
+    } else {
+        assert(skill.includes(product.actorId), `${skillPath}: skill must name exact Actor ID`);
+        assert(skill.includes('Apify charges'), `${skillPath}: skill must warn about Apify charges`);
+        assert(skill.includes('persistent saved Apify Task'), `${skillPath}: skill must direct recurring use to saved Tasks`);
+        assert(skill.includes('does not run in the background'), `${skillPath}: skill must not imply background monitoring`);
+        assert(skill.includes(product.capText), `${skillPath}: skill must document saved Task cap`);
+        assert(skill.includes('get-dataset-items'), `${skillPath}: must name the current dataset helper`);
+        assert(skill.includes('get-actor-run'), `${skillPath}: must name the current run helper`);
+        assert(skill.includes('get-key-value-store-record'), `${skillPath}: must name the current key-value-store helper`);
+        assert(/Never call `abort-actor-run` during normal discovery/i.test(skill), `${skillPath}: must prohibit routine use of the destructive abort helper`);
+        assert(/repository n8n workflow or the \[public Make shared scenario\]/i.test(skill), `${skillPath}: must distinguish repository n8n assets from the live Make shared scenario`);
+        assert(/Do not place webhook URLs, tokens/.test(skill), `${skillPath}: skill must ban webhook URLs and tokens in examples`);
+    }
     assertNoCredentialShape(skillPath, skill);
 }
 
