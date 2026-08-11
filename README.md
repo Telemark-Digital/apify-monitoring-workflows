@@ -4,6 +4,12 @@ Public Apify Task configurations, validated n8n workflow examples, Make construc
 
 Created and maintained by **Telemark Digital**.
 
+## Start here
+
+- [AI-agent index](./llms.txt) gives crawlers and coding assistants the product map, Apify links, plugin paths, and workflow boundaries.
+- [Phase 1 visibility checkpoint](./docs/release-notes/2026-08-11-phase-1-visibility.md) lists the current public example expansion and external gates.
+- [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) explains the Claude/Codex plugin package layout and the safe distribution boundary.
+
 ## Products
 
 - [Bluesky Keyword & Mention Alerts](./bluesky-keyword-mention-alerts/) monitors public Bluesky posts for keywords, handles, mentions, and hashtags.
@@ -12,11 +18,11 @@ Created and maintained by **Telemark Digital**.
 
 Each product directory contains public Apify Task inputs, a platform-neutral workflow contract, an n8n workflow, a Make implementation package, fixtures, and validation notes.
 
-The TED package now includes ten live Apify Examples pages for high-intent procurement searches: AI procurement, cybersecurity, healthcare, SaaS/cloud software, construction, CPV 72 software, change notices and corrigenda, German managed detection, recent procurement JSON previews, and EU software CPV previews.
+The TED package now includes thirteen live Apify Examples pages for high-intent procurement searches: AI procurement, cybersecurity, healthcare, SaaS/cloud software, construction, CPV 72 software, change notices and corrigenda, German managed detection, recent procurement JSON previews, EU software CPV previews, French medical equipment, Polish IT services, and renewable energy procurement.
 
-The RSS package now includes eight live Apify Examples pages: multi-feed keyword alerts, regex and exclusions, webhook-ready JSON, security advisories, AI product news, research paper alerts, company news, and government cyber updates.
+The RSS package now includes eleven live Apify Examples pages: multi-feed keyword alerts, regex and exclusions, webhook-ready JSON, security advisories, vulnerability research, AI product news, research paper alerts, DevOps release notes, cloud platform updates, company news, and government cyber updates.
 
-The Bluesky package now includes eight live Apify Examples pages: keyword search, brand-handle mentions, hashtags, product launch keywords, AI policy posts, security keywords, startup funding posts, and brand or competitor handle monitoring.
+The Bluesky package now includes eleven live Apify Examples pages: keyword search, brand-handle mentions, hashtags, product launch keywords, developer tools launches, open-source maintainer discussion, AI policy posts, security keywords, data breach discussion, startup funding posts, and brand or competitor handle monitoring.
 
 Live Make shared scenarios:
 
