@@ -6,12 +6,29 @@ This is an unofficial, independent community tool. It is not affiliated with, en
 
 ## Included examples
 
-- `apify-tasks/`: three bounded discovery Tasks for CPV, country plus keyword, and JSON notice output.
+- `apify-tasks/`: ten bounded discovery Tasks for CPV, country, keyword, change-notice, and JSON notice-output searches.
 - `workflow-contract.md`: the platform-neutral contract for reliable scheduled monitoring.
 - `n8n/ted-tender-monitor.json`: an importable, credential-free workflow using a persistent Apify Task.
 - `make/implementation.md`: the credential-free specification for the live [TED Tender Alerts public Make scenario](https://us2.make.com/public/shared-scenario/udxoD7qdzBB/ted-tender-alerts-from-a-persistent-apif).
 - `fixtures/sample-output.json`: sanitized representative dataset records.
 - `VALIDATION.md`: completed local checks and account-gated checks still required.
+
+## Public Apify Task examples
+
+Each example below is published on the Actor's Apify Examples tab, uses `sampleMode: true`, and can be copied into a persistent scheduled Task after the user is ready to monitor only new or changed TED notices.
+
+| Use case | Public example |
+|---|---|
+| EU AI procurement notices | [monitor-eu-ai-procurement-notices](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/monitor-eu-ai-procurement-notices) |
+| EU cybersecurity tenders | [track-eu-cybersecurity-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/track-eu-cybersecurity-tenders) |
+| EU healthcare tenders | [find-eu-healthcare-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/find-eu-healthcare-tenders) |
+| Public sector SaaS tenders | [monitor-public-sector-saas-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/monitor-public-sector-saas-tenders) |
+| EU construction procurement | [track-eu-construction-procurement](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/track-eu-construction-procurement) |
+| CPV 72 software tenders | [watch-cpv-72-software-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/watch-cpv-72-software-tenders) |
+| TED change notices and corrigenda | [track-ted-change-notices-and-corrigenda](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/track-ted-change-notices-and-corrigenda) |
+| German managed detection tenders | [find-german-cybersecurity-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/find-german-cybersecurity-tenders) |
+| Recent EU procurement JSON preview | [preview-recent-eu-procurement-notices-as-json](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/preview-recent-eu-procurement-notices-as-json) |
+| EU software tenders by CPV | [preview-eu-software-tenders-by-cpv](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/preview-eu-software-tenders-by-cpv) |
 
 ## Discovery and monitoring are different
 
