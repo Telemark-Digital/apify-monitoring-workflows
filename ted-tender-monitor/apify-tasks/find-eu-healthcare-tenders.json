@@ -1,0 +1,29 @@
+{
+  "actorId": "uplifted_novice_vbl/ted-tender-watch",
+  "taskName": "find-eu-healthcare-tenders",
+  "publication": {
+    "slug": "find-eu-healthcare-tenders",
+    "seoTitle": "Find EU Healthcare Tenders on TED",
+    "seoDescription": "Preview EU medical and healthcare TED notices as JSON. Disable sampleMode on a saved Task for monitoring. Not affiliated with TED or the EU.",
+    "displayedInputFields": ["sampleMode", "cpvCodes", "noticeTypes", "includeChangeNotices", "maxNewPerRun"],
+    "datasetView": "overview"
+  },
+  "input": {
+    "sampleMode": true,
+    "cpvCodes": ["33"],
+    "countries": [],
+    "keywords": [],
+    "minValueEur": 0,
+    "noticeTypes": ["cn-standard", "cn-social", "cn-desg"],
+    "includeChangeNotices": true,
+    "lookbackDays": 3,
+    "maxNewPerRun": 25
+  },
+  "expectedBehavior": {
+    "maximumTenderRecords": 10,
+    "minimumDatasetRecords": 1,
+    "maximumRunSeconds": 300,
+    "stateWritten": false,
+    "tenderEventCharge": false
+  }
+}
