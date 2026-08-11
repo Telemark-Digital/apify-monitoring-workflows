@@ -1,0 +1,43 @@
+{
+  "actorId": "uplifted_novice_vbl/rss-keyword-monitor-only-new",
+  "taskName": "rss-government-cyber-updates-preview",
+  "publication": {
+    "slug": "rss-government-cyber-updates-preview",
+    "seoTitle": "Monitor Government Cyber RSS Updates",
+    "seoDescription": "Preview official cyber RSS updates for alerts, advisories, incidents and guidance. Save as a Task for only-new monitoring.",
+    "displayedInputFields": [
+      "feeds",
+      "keywords",
+      "matchFields",
+      "onlyNew",
+      "maxItemsPerRun"
+    ],
+    "datasetView": "overview"
+  },
+  "input": {
+    "feeds": [
+      "https://www.cisa.gov/news.xml",
+      "https://us-cert.cisa.gov/ncas/current-activity.xml"
+    ],
+    "keywords": [
+      "alert",
+      "advisory",
+      "incident",
+      "guidance",
+      "vulnerability",
+      "cyber"
+    ],
+    "regexPatterns": [],
+    "excludeTerms": [],
+    "matchFields": [
+      "title",
+      "description"
+    ],
+    "onlyNew": false,
+    "maxItemsPerRun": 10,
+    "dedupWindow": 45,
+    "includeContent": false,
+    "webhookUrl": "",
+    "resetState": false
+  }
+}
