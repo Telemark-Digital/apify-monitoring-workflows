@@ -23,8 +23,26 @@ Choose one:
 1. Monitor multiple RSS feeds for keyword alerts.
 2. Filter RSS feeds with regex and exclusions.
 3. Get webhook-ready RSS updates as JSON.
+4. Track security advisory RSS feeds.
+5. Monitor AI product news RSS feeds.
+6. Track new research papers from arXiv RSS.
+7. Track company news RSS feeds.
+8. Monitor government cyber RSS updates.
 
 Each example uses public feeds, leaves `webhookUrl` blank, and limits output to ten records or fewer.
+
+## Public Apify examples
+
+| Use case | Public example |
+| --- | --- |
+| Multiple RSS feeds for keyword alerts | [Preview Multiple RSS Feeds for Keywords](https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new/examples/rss-multi-feed-keyword-alerts-preview) |
+| Regex filtering with exclusions | [Preview RSS with Regex and Exclusion Terms](https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new/examples/rss-regex-exclusions-preview) |
+| Webhook-ready JSON preview | [Preview Webhook-Ready RSS Items as JSON](https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new/examples/rss-webhook-ready-json-preview) |
+| Security advisory feeds | [Track Security Advisory RSS Feeds](https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new/examples/rss-security-advisory-alerts-preview) |
+| AI product and automation news | [Monitor AI Product News RSS Feeds](https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new/examples/rss-ai-product-news-alerts-preview) |
+| Research paper alerts | [Track New Research Papers from RSS](https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new/examples/rss-research-paper-alerts-preview) |
+| Company news monitoring | [Track Company News RSS Feeds](https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new/examples/rss-company-news-monitor-preview) |
+| Government cyber updates | [Monitor Government Cyber RSS Updates](https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new/examples/rss-government-cyber-updates-preview) |
 
 ## Create a recurring monitor
 
