@@ -1,0 +1,44 @@
+{
+  "definitionVersion": 1,
+  "actorId": "uplifted_novice_vbl/bluesky-keyword-mention-alerts",
+  "taskName": "monitor-bluesky-product-launch-keywords",
+  "publication": {
+    "slug": "monitor-bluesky-product-launch-keywords",
+    "seoTitle": "Monitor Bluesky Product Launch Keywords",
+    "seoDescription": "Preview Bluesky posts about product launches as JSON. Set onlyNew=true on a saved Task for scheduled launch monitoring.",
+    "displayedInputFields": [
+      "keywords",
+      "langs",
+      "onlyNew",
+      "maxPostsPerRun"
+    ],
+    "datasetView": "overview"
+  },
+  "input": {
+    "keywords": [
+      "product launch",
+      "new product",
+      "launching today"
+    ],
+    "handles": [],
+    "hashtags": [],
+    "excludeTerms": [],
+    "langs": [
+      "en"
+    ],
+    "onlyNew": false,
+    "maxPostsPerRun": 10,
+    "sort": "latest",
+    "resetState": false
+  },
+  "discoveryValidation": {
+    "timeoutSeconds": 300,
+    "expectedMinimumDatasetItems": 1,
+    "reason": "Active launch and product keywords with English filtering and a ten-record cap."
+  },
+  "monitoringChange": {
+    "onlyNew": true,
+    "persistentTaskRequired": true,
+    "note": "Copy the Task, replace the launch keywords with your category terms, set onlyNew to true, and schedule that same Task."
+  }
+}
