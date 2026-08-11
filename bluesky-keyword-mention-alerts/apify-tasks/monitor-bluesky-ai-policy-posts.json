@@ -1,0 +1,44 @@
+{
+  "definitionVersion": 1,
+  "actorId": "uplifted_novice_vbl/bluesky-keyword-mention-alerts",
+  "taskName": "monitor-bluesky-ai-policy-posts",
+  "publication": {
+    "slug": "monitor-bluesky-ai-policy-posts",
+    "seoTitle": "Monitor Bluesky AI Policy Posts",
+    "seoDescription": "Preview Bluesky posts about AI policy, regulation, and governance as JSON. Set onlyNew=true on a saved Task for alerts.",
+    "displayedInputFields": [
+      "keywords",
+      "langs",
+      "onlyNew",
+      "maxPostsPerRun"
+    ],
+    "datasetView": "overview"
+  },
+  "input": {
+    "keywords": [
+      "AI policy",
+      "AI regulation",
+      "AI governance"
+    ],
+    "handles": [],
+    "hashtags": [],
+    "excludeTerms": [],
+    "langs": [
+      "en"
+    ],
+    "onlyNew": false,
+    "maxPostsPerRun": 10,
+    "sort": "latest",
+    "resetState": false
+  },
+  "discoveryValidation": {
+    "timeoutSeconds": 300,
+    "expectedMinimumDatasetItems": 1,
+    "reason": "Current public discussion terms around AI policy with a repeatable preview cap."
+  },
+  "monitoringChange": {
+    "onlyNew": true,
+    "persistentTaskRequired": true,
+    "note": "Copy the Task, refine the policy terms, set onlyNew to true, and schedule that same Task."
+  }
+}
