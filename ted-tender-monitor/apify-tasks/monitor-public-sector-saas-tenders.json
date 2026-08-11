@@ -1,0 +1,29 @@
+{
+  "actorId": "uplifted_novice_vbl/ted-tender-watch",
+  "taskName": "monitor-public-sector-saas-tenders",
+  "publication": {
+    "slug": "monitor-public-sector-saas-tenders",
+    "seoTitle": "Monitor Public Sector SaaS Tenders on TED",
+    "seoDescription": "Preview EU TED notices mentioning SaaS or cloud software as JSON. Disable sampleMode on a saved Task for monitoring. Not affiliated with TED or the EU.",
+    "displayedInputFields": ["sampleMode", "cpvCodes", "keywords", "noticeTypes", "includeChangeNotices"],
+    "datasetView": "overview"
+  },
+  "input": {
+    "sampleMode": true,
+    "cpvCodes": ["72"],
+    "countries": [],
+    "keywords": ["software as a service", "SaaS", "cloud software"],
+    "minValueEur": 0,
+    "noticeTypes": ["cn-standard", "cn-social", "cn-desg"],
+    "includeChangeNotices": true,
+    "lookbackDays": 3,
+    "maxNewPerRun": 25
+  },
+  "expectedBehavior": {
+    "maximumTenderRecords": 10,
+    "minimumDatasetRecords": 1,
+    "maximumRunSeconds": 300,
+    "stateWritten": false,
+    "tenderEventCharge": false
+  }
+}
