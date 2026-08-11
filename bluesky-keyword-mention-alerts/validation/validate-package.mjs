@@ -1,84 +1,368 @@
-# Bluesky Keyword & Mention Alerts
+import assert from 'node:assert/strict';
+import { readFile, readdir } from 'node:fs/promises';
+import path from 'node:path';
+import process from 'node:process';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
 
-Monitor public Bluesky posts for keywords, phrases, handles, mentions, and hashtags. The Actor writes structured dataset items and can return only posts that a persistent Apify Task has not delivered before.
+const here = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(here, '..');
+const actorReadmeArg = process.argv.find((arg) => arg.startsWith('--actor-readme='));
+const actorReadme = actorReadmeArg ? path.resolve(actorReadmeArg.slice('--actor-readme='.length)) : null;
 
-This package contains public examples and workflow templates for [Bluesky Keyword & Mention Alerts on Apify](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts).
+async function filesUnder(directory) {
+    const entries = await readdir(directory, { withFileTypes: true });
+    const files = [];
+    for (const entry of entries) {
+        const fullPath = path.join(directory, entry.name);
+        if (entry.isDirectory()) files.push(...(await filesUnder(fullPath)));
+        if (entry.isFile()) files.push(fullPath);
+    }
+    return files;
+}
 
-> Unofficial and independent. This Actor is not affiliated with, endorsed by, or sponsored by Bluesky Social PBC.
+function walk(value, visit, trail = '$') {
+    visit(value, trail);
+    if (Array.isArray(value)) value.forEach((item, index) => walk(item, visit, `${trail}[${index}]`));
+    else if (value && typeof value === 'object') {
+        for (const [key, item] of Object.entries(value)) walk(item, visit, `${trail}.${key}`);
+    }
+}
 
-## Choose a public example
+function executeN8nCode(code, runNodeName, run, input = [], prepared = []) {
+    const context = {
+        $input: { all: () => input.map((json) => ({ json })) },
+        $: (name) => {
+            if (name === runNodeName) return { first: () => ({ json: run }) };
+            if (name === 'Prepare dataset records') return { all: () => prepared };
+            throw new Error(`Unexpected n8n node reference: ${name}`);
+        },
+    };
+    return vm.runInNewContext(`(() => {${code}\n})()`, context);
+}
 
-| Goal | Example | Discovery target |
-| --- | --- | --- |
-| Find current keyword matches | `apify-tasks/find-bluesky-keyword-posts.json` | `bluesky` |
-| Find brand-handle posts and mentions | `apify-tasks/find-bluesky-brand-mentions.json` | `bsky.app` |
-| Find current hashtag matches | `apify-tasks/find-bluesky-hashtag-posts.json` | `photography` |
-| Monitor product launch keywords | `apify-tasks/monitor-bluesky-product-launch-keywords.json` | `product launch`, `new product`, `launching today` |
-| Track brand and competitor handles | `apify-tasks/track-bluesky-brand-competitor-mentions.json` | `bsky.app`, `github.com` |
-| Monitor AI policy posts | `apify-tasks/monitor-bluesky-ai-policy-posts.json` | `AI policy`, `AI regulation`, `AI governance` |
-| Track security keywords | `apify-tasks/track-bluesky-security-keywords.json` | `cybersecurity`, `data breach`, `vulnerability` |
-| Monitor startup funding posts | `apify-tasks/monitor-bluesky-startup-funding-posts.json` | `startup funding`, `funding round`, `raised funding` |
+const publicFiles = await filesUnder(root);
+const jsonFiles = publicFiles.filter((file) => file.endsWith('.json'));
+const parsed = new Map();
+for (const file of jsonFiles) parsed.set(file, JSON.parse(await readFile(file, 'utf8')));
 
-The published examples use `onlyNew: false` and `maxPostsPerRun: 10`. This makes each discovery page repeatable, bounded, and likely to show a non-empty dataset when Apify or a visitor runs it. Discovery runs still update the Task's seen-post state, but prior state does not filter their output.
+const forbiddenNames = [
+    ['MAG', 'PIE'].join(''),
+    ['SKY', 'LARK'].join(''),
+    ['HER', 'ON'].join(''),
+    ['OS', 'PREY'].join(''),
+];
+const scanFiles = actorReadme ? [...publicFiles, actorReadme] : publicFiles;
+for (const file of scanFiles) {
+    const content = await readFile(file, 'utf8');
+    for (const name of forbiddenNames) {
+        assert(!content.toLowerCase().includes(name.toLowerCase()), `Forbidden public name in ${file}`);
+    }
+    assert(!/Bearer\s+[A-Za-z0-9_-]{12,}/i.test(content), `Likely bearer token in ${file}`);
+    assert(!/hooks\.slack\.com\/services\//i.test(content), `Slack webhook URL in ${file}`);
+    assert(!/(?:apify_api_token|apify_token|x-apify-token)\s*[=:]/i.test(content), `Likely Apify token in ${file}`);
+}
 
-Live Apify Examples pages:
+const taskDir = path.join(root, 'apify-tasks');
+const taskFiles = (await filesUnder(taskDir)).filter((file) => file.endsWith('.json'));
+assert(taskFiles.length >= 3, `Expected at least three public Task definitions, found ${taskFiles.length}`);
 
-- [Find Bluesky keyword posts](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/find-bluesky-keyword-posts)
-- [Find Bluesky brand mentions](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/find-bluesky-brand-mentions)
-- [Find Bluesky hashtag posts](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/find-bluesky-hashtag-posts)
-- [Monitor Bluesky product launch keywords](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/monitor-bluesky-product-launch-keywords)
-- [Track Bluesky brand and competitor handles](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/track-bluesky-brand-competitor-mentions)
-- [Monitor Bluesky AI policy posts](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/monitor-bluesky-ai-policy-posts)
-- [Track Bluesky security keywords](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/track-bluesky-security-keywords)
-- [Monitor Bluesky startup funding posts](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/monitor-bluesky-startup-funding-posts)
+const allowedInputKeys = new Set([
+    'keywords',
+    'handles',
+    'hashtags',
+    'excludeTerms',
+    'langs',
+    'onlyNew',
+    'maxPostsPerRun',
+    'sort',
+    'resetState',
+]);
+for (const file of taskFiles) {
+    const task = parsed.get(file);
+    assert.equal(task.definitionVersion, 1);
+    assert.equal(task.actorId, 'uplifted_novice_vbl/bluesky-keyword-mention-alerts');
+    assert(/^[a-z0-9-]+$/.test(task.taskName), `Invalid Task name in ${file}`);
+    assert.equal(task.taskName, task.publication.slug, `Task name and slug differ in ${file}`);
+    assert(task.publication.seoTitle.length <= 70, `SEO title is too long in ${file}`);
+    assert(task.publication.seoDescription.length <= 160, `SEO description is too long in ${file}`);
+    assert.equal(task.publication.datasetView, 'overview');
+    assert.equal(task.input.onlyNew, false, `Discovery Task must be repeatable in ${file}`);
+    assert.equal(task.input.resetState, false, `resetState must be false in ${file}`);
+    assert.equal(task.input.sort, 'latest', `Sort must remain latest in ${file}`);
+    assert(Number.isInteger(task.input.maxPostsPerRun));
+    assert(task.input.maxPostsPerRun >= 1 && task.input.maxPostsPerRun <= 10, `Discovery cap exceeds 10 in ${file}`);
+    assert(!Object.hasOwn(task.input, 'webhookUrl'), `Public Task contains webhookUrl in ${file}`);
+    assert(Object.keys(task.input).every((key) => allowedInputKeys.has(key)), `Unknown Actor input key in ${file}`);
+    const targetCount = task.input.keywords.length + task.input.handles.length + task.input.hashtags.length;
+    assert(targetCount >= 1 && targetCount <= 20, `Invalid target count in ${file}`);
+    assert.equal(task.discoveryValidation.timeoutSeconds, 300);
+    assert.equal(task.discoveryValidation.expectedMinimumDatasetItems, 1);
+    assert.equal(task.monitoringChange.onlyNew, true);
+    assert.equal(task.monitoringChange.persistentTaskRequired, true);
+}
 
-## Turn an example into monitoring
+const fixtureFile = path.join(root, 'fixtures', 'sample-posts.json');
+const fixtures = parsed.get(fixtureFile);
+assert(Array.isArray(fixtures) && fixtures.length > 0, 'Fixture must contain records');
+const requiredOutputFields = [
+    'uri', 'cid', 'url', 'author', 'text', 'createdAt', 'indexedAt', 'langs',
+    'likeCount', 'repostCount', 'replyCount', 'quoteCount', 'matchedTerms', 'source', 'isNew',
+];
+const allowedSources = new Set(['keyword', 'handle', 'hashtag', 'mention']);
+for (const item of fixtures) {
+    assert.deepEqual(Object.keys(item).sort(), [...requiredOutputFields].sort(), 'Fixture fields differ from dataset schema');
+    assert.equal(typeof item.author.did, 'string');
+    assert.equal(typeof item.author.handle, 'string');
+    assert(allowedSources.has(item.source));
+    assert.equal(item.isNew, true);
+}
 
-1. Copy the public example into your Apify account.
-2. Keep it as one persistent Task. Do not launch a fresh Actor configuration on every poll.
-3. Change `onlyNew` to `true`.
-4. Choose a cap appropriate to your budget; start with `maxPostsPerRun: 25`. When using either included non-paginated automation workflow, keep `maxPostsPerRun <= 100` because dataset retrieval is fixed at 100.
-5. Run once to establish the Task's state, then attach an Apify Schedule or use the included workflow.
+const isValidDatasetRecord = (record) => typeof record?.uri === 'string' && record.uri.length > 0
+    && typeof record?.url === 'string' && record.url.length > 0;
+const deliveryKeyFor = (record, run, index) => isValidDatasetRecord(record)
+    ? `bluesky:${record.uri}`
+    : `bluesky:diagnostic:${encodeURIComponent(String(run.id ?? 'unknown-run'))}:row:${index}`;
 
-The first monitoring run can return matches from the initial lookback. Later runs return only records not previously delivered to that Task. A successful quiet run can therefore have an empty dataset.
+const workflowFile = path.join(root, 'workflows', 'n8n', 'bluesky-alerts-task-to-json.json');
+const workflow = parsed.get(workflowFile);
+const nodesByName = new Map(workflow.nodes.map((node) => [node.name, node]));
+for (const name of [
+    'Run persistent Bluesky monitoring Task',
+    'Fetch terminal run dataset',
+    'Prepare dataset records',
+    'Upsert committed posts',
+    'Report terminal outcome after ingestion',
+    'Report terminal run without dataset',
+]) assert(nodesByName.has(name), `Missing n8n node: ${name}`);
 
-The included n8n workflow and Make specification do not paginate dataset retrieval. Their saved-Task account gate is `maxPostsPerRun <= 100` with a fixed retrieval limit of 100; do not activate either workflow until that Task setting has been verified.
+const runNode = nodesByName.get('Run persistent Bluesky monitoring Task');
+assert.equal(runNode.type, '@apify/n8n-nodes-apify.apify');
+assert.equal(runNode.parameters.resource, 'Actor tasks');
+assert.equal(runNode.parameters.operation, 'Run task');
+assert.equal(runNode.parameters.waitForFinish, true, 'n8n must retain every terminal run status');
+assert.equal(runNode.parameters.useCustomBody, false, 'n8n workflow must preserve saved Task input');
+assert.deepEqual(runNode.parameters.actorTaskId, { __rl: true, value: 'PASTEYOURTASKID', mode: 'id' });
+assert.equal(runNode.parameters.authentication, 'apifyApi');
+for (const field of ['timeout', 'memory', 'build']) {
+    assert(!Object.hasOwn(runNode.parameters, field), `n8n workflow overrides saved Task ${field}`);
+}
+const datasetNode = nodesByName.get('Fetch terminal run dataset');
+assert.equal(datasetNode.parameters.resource, 'Datasets');
+assert.equal(datasetNode.parameters.operation, 'Get items');
+assert.match(datasetNode.parameters.datasetId, /defaultDatasetId/);
+assert.equal(datasetNode.alwaysOutputData, true, 'Empty failed datasets must reach terminal reporting');
+assert.equal(datasetNode.parameters.offset, 0, 'n8n dataset retrieval must start at offset 0');
+assert.equal(datasetNode.parameters.limit, 100, 'n8n dataset retrieval limit must remain 100');
+assert.equal(datasetNode.retryOnFail, true);
+assert.equal(datasetNode.maxTries, 3);
+assert.equal(datasetNode.waitBetweenTries, 5000);
+assert.match(datasetNode.notes, /intentionally non-paginated/i);
+assert.match(datasetNode.notes, /maxPostsPerRun must be no greater than 100/i);
+assert.match(datasetNode.notes, /account-gated validation/i);
+const destinationNode = nodesByName.get('Upsert committed posts');
+assert.equal(destinationNode.type, 'n8n-nodes-base.dataTable');
+assert.equal(destinationNode.parameters.operation, 'upsert');
+assert.equal(destinationNode.retryOnFail, true);
+assert.equal(destinationNode.maxTries, 3);
+assert.equal(destinationNode.waitBetweenTries, 5000);
+assert.equal(destinationNode.parameters.filters.conditions[0].keyName, 'deliveryKey');
+assert.match(destinationNode.parameters.columns.value.deliveryKey, /deliveryKey/);
+const prepareCode = nodesByName.get('Prepare dataset records').parameters.jsCode;
+assert.match(prepareCode, /bluesky:\$\{post\.uri\}/);
+assert.match(prepareCode, /bluesky:diagnostic:\$\{encodeURIComponent\(String\(run\.id/);
+assert.match(prepareCode, /map\(\(item, rowIndex\)/, 'Diagnostic identity must retain the original dataset index');
+assert.match(prepareCode, /rowIdentity = `row:\$\{rowIndex\}`/);
+assert.match(prepareCode, /payloadJson: JSON\.stringify\(diagnostic\)/);
+assert.doesNotMatch(prepareCode, /throw new Error/, 'Malformed rows must not abort valid-row ingestion');
+const outcomeCode = nodesByName.get('Report terminal outcome after ingestion').parameters.jsCode;
+assert.match(outcomeCode, /after \$\{recordsPersisted\} committed dataset record/);
+assert.match(outcomeCode, /diagnosticRecordsPersisted/);
+assert.match(nodesByName.get('Report terminal run without dataset').parameters.jsCode, /no dataset request was attempted/i);
+assert.equal(workflow.nodes.some((node) => node.parameters?.operation === 'Run task and get dataset'), false);
+assert.notEqual(runNode.retryOnFail, true, 'The Task itself must never be retried');
+assert.deepEqual(workflow.pinData, {}, 'Published workflow must not contain pinned data');
+walk(workflow, (_value, trail) => assert(!/(^|\.)credentials(\.|$)/i.test(trail), `Credential object found at ${trail}`));
 
-Do not set `resetState: true` on a schedule. It erases that Task's cursor and seen-post history.
+const makeFile = path.join(root, 'workflows', 'make', 'module-spec.json');
+const make = parsed.get(makeFile);
+const makeDataset = make.modules.find((module) => module.label === 'HTTP Get Dataset Items');
+const makeListRuns = make.modules.find((module) => module.label === 'HTTP List Task Runs');
+const makePrepare = make.modules.find((module) => module.label === 'Prepare Delivery Record');
+const makeSerializer = make.modules.find((module) => module.label === 'Serialize Delivery Payload');
+const makeDelivery = make.modules.find((module) => module.label === 'Write Delivery Record');
+const makeBarrier = make.modules.find((module) => module.label === 'Aggregate Completed Delivery Writes');
+const makeDatasetCursor = make.modules.find((module) => module.label === 'Write Dataset Run Cursor');
+const makeMissingDatasetCursor = make.modules.find((module) => module.label === 'Write Missing-Dataset Run Cursor');
+assert.equal(make.architecture, 'APIFY_SCHEDULE_TO_HTTP_POLLING_RECONCILER');
+assert.equal(make.scenarioSettings.processInOrder, true, 'Make must avoid overlapping executions for run cursor safety');
+assert.equal(make.modules.some((module) => module.app === 'Apify' || module.module === 'Watch Task Runs' || module.module === 'Get Dataset Items'), false, 'Make must not use the official Apify connector modules');
+assert.equal(make.modules.some((module) => module.module === 'Search Records'), false, 'Make must not use Data store Search Records for cursor discovery');
+assert.equal(makeListRuns.configuration.method, 'GET');
+assert.match(makeListRuns.configuration.url, /\/actor-tasks\/\{\{TASK_ID\}\}\/runs\?desc=1&limit=1000&offset=0&status=SUCCEEDED,FAILED,ABORTED,TIMED-OUT$/);
+assert.equal(makeListRuns.configuration.headers.find((header) => header.name === 'Authorization').value, 'Bearer <APIFY_TOKEN_PLACEHOLDER>');
+assert.equal(makeListRuns.configuration.status, 'SUCCEEDED,FAILED,ABORTED,TIMED-OUT');
+assert.equal(makeListRuns.runWindow.limit, 1000);
+assert.match(makeListRuns.runWindow.sort, /reverse/i);
+assert.match(makeListRuns.runWindow.overflowGuard, /stored cursor run is not present/i);
+assert.equal(make.taskLaunch.requirements.pollRunLimit, 1000);
+assert.equal(make.taskLaunch.requirements.overflowStopIfCursorMissingFromFetchedPage, true);
+assert.equal(make.taskLaunch.requirements.overflowStopBeforeProcessing, true);
+assert.equal(make.taskLaunch.requirements.preflightCursorRead, true);
+assert.equal(make.taskLaunch.requirements.cursorPrimingRequired, true);
+assert.equal(make.taskLaunch.requirements.noDataStoreSearchForCursor, true);
+assert.equal(make.taskLaunch.requirements.maxRunsPerScenarioExecution, 1);
+assert.equal(make.taskLaunch.requirements.operationBudgetValidation, true);
+assert.equal(make.taskLaunch.requirements.backlogDrainFormula, 'makePollsPerHour * maxRunsPerScenarioExecution > apifyRunsPerHour');
+assert.match(make.taskLaunch.requirements.completionBarrier, /module 12 Array Aggregator sourceModule=9/);
+assert.match(make.taskLaunch.requirements.completionBarrier, /completedDeliveryWrites equals attemptedDatasetRows/);
+assert.match(make.taskLaunch.requirements.deliveryFailureStrategy, /Rollback\/stop-on-error/);
+assert.equal(make.taskLaunch.requirements.runOrdering, 'reverse-fetched-desc-page-after-cursor-filter');
+assert.deepEqual(make.taskLaunch.requirements.preflightModules, [2, 3, 4]);
+assert.equal(make.modules.find((module) => module.label === 'Read Last Processed Run Cursor').order, 2);
+assert.equal(make.modules.find((module) => module.label === 'Preflight Cursor Guard').order, 3);
+assert.equal(make.modules.find((module) => module.label === 'Cursor Guard Router').order, 4);
+assert.match(JSON.stringify(make.modules.find((module) => module.label === 'Cursor Guard Router')), /must not reach module 5/);
+assert.equal(make.modules.find((module) => module.label === 'Iterator - Dataset Items').order, 9);
+assert.equal(makePrepare.order, 10);
+assert.match(makePrepare.recordKey, /bluesky:\{\{module 9 uri\}\}/);
+assert.equal(makeSerializer.order, 10.5);
+assert.equal(makeSerializer.app, 'JSON');
+assert.equal(makeSerializer.module, 'Transform to JSON');
+assert.equal(makeSerializer.makeModuleId, 17);
+assert.match(makeSerializer.purpose, /native JSON serializer/i);
+assert.equal(makeDelivery.order, 11);
+assert.equal(makeDelivery.configuration.key, '{{module 10 recordKey}}');
+assert.equal(makeDelivery.configuration.record.payloadJson, '{{module 17 json}}');
+assert.match(makeDelivery.destinationKeyProof, /bluesky:<postUri>/);
+assert.equal(makeBarrier.order, 12);
+assert.equal(makeBarrier.configuration.sourceModule, 9);
+assert.match(makeBarrier.barrierInvariant, /Make-native completion barrier/);
+assert.match(makeBarrier.barrierInvariant, /completedDeliveryWrites equals attemptedDatasetRows/);
+assert.equal(make.modules.find((module) => module.label === 'Dataset Run Outcome').outputs.cursorWriteAllowed, 'completedDeliveryWrites = attemptedDatasetRows AND module11IncompleteExecutions = 0');
+assert.equal(make.taskLaunch.requirements.maxPostsPerRunAtMost, 100);
+assert.equal(make.taskLaunch.requirements.datasetRetrievalLimit, 100);
+assert.equal(make.taskLaunch.requirements.paginationEnabled, false);
+assert.equal(make.taskLaunch.requirements.makePollIntervalCoversRunWindow, true);
+assert.equal(makeDataset.configuration.method, 'GET');
+assert.match(makeDataset.configuration.url, /\/datasets\/\{\{module 5 defaultDatasetId\}\}\/items\?format=json&clean=1&offset=0&limit=100$/);
+assert.equal(makeDataset.configuration.headers.find((header) => header.name === 'Authorization').value, 'Bearer <APIFY_TOKEN_PLACEHOLDER>');
+assert.equal(makeDataset.configuration.limit, 100);
+assert.equal(makeDataset.configuration.paginationEnabled, false);
+assert.match(makeDataset.capInvariant, /intentionally non-paginated/i);
+assert.equal(makeDatasetCursor.idempotencyKey, 'bluesky:cursor:taskId');
+assert.match(makeDatasetCursor.checkpointInvariant, /completedDeliveryWrites equals attemptedDatasetRows/i);
+assert.match(makeDatasetCursor.checkpointInvariant, /zero module 11 incomplete executions/i);
+assert.equal(makeDatasetCursor.order, 14);
+assert.equal(makeMissingDatasetCursor.idempotencyKey, 'bluesky:cursor:taskId');
+assert.equal(makeMissingDatasetCursor.order, 16);
+assert.equal(make.errorHandlers.destination.handler, 'Rollback');
+assert.equal(make.errorHandlers.destination.stopsScenario, true);
+assert.match(make.errorHandlers.destination.never, /Do not use Make Retry\/Break on module 11/);
+assert.match(make.errorHandlers.destination.requiredProof, /module 12\/module 14 do not run/);
+assert.match(make.errorHandlers.destination.requiredProof, /run cursor remains unchanged/);
+assert.match(make.publicationGate.join(' '), /maxPostsPerRun is no greater than 100/i);
+assert.match(make.publicationGate.join(' '), /non-paginated retrieval limit of 100/i);
+assert.match(make.publicationGate.join(' '), /HTTP polling/i);
+assert.match(make.publicationGate.join(' '), /run-cursor/i);
+assert.match(make.publicationGate.join(' '), /desc=1&limit=1000&offset=0/i);
+assert.match(make.publicationGate.join(' '), /cursor-gap stop/i);
+assert.match(make.publicationGate.join(' '), /module 12 as the Array Aggregator completion barrier with sourceModule=9/i);
+assert.match(make.publicationGate.join(' '), /Rollback\/stop-on-error rather than Retry\/Break/i);
 
-The Actor holds an exclusive Task-state lease through recovery, delivery, and state commit; a concurrent contender stops before delivery or charging. Set the schedule interval longer than the Task's hard timeout to avoid needless contention.
+for (const relativePath of [
+    'README.md',
+    path.join('workflows', 'WORKFLOW-CONTRACT.md'),
+    path.join('workflows', 'n8n', 'README.md'),
+    path.join('workflows', 'make', 'README.md'),
+    path.join('validation', 'PRODUCT-VALIDATION.md'),
+]) {
+    const content = await readFile(path.join(root, relativePath), 'utf8');
+    assert.match(content, /maxPostsPerRun\s*<=\s*100/i, `${relativePath}: must document the workflow cap`);
+}
+const makeReadme = await readFile(path.join(root, 'workflows', 'make', 'README.md'), 'utf8');
+assert.match(makeReadme, /module 11 writes every prepared delivery record/i, 'Make README must document module 11 as the Bluesky sink');
+assert.match(makeReadme, /module 12 aggregates completed module 11 writes/i, 'Make README must document the completion barrier');
+assert.match(makeReadme, /Data-store error:.*Rollback.*module 11/is, 'Make README stop-on-error docs must point at module 11');
+assert.match(makeReadme, /completedDeliveryWrites equals attemptedDatasetRows/i, 'Make README must document the cursor count guard');
+assert.match(makeReadme, /Run-cursor error: retry module 14 or module 16/i, 'Make README cursor retry docs must point at modules 14/16');
+const blueskyN8nReadme = await readFile(path.join(root, 'workflows', 'n8n', 'README.md'), 'utf8');
+assert.match(blueskyN8nReadme, /account-gated/i, 'n8n README must retain the saved-Task cap account gate');
+assert.match(blueskyN8nReadme, /manual recovery.*original.*run ID/is, 'n8n README must document exhausted-retry recovery');
+assert.match(blueskyN8nReadme, /does not provide automatic exactly-once delivery/i, 'n8n README must disclaim automatic exactly-once delivery');
 
-## Output
+const terminalFixtureFile = path.join(root, 'fixtures', 'terminal-run-scenarios.json');
+const terminalScenarios = parsed.get(terminalFixtureFile);
+assert(Array.isArray(terminalScenarios) && terminalScenarios.length === 6, 'Expected six terminal-run scenarios');
+const deliveryStore = new Map();
+for (const scenario of terminalScenarios) {
+    assert.equal(scenario.run.status, 'FAILED');
+    const hasDataset = typeof scenario.run.defaultDatasetId === 'string';
+    assert.equal(scenario.expected.datasetFetched, hasDataset, `${scenario.scenario}: dataset fetch expectation mismatch`);
+    const records = scenario.dataset ?? [];
+    assert.equal(scenario.expected.recordsPersisted, records.length, `${scenario.scenario}: persistence count mismatch`);
+    const keys = records.map((record, index) => deliveryKeyFor(record, scenario.run, index));
+    assert.deepEqual(scenario.expected.deliveryKeys ?? [], keys, `${scenario.scenario}: stable keys mismatch`);
+    const validCount = records.filter(isValidDatasetRecord).length;
+    const diagnosticCount = records.length - validCount;
+    if (Object.hasOwn(scenario.expected, 'validRecordsPersisted')) {
+        assert.equal(scenario.expected.validRecordsPersisted, validCount, `${scenario.scenario}: valid-row count mismatch`);
+        assert.equal(scenario.expected.diagnosticRecordsPersisted, diagnosticCount, `${scenario.scenario}: diagnostic-row count mismatch`);
+    }
+    records.forEach((record, index) => deliveryStore.set(keys[index], record));
+    assert.equal(scenario.expected.terminalFailureReportedAfterIngestion, true);
+    if (scenario.replayOf) assert.equal(deliveryStore.size, scenario.expected.uniqueRecordsAfterReplay, 'Replay created a duplicate row');
+}
+const mixed = terminalScenarios.find((scenario) => scenario.scenario === 'FAILED_MIXED_VALID_AND_MALFORMED');
+const mixedReplay = terminalScenarios.find((scenario) => scenario.scenario === 'FAILED_MIXED_REPLAY_IDEMPOTENCY');
+assert(mixed && mixedReplay, 'Mixed valid/malformed run and replay fixtures are required');
+assert.equal(mixed.expected.malformedDiagnosticsDeterministic, true);
+assert.deepEqual(
+    mixed.dataset.map((record, index) => deliveryKeyFor(record, mixed.run, index)),
+    mixedReplay.dataset.map((record, index) => deliveryKeyFor(record, mixedReplay.run, index)),
+    'Mixed replay must preserve valid and diagnostic keys',
+);
+assert(mixed.expected.deliveryKeys.some((key) => key.startsWith('bluesky:diagnostic:')), 'Mixed fixture must persist a sanitized diagnostic');
+assert.equal(mixed.expected.terminalFailureReportedAfterIngestion, true);
+const preparedMixed = executeN8nCode(
+    prepareCode,
+    'Run persistent Bluesky monitoring Task',
+    mixed.run,
+    mixed.dataset,
+);
+assert.deepEqual(
+    preparedMixed.map((item) => item.json.deliveryKey),
+    mixed.expected.deliveryKeys,
+    'Executed preparation must preserve the valid row and deterministic diagnostic',
+);
+const diagnosticRecord = preparedMixed.find((item) => item.json.isDiagnostic === true)?.json;
+assert(diagnosticRecord, 'Executed mixed preparation must emit one diagnostic');
+assert.deepEqual(
+    Object.keys(JSON.parse(diagnosticRecord.payloadJson)).sort(),
+    ['code', 'datasetId', 'product', 'recordType', 'requiredFields', 'rowIndex', 'runId'].sort(),
+    'Diagnostic payload must contain only the sanitized envelope',
+);
+assert(!diagnosticRecord.payloadJson.includes(mixed.dataset[1].url), 'Diagnostic payload leaked malformed source URL');
+assert(!diagnosticRecord.payloadJson.includes(mixed.dataset[1].text), 'Diagnostic payload leaked malformed row text');
+const replayPrepared = executeN8nCode(prepareCode, 'Run persistent Bluesky monitoring Task', mixedReplay.run, mixedReplay.dataset);
+assert.deepEqual(
+    replayPrepared.map((item) => item.json.deliveryKey),
+    preparedMixed.map((item) => item.json.deliveryKey),
+    'Executed replay must emit the same valid and diagnostic keys',
+);
+const offsetPrepared = executeN8nCode(prepareCode, 'Run persistent Bluesky monitoring Task', mixed.run, [{}, ...mixed.dataset]);
+assert.equal(offsetPrepared[1].json.deliveryKey, 'bluesky:diagnostic:blueskyMixedRun001:row:2', 'Diagnostic must retain the original dataset input index');
+assert.throws(
+    () => executeN8nCode(outcomeCode, 'Run persistent Bluesky monitoring Task', mixed.run, [], preparedMixed),
+    /after 2 committed dataset record\(s\).*1 malformed-row diagnostic record\(s\)/,
+    'Failed terminal status must be reported with post-ingestion valid/diagnostic counts',
+);
+assert.equal(terminalScenarios.find((scenario) => scenario.scenario === 'FAILED_EMPTY_DATASET').expected.safeEmptyResult, true);
+assert.equal(terminalScenarios.find((scenario) => scenario.scenario === 'FAILED_WITHOUT_DATASET_ID').dataset, null);
 
-Each dataset item represents one matched public post. Important fields include:
-
-- `uri`: stable post identity used for deduplication
-- `url`: human-readable Bluesky post link
-- `author.handle`: author handle
-- `text`: post text
-- `matchedTerms`: input terms that matched
-- `source`: `keyword`, `handle`, `mention`, or `hashtag`
-- `isNew`: whether the post was new to the Task on this run
-
-See `fixtures/sample-posts.json` for sanitized example records.
-
-## Workflow packages
-
-- `workflows/WORKFLOW-CONTRACT.md`: platform-neutral behavior and acceptance rules
-- `workflows/n8n/bluesky-alerts-task-to-json.json`: importable credential-free n8n workflow
-- `workflows/n8n/README.md`: account connection and test steps
-- `workflows/make/README.md`: exact Make scenario implementation package
-- `workflows/make/module-spec.json`: machine-readable module and mapping plan
-- [Bluesky Keyword and Mention Alerts on Make](https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from): live public shared scenario
-
-The n8n workflow contains no API token or credential identifier. After import, set your persistent Apify Task ID and connect your own Apify API or OAuth credential. The repository's Make package remains a credential-free design specification; the linked scenario is the validated public Make implementation.
-
-## Cost controls
-
-The Actor charges per run and per delivered post. With `onlyNew: true`, delivered posts are new to that persistent Task. With `onlyNew: false`, every delivered post is charged even if that Task has delivered it before. Keep `maxPostsPerRun` low while testing, use a schedule appropriate to the activity of the watched terms, and review the current price shown on the Apify Store listing before production use.
-
-## Privacy and credentials
-
-- Public examples contain no webhook URL, token, private URL, or personal identifier.
-- Connect credentials inside n8n or Make; never paste them into a workflow export.
-- Public posts may contain personal data. Process and retain results only for a lawful purpose.
+console.log(`PASS: ${jsonFiles.length} JSON files parsed`);
+console.log(`PASS: ${taskFiles.length} Task definitions match bounded discovery and persistent monitoring rules`);
+console.log(`PASS: ${fixtures.length} fixture records match the documented dataset shape`);
+console.log('PASS: n8n retains terminal status, ingests datasets, upserts stable keys, then reports failure');
+console.log('PASS: FAILED committed-row, mixed-row survival, deterministic diagnostic replay, empty-dataset, and missing-dataset fixtures');
+console.log(`PASS: ${scanFiles.length} public-surface files passed internal-name and credential scans`);
