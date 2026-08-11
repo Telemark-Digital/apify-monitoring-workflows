@@ -1,44 +1,63 @@
-{
-  "definitionVersion": 1,
-  "actorId": "uplifted_novice_vbl/bluesky-keyword-mention-alerts",
-  "taskName": "track-bluesky-security-keywords",
-  "publication": {
-    "slug": "track-bluesky-security-keywords",
-    "seoTitle": "Track Bluesky Security Keywords",
-    "seoDescription": "Preview Bluesky posts about cybersecurity, data breaches, and vulnerabilities as JSON. Set onlyNew=true on a saved Task for alerts.",
-    "displayedInputFields": [
-      "keywords",
-      "langs",
-      "onlyNew",
-      "maxPostsPerRun"
-    ],
-    "datasetView": "overview"
-  },
-  "input": {
-    "keywords": [
-      "cybersecurity",
-      "data breach",
-      "vulnerability"
-    ],
-    "handles": [],
-    "hashtags": [],
-    "excludeTerms": [],
-    "langs": [
-      "en"
-    ],
-    "onlyNew": false,
-    "maxPostsPerRun": 10,
-    "sort": "latest",
-    "resetState": false
-  },
-  "discoveryValidation": {
-    "timeoutSeconds": 300,
-    "expectedMinimumDatasetItems": 1,
-    "reason": "Active security terms with a bounded ten-record preview."
-  },
-  "monitoringChange": {
-    "onlyNew": true,
-    "persistentTaskRequired": true,
-    "note": "Copy the Task, adapt the security terms, set onlyNew to true, and schedule that same Task."
-  }
-}
+# Apify Monitoring Workflows
+
+Public Apify Task configurations, validated n8n workflow examples, Make construction specifications, and live Make shared scenarios for monitoring Bluesky posts, RSS feeds, and TED procurement notices.
+
+Created and maintained by **Telemark Digital**.
+
+## Products
+
+- [Bluesky Keyword & Mention Alerts](./bluesky-keyword-mention-alerts/) monitors public Bluesky posts for keywords, handles, mentions, and hashtags.
+- [RSS Keyword Monitor](./rss-keyword-monitor/) filters RSS, Atom, and RDF feeds by keyword, regular expression, and exclusion rules.
+- [TED Tender Monitor](./ted-tender-monitor/) finds new or changed EU procurement notices by CPV code, country, keyword, value, and notice type.
+
+Each product directory contains public Apify Task inputs, a platform-neutral workflow contract, an n8n workflow, a Make implementation package, fixtures, and validation notes.
+
+The TED package now includes ten live Apify Examples pages for high-intent procurement searches: AI procurement, cybersecurity, healthcare, SaaS/cloud software, construction, CPV 72 software, change notices and corrigenda, German managed detection, recent procurement JSON previews, and EU software CPV previews.
+
+The RSS package now includes eight live Apify Examples pages: multi-feed keyword alerts, regex and exclusions, webhook-ready JSON, security advisories, AI product news, research paper alerts, company news, and government cyber updates.
+
+The Bluesky package now includes eight live Apify Examples pages: keyword search, brand-handle mentions, hashtags, product launch keywords, AI policy posts, security keywords, startup funding posts, and brand or competitor handle monitoring.
+
+Live Make shared scenarios:
+
+- [Bluesky Keyword and Mention Alerts](https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from)
+- [RSS Keyword Alerts](https://us2.make.com/public/shared-scenario/3rwZCcptirx/rss-keyword-alerts-from-a-persistent-api)
+- [TED Tender Alerts](https://us2.make.com/public/shared-scenario/udxoD7qdzBB/ted-tender-alerts-from-a-persistent-apif)
+
+## AI client plugins
+
+Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are included under [plugins](./plugins/). Each plugin exposes exactly one public Apify Actor through Apify MCP with OAuth and includes a product-specific skill that keeps bounded one-off discovery separate from saved-Task monitoring.
+
+The plugin packages passed repository-source installation plus live OAuth/MCP calls in Codex and Claude Code on 2026-07-23. They are not official OpenAI or Anthropic directory listings. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and validation gates.
+
+Public product icons are in [assets/icons](./assets/icons/) using clean external filenames. The AI-client plugin manifests omit optional icon fields for this release so the plugin packages remain text-only and easy to publish through GitHub's web editor.
+
+## Terminal-run reliability
+
+Actor runs can commit dataset records before ending `FAILED`, `TIMED-OUT`, or `ABORTED`. For each terminal run they process, the public workflows fetch the run's `defaultDatasetId` when present, persist records under stable product-prefixed keys, and only then expose or report the terminal status. Failed empty datasets and runs without a dataset ID are reported safely. The terminal fixtures also prove replay idempotency, and the TED fixture confirms that `title: null` remains valid.
+
+For Make, the construction specifications use Apify's maximum 1000-run task-runs page, one exact-key data-store cursor per Task, cursor-filtered reverse-page processing, first-run cursor priming, and an overflow stop whenever the fetched page does not contain the stored cursor run. Each publication template processes at most one selected Task run per scenario execution (`maxRunsPerScenarioExecution = 1`) so operation budgets stay bounded; if an account needs a longer outage window than `1000 * Apify Schedule interval`, add paginated backfill before activation.
+
+In each n8n export, dataset retrieval and Data Table upsert retry the same operation in place up to three times, waiting five seconds between attempts. These retries keep the original `defaultDatasetId` and stable delivery key and never rerun the Apify Task. If either operation still fails after its retries, perform manual recovery using the original run ID and its dataset; this package does not claim automatic exactly-once delivery.
+
+## Non-paginated delivery caps
+
+The included n8n workflows and Make specifications intentionally make one non-paginated dataset request per Task run. Full retrieval therefore depends on the saved Task cap:
+
+| Product | Saved Task cap | Fixed retrieval limit | Reserved control rows |
+| --- | --- | --- | --- |
+| Bluesky | `maxPostsPerRun <= 100` | `100` | None |
+| RSS | `maxItemsPerRun <= 200` | `200` | None |
+| TED | `maxNewPerRun <= 999` | `1000` | Exactly one appended summary row (`999 + 1 = 1000`) |
+
+Do not activate a workflow until the account owner has verified the matching saved Task setting. Raising a cap requires a separately designed, documented, and validated paginated workflow; it is outside this package.
+
+## Security
+
+These examples contain no credentials. Connect your own Apify and destination accounts after importing a workflow. Read [SECURITY.md](./SECURITY.md) before publishing or modifying an export.
+
+## Repository status
+
+The examples are prepared and validated locally before publication. All three Make scenarios have been built and are publicly shared through the links above. The repository retains their credential-free construction specifications rather than exported Make blueprint files.
+
+See [Account Gates](./docs/account-gates.md) for the GitHub publisher, n8n Creator Portal, optional n8n Cloud, and Make publication steps.
