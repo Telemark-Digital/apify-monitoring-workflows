@@ -12,6 +12,8 @@ Created and maintained by **Telemark Digital**.
 
 Each product directory contains public Apify Task inputs, a platform-neutral workflow contract, an n8n workflow, a Make implementation package, fixtures, and validation notes.
 
+The TED package now includes ten live Apify Examples pages for high-intent procurement searches: AI procurement, cybersecurity, healthcare, SaaS/cloud software, construction, CPV 72 software, change notices and corrigenda, German managed detection, recent procurement JSON previews, and EU software CPV previews.
+
 Live Make shared scenarios:
 
 - [Bluesky Keyword and Mention Alerts](https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from)
