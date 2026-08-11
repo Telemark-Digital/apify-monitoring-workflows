@@ -1,0 +1,30 @@
+# Telemark Digital Apify Monitoring Workflows
+
+Public, credential-free packages for three Apify monitoring Actors and their workflow examples.
+
+## Products
+
+- Bluesky Keyword & Mention Alerts: https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts
+  - Public examples: https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples
+  - Local package: bluesky-keyword-mention-alerts/
+  - Plugin package: plugins/bluesky-keyword-alerts/
+- RSS Keyword Monitor: https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new
+  - Public examples: https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new/examples
+  - Local package: rss-keyword-monitor/
+  - Plugin package: plugins/rss-keyword-monitor/
+- TED Tender Monitor: https://apify.com/uplifted_novice_vbl/ted-tender-watch
+  - Public examples: https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples
+  - Local package: ted-tender-monitor/
+  - Plugin package: plugins/ted-tender-monitor/
+
+## Public Workflow Surfaces
+
+- n8n workflow package docs are inside each product directory.
+- Live Make shared scenarios are linked from README.md.
+- AI client plugin packages are under plugins/ and expose one fixed Telemark gateway route per Actor.
+
+## Usage Boundary
+
+- Public example Tasks are bounded discovery previews.
+- Recurring monitoring should use a persistent saved Apify Task with the documented cap for that product.
+- These files contain no Apify tokens, webhook URLs, private credentials, or destination account bindings.
