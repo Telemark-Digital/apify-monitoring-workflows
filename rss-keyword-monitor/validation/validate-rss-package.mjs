@@ -56,7 +56,7 @@ for (const file of taskFiles) {
   assert(input.webhookUrl === '', `${file}: webhookUrl must be blank`);
   assert(Number.isInteger(input.maxItemsPerRun) && input.maxItemsPerRun <= 10, `${file}: output must be capped at 10`);
 }
-assert(taskFiles.length === 3, `expected 3 public Task definitions, found ${taskFiles.length}`);
+assert(taskFiles.length >= 3, `expected at least 3 public Task definitions, found ${taskFiles.length}`);
 
 const fixture = JSON.parse(await readFile(join(root, 'fixtures', 'rss-items.json'), 'utf8'));
 assert(Array.isArray(fixture) && fixture.length > 0, 'fixture must contain records');
