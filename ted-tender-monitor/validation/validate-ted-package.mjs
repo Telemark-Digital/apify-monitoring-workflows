@@ -16,7 +16,7 @@ async function filesUnder(directory) {
 }
 
 const taskFiles = (await filesUnder(path.join(root, 'apify-tasks'))).filter((file) => file.endsWith('.json'));
-assert.equal(taskFiles.length, 10, 'Expected exactly ten TED Task definitions');
+assert.equal(taskFiles.length, 13, 'Expected exactly thirteen TED Task definitions');
 const taskNames = new Set();
 const slugs = new Set();
 for (const file of taskFiles) {
@@ -250,7 +250,7 @@ for (const file of publicFiles) {
   assert.doesNotMatch(content, /\bapify_api_[A-Za-z0-9_-]{12,}\b/, `${file}: likely token`);
 }
 
-console.log('PASS: 10 TED Task definitions and representative output fixture');
+console.log('PASS: 13 TED Task definitions and representative output fixture');
 console.log('PASS: FAILED committed-row, replay, empty-dataset, missing-dataset, and title:null fixtures');
 console.log('PASS: n8n and Make ingest every available terminal dataset before reporting failure');
 console.log('PASS: Make module 11 enforces TED stable keys through module 10 recordKey, overwrite, and Rollback stop-on-error coverage');
