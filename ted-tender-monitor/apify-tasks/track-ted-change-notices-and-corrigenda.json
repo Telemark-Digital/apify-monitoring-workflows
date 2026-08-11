@@ -1,0 +1,29 @@
+{
+  "actorId": "uplifted_novice_vbl/ted-tender-watch",
+  "taskName": "track-ted-change-notices-and-corrigenda",
+  "publication": {
+    "slug": "track-ted-change-notices-and-corrigenda",
+    "seoTitle": "Track TED Change Notices and Corrigenda",
+    "seoDescription": "Preview TED change notices and corrigenda as JSON. Disable sampleMode on a saved Task for monitoring. Not affiliated with TED or the EU.",
+    "displayedInputFields": ["sampleMode", "noticeTypes", "includeChangeNotices", "maxNewPerRun"],
+    "datasetView": "overview"
+  },
+  "input": {
+    "sampleMode": true,
+    "cpvCodes": [],
+    "countries": [],
+    "keywords": [],
+    "minValueEur": 0,
+    "noticeTypes": ["can-modif", "corr"],
+    "includeChangeNotices": true,
+    "lookbackDays": 3,
+    "maxNewPerRun": 25
+  },
+  "expectedBehavior": {
+    "maximumTenderRecords": 10,
+    "minimumDatasetRecords": 1,
+    "maximumRunSeconds": 300,
+    "stateWritten": false,
+    "tenderEventCharge": false
+  }
+}
