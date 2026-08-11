@@ -1,0 +1,44 @@
+{
+  "definitionVersion": 1,
+  "actorId": "uplifted_novice_vbl/bluesky-keyword-mention-alerts",
+  "taskName": "monitor-bluesky-startup-funding-posts",
+  "publication": {
+    "slug": "monitor-bluesky-startup-funding-posts",
+    "seoTitle": "Monitor Bluesky Startup Funding Posts",
+    "seoDescription": "Preview Bluesky posts about startup funding and funding rounds as JSON. Set onlyNew=true on a saved Task for scheduled alerts.",
+    "displayedInputFields": [
+      "keywords",
+      "langs",
+      "onlyNew",
+      "maxPostsPerRun"
+    ],
+    "datasetView": "overview"
+  },
+  "input": {
+    "keywords": [
+      "startup funding",
+      "funding round",
+      "raised funding"
+    ],
+    "handles": [],
+    "hashtags": [],
+    "excludeTerms": [],
+    "langs": [
+      "en"
+    ],
+    "onlyNew": false,
+    "maxPostsPerRun": 10,
+    "sort": "latest",
+    "resetState": false
+  },
+  "discoveryValidation": {
+    "timeoutSeconds": 300,
+    "expectedMinimumDatasetItems": 1,
+    "reason": "Fresh startup and funding phrases with a repeatable ten-record preview."
+  },
+  "monitoringChange": {
+    "onlyNew": true,
+    "persistentTaskRequired": true,
+    "note": "Copy the Task, tune the market terms, set onlyNew to true, and schedule that same Task."
+  }
+}
