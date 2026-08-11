@@ -1,0 +1,44 @@
+{
+  "definitionVersion": 1,
+  "actorId": "uplifted_novice_vbl/bluesky-keyword-mention-alerts",
+  "taskName": "track-bluesky-open-source-maintainers",
+  "publication": {
+    "slug": "track-bluesky-open-source-maintainers",
+    "seoTitle": "Track Bluesky Open Source Maintainers",
+    "seoDescription": "Preview Bluesky posts about open-source maintenance and GitHub projects. Set onlyNew=true on a saved Task for alerts.",
+    "displayedInputFields": [
+      "keywords",
+      "langs",
+      "onlyNew",
+      "maxPostsPerRun"
+    ],
+    "datasetView": "overview"
+  },
+  "input": {
+    "keywords": [
+      "open source",
+      "maintainer",
+      "GitHub"
+    ],
+    "handles": [],
+    "hashtags": [],
+    "excludeTerms": [],
+    "langs": [
+      "en"
+    ],
+    "onlyNew": false,
+    "maxPostsPerRun": 10,
+    "sort": "latest",
+    "resetState": false
+  },
+  "discoveryValidation": {
+    "timeoutSeconds": 300,
+    "expectedMinimumDatasetItems": 1,
+    "reason": "Open-source and GitHub discussion is active and maps to developer/community monitoring."
+  },
+  "monitoringChange": {
+    "onlyNew": true,
+    "persistentTaskRequired": true,
+    "note": "Copy the Task, refine the open-source terms, set onlyNew to true, and schedule that same Task."
+  }
+}
