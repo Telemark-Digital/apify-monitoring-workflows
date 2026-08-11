@@ -45,7 +45,7 @@ All three implementation packages were built, imported, run, exported, scrubbed,
 - [RSS Keyword Alerts](https://us2.make.com/public/shared-scenario/3rwZCcptirx/rss-keyword-alerts-from-a-persistent-api)
 - [TED Tender Alerts](https://us2.make.com/public/shared-scenario/udxoD7qdzBB/ted-tender-alerts-from-a-persistent-apif)
 
-The remaining Make public-library gate requires a Teams-plan upgrade before **Request approval** becomes available. The following checklist applies when reproducing or extending a scenario:
+The remaining Make public-library gate requires authenticated Make access. Current Make Help says scenario templates are available on all plans and that a published team template can be submitted with **Request approval**; Make Academy still presents the template builder as a Teams-plan feature, so the live account UI is the deciding source if those instructions diverge. A non-browser submission would require a Make API token with `templates:write` for `POST /templates/{templateId}/request-approval`. The following checklist applies when reproducing or extending a scenario:
 
 1. Create the `Telemark Digital` Make organization. Select the EU data region carefully because Make does not allow changing it later.
 2. Register the human user accurately, set the organization timezone to `Europe/Oslo`, and use `Public Integrations` as the sole/default team on lower plans or a dedicated team when the plan supports multiple teams.
@@ -63,4 +63,4 @@ The remaining Make public-library gate requires a Teams-plan upgrade before **Re
 14. Create and publish a team template when the account plan supports it.
 15. Select **Request approval** to submit the tested template to Make's public library.
 
-The public shared-scenario links above are live and usable. Inclusion in Make's searchable public template library is a separate paid-plan review and approval step.
+The public shared-scenario links above are live and usable. Inclusion in Make's searchable public template library is a separate Make review and approval step that currently needs either a valid saved Make login or a scoped Make API token with template permissions.
