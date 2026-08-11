@@ -1,0 +1,29 @@
+{
+  "actorId": "uplifted_novice_vbl/ted-tender-watch",
+  "taskName": "find-french-medical-equipment-tenders",
+  "publication": {
+    "slug": "find-french-medical-equipment-tenders",
+    "seoTitle": "Find French Medical Equipment Tenders",
+    "seoDescription": "Preview French medical-equipment procurement notices from TED as JSON. Save as a Task for only-new tender monitoring. Not affiliated with TED or the EU.",
+    "displayedInputFields": ["sampleMode", "cpvCodes", "countries", "noticeTypes", "maxNewPerRun"],
+    "datasetView": "overview"
+  },
+  "input": {
+    "sampleMode": true,
+    "cpvCodes": ["33"],
+    "countries": ["FRA"],
+    "keywords": [],
+    "minValueEur": 0,
+    "noticeTypes": ["cn-standard", "cn-social", "cn-desg"],
+    "includeChangeNotices": true,
+    "lookbackDays": 14,
+    "maxNewPerRun": 25
+  },
+  "expectedBehavior": {
+    "maximumTenderRecords": 10,
+    "minimumDatasetRecords": 1,
+    "maximumRunSeconds": 300,
+    "stateWritten": false,
+    "tenderEventCharge": false
+  }
+}
