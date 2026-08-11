@@ -16,11 +16,21 @@ async function filesUnder(directory) {
 }
 
 const taskFiles = (await filesUnder(path.join(root, 'apify-tasks'))).filter((file) => file.endsWith('.json'));
-assert.equal(taskFiles.length, 3, 'Expected exactly three TED Task definitions');
+assert.equal(taskFiles.length, 10, 'Expected exactly ten TED Task definitions');
+const taskNames = new Set();
+const slugs = new Set();
 for (const file of taskFiles) {
   const task = JSON.parse(await readFile(file, 'utf8'));
+  assert.match(task.taskName, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, `${file}: taskName must be a public slug`);
+  assert.equal(task.publication?.slug, task.taskName, `${file}: publication slug must match taskName`);
+  assert.equal(taskNames.has(task.taskName), false, `${file}: duplicate taskName`);
+  assert.equal(slugs.has(task.publication.slug), false, `${file}: duplicate publication slug`);
+  taskNames.add(task.taskName);
+  slugs.add(task.publication.slug);
   assert.equal(task.publication?.datasetView, 'overview', `${file}: dataset view must be overview`);
   assert.equal(task.input?.sampleMode, true, `${file}: discovery Task must use sampleMode=true`);
+  assert.equal(Object.hasOwn(task.input ?? {}, 'webhookUrl'), false, `${file}: discovery Task must not include webhookUrl`);
+  assert.equal(Object.hasOwn(task.input ?? {}, 'webhookSecret'), false, `${file}: discovery Task must not include webhookSecret`);
   assert.notEqual(task.input?.resetState, true, `${file}: resetState must not be enabled`);
   assert.equal(task.expectedBehavior?.maximumRunSeconds, 300, `${file}: discovery timeout must remain five minutes`);
 }
@@ -240,7 +250,7 @@ for (const file of publicFiles) {
   assert.doesNotMatch(content, /\bapify_api_[A-Za-z0-9_-]{12,}\b/, `${file}: likely token`);
 }
 
-console.log('PASS: 3 TED Task definitions and representative output fixture');
+console.log('PASS: 10 TED Task definitions and representative output fixture');
 console.log('PASS: FAILED committed-row, replay, empty-dataset, missing-dataset, and title:null fixtures');
 console.log('PASS: n8n and Make ingest every available terminal dataset before reporting failure');
 console.log('PASS: Make module 11 enforces TED stable keys through module 10 recordKey, overwrite, and Rollback stop-on-error coverage');
