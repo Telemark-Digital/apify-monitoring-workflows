@@ -133,8 +133,9 @@ for (const product of products) {
     assert(!JSON.stringify(mcp).match(/headers|Authorization|token|command|args/i), `${mcpPath}: MCP config must not embed local commands, headers, or tokens`);
 
     const skill = await readText(skillPath);
-    assert(skill.startsWith('---\n'), `${skillPath}: skill must start with YAML frontmatter`);
-    assert(skill.includes(`name: ${product.name}`), `${skillPath}: frontmatter name mismatch`);
+    const normalizedSkill = skill.replace(/^\uFEFF/u, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    assert(normalizedSkill.startsWith('---\n'), `${skillPath}: skill must start with YAML frontmatter`);
+    assert(normalizedSkill.includes(`name: ${product.name}`), `${skillPath}: frontmatter name mismatch`);
     if (product.currentBoundedContract) {
         assert(skill.includes('search_public_feed_items'), `${skillPath}: must name the bounded search tool`);
         assert(skill.includes('get_public_feed_search_status'), `${skillPath}: must name the signed status helper`);
