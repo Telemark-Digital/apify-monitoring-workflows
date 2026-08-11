@@ -14,6 +14,8 @@ Each product directory contains public Apify Task inputs, a platform-neutral wor
 
 The TED package now includes ten live Apify Examples pages for high-intent procurement searches: AI procurement, cybersecurity, healthcare, SaaS/cloud software, construction, CPV 72 software, change notices and corrigenda, German managed detection, recent procurement JSON previews, and EU software CPV previews.
 
+The RSS package now includes eight live Apify Examples pages: multi-feed keyword alerts, regex and exclusions, webhook-ready JSON, security advisories, AI product news, research paper alerts, company news, and government cyber updates.
+
 Live Make shared scenarios:
 
 - [Bluesky Keyword and Mention Alerts](https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from)
