@@ -14,9 +14,12 @@ This package contains public examples and workflow templates for [Bluesky Keywor
 | Find brand-handle posts and mentions | `apify-tasks/find-bluesky-brand-mentions.json` | `bsky.app` |
 | Find current hashtag matches | `apify-tasks/find-bluesky-hashtag-posts.json` | `photography` |
 | Monitor product launch keywords | `apify-tasks/monitor-bluesky-product-launch-keywords.json` | `product launch`, `new product`, `launching today` |
+| Monitor developer tools launches | `apify-tasks/monitor-bluesky-devtools-launches.json` | `developer tools`, `devtools`, `API launch` |
+| Track open-source maintainers | `apify-tasks/track-bluesky-open-source-maintainers.json` | `open source`, `maintainer`, `GitHub` |
 | Track brand and competitor handles | `apify-tasks/track-bluesky-brand-competitor-mentions.json` | `bsky.app`, `github.com` |
 | Monitor AI policy posts | `apify-tasks/monitor-bluesky-ai-policy-posts.json` | `AI policy`, `AI regulation`, `AI governance` |
 | Track security keywords | `apify-tasks/track-bluesky-security-keywords.json` | `cybersecurity`, `data breach`, `vulnerability` |
+| Track data breach discussion | `apify-tasks/track-bluesky-data-breach-discussions.json` | `data breach`, `security incident`, `leaked data` |
 | Monitor startup funding posts | `apify-tasks/monitor-bluesky-startup-funding-posts.json` | `startup funding`, `funding round`, `raised funding` |
 
 The published examples use `onlyNew: false` and `maxPostsPerRun: 10`. This makes each discovery page repeatable, bounded, and likely to show a non-empty dataset when Apify or a visitor runs it. Discovery runs still update the Task's seen-post state, but prior state does not filter their output.
@@ -27,9 +30,12 @@ Live Apify Examples pages:
 - [Find Bluesky brand mentions](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/find-bluesky-brand-mentions)
 - [Find Bluesky hashtag posts](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/find-bluesky-hashtag-posts)
 - [Monitor Bluesky product launch keywords](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/monitor-bluesky-product-launch-keywords)
+- [Monitor Bluesky devtools launches](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/monitor-bluesky-devtools-launches)
+- [Track Bluesky open source maintainers](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/track-bluesky-open-source-maintainers)
 - [Track Bluesky brand and competitor handles](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/track-bluesky-brand-competitor-mentions)
 - [Monitor Bluesky AI policy posts](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/monitor-bluesky-ai-policy-posts)
 - [Track Bluesky security keywords](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/track-bluesky-security-keywords)
+- [Track Bluesky data breach discussions](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/track-bluesky-data-breach-discussions)
 - [Monitor Bluesky startup funding posts](https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples/monitor-bluesky-startup-funding-posts)
 
 ## Turn an example into monitoring
