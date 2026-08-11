@@ -1,0 +1,29 @@
+{
+  "actorId": "uplifted_novice_vbl/ted-tender-watch",
+  "taskName": "track-eu-cybersecurity-tenders",
+  "publication": {
+    "slug": "track-eu-cybersecurity-tenders",
+    "seoTitle": "Track EU Cybersecurity Tenders on TED",
+    "seoDescription": "Preview EU TED notices for cybersecurity services as JSON. Disable sampleMode on a saved Task for monitoring. Not affiliated with TED or the EU.",
+    "displayedInputFields": ["sampleMode", "cpvCodes", "keywords", "noticeTypes", "includeChangeNotices"],
+    "datasetView": "overview"
+  },
+  "input": {
+    "sampleMode": true,
+    "cpvCodes": ["72"],
+    "countries": [],
+    "keywords": ["cybersecurity", "cyber security"],
+    "minValueEur": 0,
+    "noticeTypes": ["cn-standard", "cn-social", "cn-desg"],
+    "includeChangeNotices": true,
+    "lookbackDays": 3,
+    "maxNewPerRun": 25
+  },
+  "expectedBehavior": {
+    "maximumTenderRecords": 10,
+    "minimumDatasetRecords": 1,
+    "maximumRunSeconds": 300,
+    "stateWritten": false,
+    "tenderEventCharge": false
+  }
+}
