@@ -6,7 +6,7 @@ This is an unofficial, independent community tool. It is not affiliated with, en
 
 ## Included examples
 
-- `apify-tasks/`: ten bounded discovery Tasks for CPV, country, keyword, change-notice, and JSON notice-output searches.
+- `apify-tasks/`: thirteen bounded discovery Tasks for CPV, country, keyword, change-notice, and JSON notice-output searches.
 - `workflow-contract.md`: the platform-neutral contract for reliable scheduled monitoring.
 - `n8n/ted-tender-monitor.json`: an importable, credential-free workflow using a persistent Apify Task.
 - `make/implementation.md`: the credential-free specification for the live [TED Tender Alerts public Make scenario](https://us2.make.com/public/shared-scenario/udxoD7qdzBB/ted-tender-alerts-from-a-persistent-apif).
@@ -22,9 +22,12 @@ Each example below is published on the Actor's Apify Examples tab, uses `sampleM
 | EU AI procurement notices | [monitor-eu-ai-procurement-notices](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/monitor-eu-ai-procurement-notices) |
 | EU cybersecurity tenders | [track-eu-cybersecurity-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/track-eu-cybersecurity-tenders) |
 | EU healthcare tenders | [find-eu-healthcare-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/find-eu-healthcare-tenders) |
+| French medical equipment tenders | [find-french-medical-equipment-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/find-french-medical-equipment-tenders) |
 | Public sector SaaS tenders | [monitor-public-sector-saas-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/monitor-public-sector-saas-tenders) |
 | EU construction procurement | [track-eu-construction-procurement](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/track-eu-construction-procurement) |
+| Renewable energy procurement | [monitor-eu-renewable-energy-procurement](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/monitor-eu-renewable-energy-procurement) |
 | CPV 72 software tenders | [watch-cpv-72-software-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/watch-cpv-72-software-tenders) |
+| Polish IT services tenders | [find-polish-it-services-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/find-polish-it-services-tenders) |
 | TED change notices and corrigenda | [track-ted-change-notices-and-corrigenda](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/track-ted-change-notices-and-corrigenda) |
 | German managed detection tenders | [find-german-cybersecurity-tenders](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/find-german-cybersecurity-tenders) |
 | Recent EU procurement JSON preview | [preview-recent-eu-procurement-notices-as-json](https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples/preview-recent-eu-procurement-notices-as-json) |
