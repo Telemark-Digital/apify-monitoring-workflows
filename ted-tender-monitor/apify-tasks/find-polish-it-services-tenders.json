@@ -1,0 +1,29 @@
+{
+  "actorId": "uplifted_novice_vbl/ted-tender-watch",
+  "taskName": "find-polish-it-services-tenders",
+  "publication": {
+    "slug": "find-polish-it-services-tenders",
+    "seoTitle": "Find Polish IT Services Tenders",
+    "seoDescription": "Preview Polish IT services procurement notices from TED as JSON. Save as a Task for scheduled only-new tender monitoring.",
+    "displayedInputFields": ["sampleMode", "cpvCodes", "countries", "noticeTypes", "maxNewPerRun"],
+    "datasetView": "overview"
+  },
+  "input": {
+    "sampleMode": true,
+    "cpvCodes": ["72"],
+    "countries": ["POL"],
+    "keywords": [],
+    "minValueEur": 0,
+    "noticeTypes": ["cn-standard", "cn-social", "cn-desg"],
+    "includeChangeNotices": true,
+    "lookbackDays": 14,
+    "maxNewPerRun": 25
+  },
+  "expectedBehavior": {
+    "maximumTenderRecords": 10,
+    "minimumDatasetRecords": 1,
+    "maximumRunSeconds": 300,
+    "stateWritten": false,
+    "tenderEventCharge": false
+  }
+}
