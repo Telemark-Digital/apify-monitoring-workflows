@@ -8,7 +8,7 @@ Author implementation is complete. Local structural and Actor tests passed on 20
 
 - Actor README uses the public product name and contains no internal codename.
 - `webhookUrl` and `webhookSecret` are marked secret in the Actor input schema.
-- Three Task packages use `sampleMode: true`, bounded CPV/country filters, and no webhook fields.
+- Ten Task packages use `sampleMode: true`, bounded CPV/country/keyword filters, and no webhook fields.
 - Task publication metadata includes a goal-focused slug, SEO title, SEO description, displayed input fields, and the `overview` dataset view.
 - Fixture records conform to the Actor's tender and summary field shapes and contain synthetic identifiers and names.
 - n8n workflow uses persistent-Task **Run task** plus separate dataset retrieval, has no input override, and has no credential binding.
@@ -40,7 +40,7 @@ node validation/validate-ted-package.mjs
 |---|---|---|
 | Actor tests | PASS | `npm.cmd test` on 2026-07-21: 5 files, 45 tests passed |
 | TypeScript typecheck | PASS | `npm.cmd run typecheck` |
-| Task input parser | PASS | All three inputs accepted by the Actor's `parseInput` implementation |
+| Task input parser | PASS | All ten inputs accepted by the Actor's `parseInput` implementation |
 | JSON and package structure | PASS | Product validator parses Tasks, fixtures, workflow, and Make specification |
 | Dataset fixture contract | PASS | Representative output plus terminal recovery and null-title scenarios |
 | n8n static contract | PASS | Terminal metadata, separate retrieval, stable-key Data Table upsert, then status reporting |
@@ -48,6 +48,6 @@ node validation/validate-ted-package.mjs
 | Credential-pattern scan | PASS | Zero findings in the public product package |
 | Independent validator | PENDING | Reviewer report |
 | Adversarial reviewer | PENDING | Reviewer report |
-| Live Apify Tasks | ACCOUNT GATE | IDs, URLs, run evidence |
+| Live Apify Tasks | PASS | 10 public example Tasks; original three in `105-APIFY-PUBLIC-TASK-REPLACEMENT-COMPLETION.md`, phase-2 seven in `106-TED-APIFY-EXAMPLE-TASK-EXPANSION-COMPLETION.md` |
 | Fresh n8n import | ACCOUNT GATE | Revised ingest-first export requires exact-file import in n8n 2.30.8 or current release |
 | Make blueprint | ACCOUNT GATE | Make-exported blueprint and run evidence |
