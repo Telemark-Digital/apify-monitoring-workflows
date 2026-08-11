@@ -1,0 +1,44 @@
+{
+  "definitionVersion": 1,
+  "actorId": "uplifted_novice_vbl/bluesky-keyword-mention-alerts",
+  "taskName": "track-bluesky-data-breach-discussions",
+  "publication": {
+    "slug": "track-bluesky-data-breach-discussions",
+    "seoTitle": "Track Bluesky Data Breach Discussions",
+    "seoDescription": "Preview Bluesky posts about data breaches and security incidents as JSON. Set onlyNew=true on a saved Task for alerts.",
+    "displayedInputFields": [
+      "keywords",
+      "langs",
+      "onlyNew",
+      "maxPostsPerRun"
+    ],
+    "datasetView": "overview"
+  },
+  "input": {
+    "keywords": [
+      "data breach",
+      "security incident",
+      "leaked data"
+    ],
+    "handles": [],
+    "hashtags": [],
+    "excludeTerms": [],
+    "langs": [
+      "en"
+    ],
+    "onlyNew": false,
+    "maxPostsPerRun": 10,
+    "sort": "latest",
+    "resetState": false
+  },
+  "discoveryValidation": {
+    "timeoutSeconds": 300,
+    "expectedMinimumDatasetItems": 1,
+    "reason": "Security incident terms create a concrete monitoring use case with public discussion volume."
+  },
+  "monitoringChange": {
+    "onlyNew": true,
+    "persistentTaskRequired": true,
+    "note": "Copy the Task, refine the incident terms, set onlyNew to true, and schedule that same Task."
+  }
+}
