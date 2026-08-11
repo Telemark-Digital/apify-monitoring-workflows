@@ -1,0 +1,43 @@
+{
+  "definitionVersion": 1,
+  "actorId": "uplifted_novice_vbl/bluesky-keyword-mention-alerts",
+  "taskName": "track-bluesky-brand-competitor-mentions",
+  "publication": {
+    "slug": "track-bluesky-brand-competitor-mentions",
+    "seoTitle": "Track Bluesky Brand and Competitor Mentions",
+    "seoDescription": "Preview Bluesky posts from or mentioning example brand handles as JSON. Replace handles and set onlyNew=true for scheduled monitoring.",
+    "displayedInputFields": [
+      "handles",
+      "langs",
+      "onlyNew",
+      "maxPostsPerRun"
+    ],
+    "datasetView": "overview"
+  },
+  "input": {
+    "keywords": [],
+    "handles": [
+      "bsky.app",
+      "github.com"
+    ],
+    "hashtags": [],
+    "excludeTerms": [],
+    "langs": [
+      "en"
+    ],
+    "onlyNew": false,
+    "maxPostsPerRun": 10,
+    "sort": "latest",
+    "resetState": false
+  },
+  "discoveryValidation": {
+    "timeoutSeconds": 300,
+    "expectedMinimumDatasetItems": 1,
+    "reason": "Active public service handles exercise authored-post and mention matching with a ten-record cap."
+  },
+  "monitoringChange": {
+    "onlyNew": true,
+    "persistentTaskRequired": true,
+    "note": "Replace the example handles with your brand and competitor handles, set onlyNew to true, and schedule that same Task."
+  }
+}
