@@ -91,6 +91,7 @@ See the complete sanitized fixture in [`fixtures/rss-items.json`](./fixtures/rss
 
 - [`workflows/WORKFLOW-CONTRACT.md`](./workflows/WORKFLOW-CONTRACT.md) defines the platform-neutral behavior.
 - [`workflows/n8n/rss-task-only-new.json`](./workflows/n8n/rss-task-only-new.json) is an importable, credential-free n8n workflow.
+- [RSS Keyword Monitor on n8n](https://n8n.io/workflows/17430-monitor-rss-feeds-with-apify-and-store-new-items-in-data-tables/) is the live public n8n template.
 - [`workflows/make/IMPLEMENTATION.md`](./workflows/make/IMPLEMENTATION.md) gives exact Make modules, mappings, filters, error routes, and account-gated tests.
 - [RSS Keyword Alerts on Make](https://us2.make.com/public/shared-scenario/3rwZCcptirx/rss-keyword-alerts-from-a-persistent-api) is the live public shared scenario.
 
