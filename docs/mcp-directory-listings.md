@@ -8,9 +8,9 @@ Status on 2026-08-12: all three gateway routes returned `401 Unauthorized` with 
 
 | Product | Registry name | Remote URL | Official registry file |
 | --- | --- | --- | --- |
-| Bluesky Keyword Alerts | `io.github.telemark-digital/bluesky-keyword-alerts` | `https://telemark-apify-monitoring-mcp.katfu111111.workers.dev/bluesky` | `mcp/bluesky-keyword-alerts/server.json` |
-| RSS Keyword Monitor | `io.github.telemark-digital/rss-keyword-monitor` | `https://telemark-apify-monitoring-mcp.katfu111111.workers.dev/rss` | `mcp/rss-keyword-monitor/server.json` |
-| TED Tender Monitor | `io.github.telemark-digital/ted-tender-monitor` | `https://telemark-apify-monitoring-mcp.katfu111111.workers.dev/ted` | `mcp/ted-tender-monitor/server.json` |
+| Bluesky Keyword Alerts | `io.github.telemarkdigital-publisher/bluesky-keyword-alerts` | `https://telemark-apify-monitoring-mcp.katfu111111.workers.dev/bluesky` | `mcp/bluesky-keyword-alerts/server.json` |
+| RSS Keyword Monitor | `io.github.telemarkdigital-publisher/rss-keyword-monitor` | `https://telemark-apify-monitoring-mcp.katfu111111.workers.dev/rss` | `mcp/rss-keyword-monitor/server.json` |
+| TED Tender Monitor | `io.github.telemarkdigital-publisher/ted-tender-monitor` | `https://telemark-apify-monitoring-mcp.katfu111111.workers.dev/ted` | `mcp/ted-tender-monitor/server.json` |
 
 ## Submission Order
 
