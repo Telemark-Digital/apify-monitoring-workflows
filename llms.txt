@@ -24,6 +24,7 @@ Public, credential-free packages for three Apify monitoring Actors and their wor
 - Bluesky n8n template is under Creator review as submission 18103; the repository export remains available in the product directory.
 - Live Make shared scenarios are linked from README.md.
 - AI client plugin packages are under plugins/ and expose one fixed Telemark gateway route per Actor.
+- Remote MCP directory metadata is under mcp/ and should be submitted only after a bounded tool-call canary for the matching product route.
 
 ## Usage Boundary
 
