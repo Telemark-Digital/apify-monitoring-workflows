@@ -18,7 +18,7 @@ All nine examples were created as fresh Apify Tasks, run once with bounded publi
 
 ## Current External Gates
 
-- n8n: RSS is published; TED is awaiting template review before the next creator-ladder submission.
+- n8n: RSS and TED are published; Bluesky was submitted for human review as `18103` on 2026-08-12.
 - Make: public shared scenarios remain live; no Teams upgrade is planned at this point.
 - Claude: the three plugin submissions are pending review.
 - OpenAI: held until identity, legal URL, demo, and production MCP challenge gates are ready.
