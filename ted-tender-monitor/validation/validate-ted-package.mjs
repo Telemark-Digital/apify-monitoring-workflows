@@ -233,7 +233,7 @@ for (const relativePath of [
 }
 const n8nReadme = await readFile(path.join(root, 'n8n', 'README.md'), 'utf8');
 assert.match(n8nReadme, /executable graph was imported and authenticated-run validated/i, 'TED n8n README must preserve authenticated graph validation');
-assert.match(n8nReadme, /Creator submission is queued behind n8n's one-pending-template policy/i, 'TED n8n README must preserve current Creator submission gate');
+assert.match(n8nReadme, /Creator submission is published as n8n workflow `18030`/i, 'TED n8n README must preserve current Creator publication status');
 assert.match(n8nReadme, /manual recovery.*original.*run ID/is, 'n8n README must document exhausted-retry recovery');
 assert.match(n8nReadme, /does not provide automatic exactly-once delivery/i, 'n8n README must disclaim automatic exactly-once delivery');
 const validationNotes = await readFile(path.join(root, 'VALIDATION.md'), 'utf8');
