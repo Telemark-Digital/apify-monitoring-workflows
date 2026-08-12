@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.telemark-digital/rss-keyword-monitor",
+  "title": "RSS Keyword Monitor",
+  "description": "Search bounded RSS, Atom, and RDF feed matches by keyword or regex.",
+  "version": "0.2.0",
+  "repository": {
+    "url": "https://github.com/Telemark-Digital/apify-monitoring-workflows",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://telemark-apify-monitoring-mcp.katfu111111.workers.dev/rss"
+    }
+  ]
+}
