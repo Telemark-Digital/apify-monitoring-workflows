@@ -72,7 +72,7 @@ See `fixtures/sample-posts.json` for sanitized example records.
 
 - `workflows/WORKFLOW-CONTRACT.md`: platform-neutral behavior and acceptance rules
 - `workflows/n8n/bluesky-alerts-task-to-json.json`: importable credential-free n8n workflow
-- `workflows/n8n/README.md`: account connection and test steps
+- `workflows/n8n/README.md`: account connection and test steps; public n8n Creator submission `18103` is under review
 - `workflows/make/README.md`: exact Make scenario implementation package
 - `workflows/make/module-spec.json`: machine-readable module and mapping plan
 - [Bluesky Keyword and Mention Alerts on Make](https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from): live public shared scenario
