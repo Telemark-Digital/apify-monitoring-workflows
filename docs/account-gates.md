@@ -21,7 +21,7 @@ The organization and maintainer should be transparently attributable to `Telemar
 
 ## n8n
 
-All three workflow graphs were imported and validated in an isolated n8n 2.30.8 instance. The final publication files add documentation notes without changing executable nodes. The exact RSS file passed Creator AI review and was submitted for human review as submission `17430` on 2026-07-23. n8n's one-pending-template policy queues Bluesky and TED until RSS is approved. The n8n Creator Portal is the public template-submission surface; n8n Cloud is a separate, optional hosted execution workspace.
+All three workflow graphs were imported and validated in an isolated n8n 2.30.8 instance. The final publication files add documentation notes without changing executable nodes. RSS is published as submission `17430`; TED is published as submission `18030`; Bluesky was submitted for human review as submission `18103` on 2026-08-12 and is under review. Creator Hub currently shows one more published workflow required before verified creator status. The n8n Creator Portal is the public template-submission surface; n8n Cloud is a separate, optional hosted execution workspace.
 
 1. Create a Creator Portal account and set the public creator name to `Telemark Digital`.
 2. Choose one mandatory live-validation environment: n8n Cloud, or the retained isolated local/self-hosted n8n instance. Creator Portal alone cannot execute workflows.
