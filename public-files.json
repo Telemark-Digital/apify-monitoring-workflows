@@ -2,6 +2,7 @@
   ".gitignore",
   ".agents/plugins/marketplace.json",
   ".claude-plugin/marketplace.json",
+  "glama.json",
   "LICENSE",
   "llms.txt",
   "README.md",
