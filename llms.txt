@@ -19,7 +19,9 @@ Public, credential-free packages for three Apify monitoring Actors and their wor
 
 ## Public Workflow Surfaces
 
-- n8n workflow package docs are inside each product directory.
+- Live n8n RSS template: https://n8n.io/workflows/17430-monitor-rss-feeds-with-apify-and-store-new-items-in-data-tables/
+- Live n8n TED template: https://n8n.io/workflows/18030-monitor-eu-ted-tenders-with-apify-and-store-notices-in-n8n-data-tables/
+- Bluesky n8n template is under Creator review as submission 18103; the repository export remains available in the product directory.
 - Live Make shared scenarios are linked from README.md.
 - AI client plugin packages are under plugins/ and expose one fixed Telemark gateway route per Actor.
 
