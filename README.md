@@ -10,6 +10,7 @@ Created and maintained by **Telemark Digital**.
 - [Phase 1 visibility checkpoint](./docs/release-notes/2026-08-11-phase-1-visibility.md) lists the current public example expansion and external gates.
 - [n8n creator checkpoint](./docs/release-notes/2026-08-12-n8n-creator-ladder.md) records the live RSS and TED templates and the Bluesky review gate.
 - [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) explains the Claude/Codex plugin package layout and the safe distribution boundary.
+- [MCP Directory Listing Pack](./docs/mcp-directory-listings.md) contains per-product `server.json` metadata and copy for remote MCP directories.
 
 ## Products
 
@@ -39,9 +40,11 @@ Live n8n workflow templates:
 
 ## AI client plugins
 
-Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are included under [plugins](./plugins/). Each plugin exposes exactly one public Apify Actor through Apify MCP with OAuth and includes a product-specific skill that keeps bounded one-off discovery separate from saved-Task monitoring.
+Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are included under [plugins](./plugins/). Each plugin exposes exactly one public Apify Actor through a product-specific Telemark MCP gateway route backed by Apify OAuth/MCP and includes a product-specific skill that keeps bounded one-off discovery separate from saved-Task monitoring.
 
 The plugin packages passed repository-source installation plus live OAuth/MCP calls in Codex and Claude Code on 2026-07-23. They are not official OpenAI or Anthropic directory listings. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and validation gates.
+
+Remote MCP directory metadata for the same product routes is staged under [mcp](./mcp/). Publish those entries only after the matching product route has passed a full bounded MCP tool-call canary.
 
 Public product icons are in [assets/icons](./assets/icons/) using clean external filenames. The AI-client plugin manifests omit optional icon fields for this release so the plugin packages remain text-only and easy to publish through GitHub's web editor.
 
