@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.telemark-digital/bluesky-keyword-alerts",
+  "title": "Bluesky Keyword Alerts",
+  "description": "Search bounded public Bluesky keywords, handles, mentions, and hashtags.",
+  "version": "0.2.0",
+  "repository": {
+    "url": "https://github.com/Telemark-Digital/apify-monitoring-workflows",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://telemark-apify-monitoring-mcp.katfu111111.workers.dev/bluesky"
+    }
+  ]
+}
