@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.telemark-digital/ted-tender-monitor",
+  "name": "io.github.telemarkdigital-publisher/ted-tender-monitor",
   "title": "TED Tender Monitor",
   "description": "Search EU TED procurement notices by CPV, country, keyword, value, or type.",
   "version": "0.2.0",
