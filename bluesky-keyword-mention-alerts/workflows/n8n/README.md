@@ -1,6 +1,6 @@
 # n8n: Run a Persistent Bluesky Alert Task
 
-Status: the executable graph was imported and authenticated-run validated against n8n 2.30.8, built-in Data Table 1.1, and `@apify/n8n-nodes-apify` 0.6.10. The final publication export adds documentation notes without changing executable nodes and passes exact-file repository validation. Its Creator submission is queued behind n8n's one-pending-template policy.
+Status: the executable graph was imported and authenticated-run validated against n8n 2.30.8, built-in Data Table 1.1, and `@apify/n8n-nodes-apify` 0.6.10. The final publication export adds documentation notes without changing executable nodes and passes exact-file repository validation. Its public n8n Creator submission `18103` was sent for human review on 2026-08-12.
 
 ## Import
 
