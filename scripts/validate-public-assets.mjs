@@ -201,8 +201,10 @@ if (!/TED[\s\S]*999[\s\S]*(?:one|1)[^\n]*summary[\s\S]*1000/i.test(rootReadme)) 
 }
 if (!/All three workflow graphs were imported and validated/i.test(accountGates)
     || !/submission `17430`/i.test(accountGates)
-    || !/one-pending-template policy queues Bluesky and TED/i.test(accountGates)) {
-    errors.push('docs/account-gates.md: must preserve current n8n validation, RSS submission, and policy-queue status');
+    || !/submission `18030`/i.test(accountGates)
+    || !/submission `18103`/i.test(accountGates)
+    || !/one more published workflow required before verified creator status/i.test(accountGates)) {
+    errors.push('docs/account-gates.md: must preserve current n8n validation, published RSS/TED submissions, Bluesky review status, and verified-creator gate');
 }
 
 const taskFiles = jsonFiles.filter(({ relativePath }) => relativePath.includes(`${path.sep}apify-tasks${path.sep}`));
