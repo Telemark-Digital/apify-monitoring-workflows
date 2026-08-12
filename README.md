@@ -8,6 +8,7 @@ Created and maintained by **Telemark Digital**.
 
 - [AI-agent index](./llms.txt) gives crawlers and coding assistants the product map, Apify links, plugin paths, and workflow boundaries.
 - [Phase 1 visibility checkpoint](./docs/release-notes/2026-08-11-phase-1-visibility.md) lists the current public example expansion and external gates.
+- [n8n creator checkpoint](./docs/release-notes/2026-08-12-n8n-creator-ladder.md) records the live RSS and TED templates and the Bluesky review gate.
 - [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) explains the Claude/Codex plugin package layout and the safe distribution boundary.
 
 ## Products
@@ -29,6 +30,12 @@ Live Make shared scenarios:
 - [Bluesky Keyword and Mention Alerts](https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from)
 - [RSS Keyword Alerts](https://us2.make.com/public/shared-scenario/3rwZCcptirx/rss-keyword-alerts-from-a-persistent-api)
 - [TED Tender Alerts](https://us2.make.com/public/shared-scenario/udxoD7qdzBB/ted-tender-alerts-from-a-persistent-apif)
+
+Live n8n workflow templates:
+
+- [RSS Keyword Monitor for Apify Tasks](https://n8n.io/workflows/17430-monitor-rss-feeds-with-apify-and-store-new-items-in-data-tables/)
+- [TED Tender Monitor for EU procurement alerts](https://n8n.io/workflows/18030-monitor-eu-ted-tenders-with-apify-and-store-notices-in-n8n-data-tables/)
+- Bluesky Keyword & Mention Alerts is included as a repository workflow and is under n8n Creator review as submission `18103`.
 
 ## AI client plugins
 
