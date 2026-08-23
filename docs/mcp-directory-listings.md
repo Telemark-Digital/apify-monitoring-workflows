@@ -2,7 +2,7 @@
 
 This pack is for MCP directories and AI-agent connector indexes that accept GitHub-backed or remote Streamable HTTP MCP listings. Submit only the product-scoped Telemark gateway routes below. Do not submit direct, broad Apify MCP URLs, and do not describe these listings as official Bluesky, RSS, TED, EU, Apify, OpenAI, or Anthropic integrations.
 
-Status on 2026-08-12: all three gateway routes returned `401 Unauthorized` with OAuth protected-resource metadata and no static token requirement in the public metadata. This is a route health smoke check, not a full paid tool-call canary. Complete a bounded MCP tool-call canary for a product before submitting that product to directories that automatically inspect or call tools.
+Status on 2026-08-24: all three product gateway routes return the expected OAuth protected-resource challenge, and the public ownership and server-card metadata are live. Exact Official MCP Registry entries are live for all three products. Smithery external Streamable HTTP listings are live for all three products. Glama connector pages are discovered, but still report `Unhealthy`; request a Glama retest or diagnostic if this does not clear automatically.
 
 ## Product Metadata
 
@@ -14,12 +14,20 @@ Status on 2026-08-12: all three gateway routes returned `401 Unauthorized` with 
 
 ## Submission Order
 
-1. Official MCP Registry: use the matching `server.json` file. From that product directory, run `mcp-publisher login github`, complete the Telemark Digital GitHub authorization, then run `mcp-publisher publish`. Verify through `https://registry.modelcontextprotocol.io/v0.1/servers?search=<registry-name>`.
-2. Glama: submit the public GitHub repository or inspect the remote URL after the full canary passes. Use community/unofficial classification and the product-specific route, not the generic provider route.
-3. Smithery: publish as an external Streamable HTTP URL after login with `smithery mcp publish "<remote-url>" -n telemark-digital/<product-slug>`. Use the free route unless product usage justifies a paid placement.
+1. Official MCP Registry: completed for all three exact registry names. Verify through `https://registry.modelcontextprotocol.io/v0.1/servers?search=<registry-name>`.
+2. Smithery: completed for all three products as external Streamable HTTP listings.
+3. Glama: public pages exist, but the health gate is still open. Use the product-specific route, not the generic provider route, and ask Glama support whether OAuth-protected Streamable HTTP connectors need test credentials or a manual crawler retry.
 4. mcpservers.org and similar curated directories: submit the GitHub repo URL, product name, one-sentence description, and category. Use free review first.
 5. MCP.so: submit the public GitHub repository as a server or remote server. Its form reads the public README, so keep `README.md`, `llms.txt`, and this pack current before submission.
-6. PulseMCP: prioritize after Official MCP Registry publication, because PulseMCP ingests the official registry and enriches `server.json` metadata.
+6. PulseMCP: monitor after Official MCP Registry publication, because PulseMCP ingests the official registry and enriches `server.json` metadata.
+
+## Current Listing Status
+
+| Product | Official MCP Registry | Smithery | Glama |
+| --- | --- | --- | --- |
+| Bluesky Keyword Alerts | Live: `io.github.telemarkdigital-publisher/bluesky-keyword-alerts` | Live: `thetelemarkdigital/bluesky-keyword-alerts` | Discovered, health gate open: `https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/bluesky-keyword-alerts` |
+| RSS Keyword Monitor | Live: `io.github.telemarkdigital-publisher/rss-keyword-monitor` | Live: `thetelemarkdigital/rss-keyword-monitor` | Discovered, health gate open: `https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/rss-keyword-monitor` |
+| TED Tender Monitor | Live: `io.github.telemarkdigital-publisher/ted-tender-monitor` | Live: `thetelemarkdigital/ted-tender-monitor` | Discovered, health gate open: `https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/ted-tender-monitor` |
 
 ## Form Copy
 
