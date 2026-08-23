@@ -8,7 +8,8 @@ Created and maintained by **Telemark Digital**.
 
 - [AI-agent index](./llms.txt) gives crawlers and coding assistants the product map, Apify links, plugin paths, and workflow boundaries.
 - [Phase 1 visibility checkpoint](./docs/release-notes/2026-08-11-phase-1-visibility.md) lists the current public example expansion and external gates.
-- [n8n creator checkpoint](./docs/release-notes/2026-08-12-n8n-creator-ladder.md) records the live RSS and TED templates and the Bluesky review gate.
+- [Promotion and directory checkpoint](./docs/release-notes/2026-08-24-public-status-and-glama-gate.md) records the live n8n, Make, MCP Registry, Smithery, OpenAI, Claude, and Glama gate status.
+- [n8n creator checkpoint](./docs/release-notes/2026-08-12-n8n-creator-ladder.md) records the first two n8n template approvals and creator-ladder context.
 - [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) explains the Claude/Codex plugin package layout and the safe distribution boundary.
 - [MCP Directory Listing Pack](./docs/mcp-directory-listings.md) contains per-product `server.json` metadata and copy for remote MCP directories.
 
@@ -36,15 +37,15 @@ Live n8n workflow templates:
 
 - [RSS Keyword Monitor for Apify Tasks](https://n8n.io/workflows/17430-monitor-rss-feeds-with-apify-and-store-new-items-in-data-tables/)
 - [TED Tender Monitor for EU procurement alerts](https://n8n.io/workflows/18030-monitor-eu-ted-tenders-with-apify-and-store-notices-in-n8n-data-tables/)
-- Bluesky Keyword & Mention Alerts is included as a repository workflow and is under n8n Creator review as submission `18103`.
+- [Bluesky Keyword & Mention Alerts](https://n8n.io/workflows/18103-monitor-bluesky-keyword-posts-with-apify-and-data-tables/)
 
 ## AI client plugins
 
 Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are included under [plugins](./plugins/). Each plugin exposes exactly one public Apify Actor through a product-specific Telemark MCP gateway route backed by Apify OAuth/MCP and includes a product-specific skill that keeps bounded one-off discovery separate from saved-Task monitoring.
 
-The plugin packages passed repository-source installation plus live OAuth/MCP calls in Codex and Claude Code on 2026-07-23. They are not official OpenAI or Anthropic directory listings. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and validation gates.
+The plugin packages passed repository-source installation plus live OAuth/MCP calls in Codex and Claude Code on 2026-07-23. These repository-source packages are separate from the official OpenAI and Anthropic review programs. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and current directory gates.
 
-Remote MCP directory metadata for the same product routes is staged under [mcp](./mcp/). Publish those entries only after the matching product route has passed a full bounded MCP tool-call canary.
+Remote MCP directory metadata for the same product routes is under [mcp](./mcp/). Official MCP Registry and Smithery listings are live for all three products. Glama connector pages are discovered, but still report `Unhealthy` while the public OAuth challenge, ownership, and server-card endpoints are live; see [MCP Directory Listing Pack](./docs/mcp-directory-listings.md).
 
 Public product icons are in [assets/icons](./assets/icons/) using clean external filenames. The AI-client plugin manifests omit optional icon fields for this release so the plugin packages remain text-only and easy to publish through GitHub's web editor.
 
@@ -74,6 +75,6 @@ These examples contain no credentials. Connect your own Apify and destination ac
 
 ## Repository status
 
-The examples are prepared and validated locally before publication. All three Make scenarios have been built and are publicly shared through the links above. The repository retains their credential-free construction specifications rather than exported Make blueprint files.
+The examples are prepared and validated locally before publication. All three Make scenarios and all three n8n templates are publicly shared through the links above. The repository retains credential-free construction specifications rather than exported Make blueprint files.
 
 See [Account Gates](./docs/account-gates.md) for the GitHub publisher, n8n Creator Portal, optional n8n Cloud, and Make publication steps.
