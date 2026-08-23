@@ -21,10 +21,12 @@ Public, credential-free packages for three Apify monitoring Actors and their wor
 
 - Live n8n RSS template: https://n8n.io/workflows/17430-monitor-rss-feeds-with-apify-and-store-new-items-in-data-tables/
 - Live n8n TED template: https://n8n.io/workflows/18030-monitor-eu-ted-tenders-with-apify-and-store-notices-in-n8n-data-tables/
-- Bluesky n8n template is under Creator review as submission 18103; the repository export remains available in the product directory.
+- Live n8n Bluesky template: https://n8n.io/workflows/18103-monitor-bluesky-keyword-posts-with-apify-and-data-tables/
 - Live Make shared scenarios are linked from README.md.
 - AI client plugin packages are under plugins/ and expose one fixed Telemark gateway route per Actor.
-- Remote MCP directory metadata is under mcp/ and should be submitted only after a bounded tool-call canary for the matching product route.
+- Official MCP Registry entries are live for all three product routes.
+- Smithery external Streamable HTTP listings are live for all three product routes.
+- Glama connector pages are discovered but currently show `Unhealthy`; the public MCP ownership, server-card, and OAuth protected-resource metadata routes are live.
 
 ## Usage Boundary
 
