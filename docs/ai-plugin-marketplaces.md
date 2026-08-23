@@ -2,7 +2,17 @@
 
 This repository includes foundational plugin packages for Codex, ChatGPT desktop, and Claude Code. Each plugin exposes one Telemark Digital Apify Actor through Apify's hosted MCP endpoint and adds a product-specific skill for safe use.
 
-Status: repository-source installation and live OAuth/MCP canaries passed in Codex and Claude Code on 2026-07-23. These packages are not official OpenAI or Anthropic directory listings.
+Status on 2026-08-24: repository-source installation and live OAuth/MCP canaries passed in Codex and Claude Code on 2026-07-23. Official MCP Registry and Smithery remote listings are live for all three products. Claude plugin submissions are pending review. OpenAI app listings are separate from these repository-source packages; TED and Bluesky are released, and RSS is resubmitted after a result-shape fixture fix. Glama pages are discovered but still report `Unhealthy`; see [MCP Directory Listing Pack](./mcp-directory-listings.md).
+
+## Directory Status
+
+| Surface | Bluesky | RSS | TED |
+| --- | --- | --- | --- |
+| OpenAI app directory | Released | In review after fixture fix | Released |
+| Claude plugin review | Pending review | Pending review | Pending review |
+| Official MCP Registry | Live | Live | Live |
+| Smithery | Live | Live | Live |
+| Glama | Discovered, health gate open | Discovered, health gate open | Discovered, health gate open |
 
 ## Included Plugins
 
