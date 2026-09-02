@@ -51,7 +51,7 @@ Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are include
 
 The plugin packages passed repository-source installation plus live OAuth/MCP calls in Codex and Claude Code on 2026-07-23. These repository-source packages are separate from the official OpenAI and Anthropic review programs. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and current directory gates.
 
-Remote MCP directory metadata for the same product routes is under [mcp](./mcp/). Official MCP Registry, Smithery, and Glama listings are live for all three products. Glama reports each connector as `Healthy`, and the public OAuth challenge, ownership, and server-card endpoints are live; see [MCP Directory Listing Pack](./docs/mcp-directory-listings.md).
+Remote MCP directory metadata for the same product routes is under [mcp](./mcp/). Official MCP Registry, Smithery, and Glama listings are live for all three products. Smithery uses distinct free-capped product Worker URLs for cleaner tool discovery. Glama reports each connector as `Healthy`, and the public OAuth challenge, ownership, and server-card endpoints are live; see [MCP Directory Listing Pack](./docs/mcp-directory-listings.md).
 
 Public product icons are in [assets/icons](./assets/icons/) using clean external filenames. The AI-client plugin manifests omit optional icon fields for this release so the plugin packages remain text-only and easy to publish through GitHub's web editor.
 
