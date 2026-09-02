@@ -6,7 +6,7 @@ Checked on 2026-09-02.
 
 - Official MCP Registry entries are active for Bluesky Keyword Alerts, RSS Keyword Monitor, and TED Tender Monitor.
 - Glama connector pages are live and report `Healthy` for all three product-scoped remote MCP routes.
-- Smithery external Streamable HTTP listings are live for all three product-scoped remote MCP routes.
+- Smithery external Streamable HTTP listings are live for all three products and now point at distinct free-capped product Workers for cleaner product-specific tool discovery.
 - Apify Store search and Apify agentic discovery find all three public Actors.
 
 ## Product Links
@@ -19,4 +19,4 @@ Checked on 2026-09-02.
 
 ## Next Promotion Surface
 
-Submit or refresh the same three product routes on PulseMCP and MCP.so as community/unofficial Telemark Digital listings. Use the public repository and product-scoped MCP routes; do not submit the broad Apify provider route.
+Submit or refresh the same three product entries on PulseMCP and MCP.so as community/unofficial Telemark Digital listings. Use the public repository and product-scoped MCP routes; do not submit the broad Apify provider route. For Smithery-style external URL ingestion, use the distinct product Worker MCP URLs from the MCP Directory Listing Pack.
