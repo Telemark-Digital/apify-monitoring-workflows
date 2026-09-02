@@ -25,7 +25,7 @@ Public, credential-free packages for three Apify monitoring Actors and their wor
 - Live Make shared scenarios are linked from README.md.
 - AI client plugin packages are under plugins/ and expose one fixed Telemark gateway route per Actor.
 - Official MCP Registry entries are live for all three product routes.
-- Smithery external Streamable HTTP listings are live for all three product routes.
+- Smithery external Streamable HTTP listings are live for all three products through distinct free-capped product Worker routes.
 - Glama connector pages are live and `Healthy` for all three product routes; the public MCP ownership, server-card, and OAuth protected-resource metadata routes are live.
 
 ## MCP Directory Surfaces
