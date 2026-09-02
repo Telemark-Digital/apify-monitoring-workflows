@@ -4,7 +4,7 @@
   "publication": {
     "slug": "preview-recent-eu-procurement-notices-as-json",
     "seoTitle": "Preview Recent EU Procurement Notices as JSON",
-    "seoDescription": "Preview French computer-equipment TED notices as JSON. Disable sampleMode on a saved Task for monitoring. Not affiliated with TED or the EU.",
+    "seoDescription": "Preview recent EU procurement notices from TED as JSON. Disable sampleMode on a saved Task for monitoring. Not affiliated with TED or the EU.",
     "displayedInputFields": ["sampleMode", "cpvCodes", "countries", "noticeTypes", "includeChangeNotices"],
     "datasetView": "overview"
   },
