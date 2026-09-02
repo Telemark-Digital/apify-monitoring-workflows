@@ -2,7 +2,7 @@
 
 This pack is for MCP directories and AI-agent connector indexes that accept GitHub-backed or remote Streamable HTTP MCP listings. Submit only the product-scoped Telemark gateway routes below. Do not submit direct, broad Apify MCP URLs, and do not describe these listings as official Bluesky, RSS, TED, EU, Apify, OpenAI, or Anthropic integrations.
 
-Status on 2026-09-02: all three product gateway routes return the expected OAuth protected-resource challenge, and the public ownership and server-card metadata are live. Exact Official MCP Registry entries are live for all three products. Smithery external Streamable HTTP listings are live for all three products. Glama connector pages are live and report `Healthy` for all three products.
+Status on 2026-09-02: all three product gateway routes return the expected OAuth protected-resource challenge, and the public ownership and server-card metadata are live. Exact Official MCP Registry entries are live for all three products. Smithery external Streamable HTTP listings are live for all three products through the distinct free-capped product Workers. Glama connector pages are live and report `Healthy` for all three products.
 
 ## Product Metadata
 
@@ -12,10 +12,18 @@ Status on 2026-09-02: all three product gateway routes return the expected OAuth
 | RSS Keyword Monitor | `io.github.telemarkdigital-publisher/rss-keyword-monitor` | `https://telemark-apify-monitoring-mcp.katfu111111.workers.dev/rss` | `mcp/rss-keyword-monitor/server.json` |
 | TED Tender Monitor | `io.github.telemarkdigital-publisher/ted-tender-monitor` | `https://telemark-apify-monitoring-mcp.katfu111111.workers.dev/ted` | `mcp/ted-tender-monitor/server.json` |
 
+## Smithery Product URLs
+
+| Product | Smithery MCP URL |
+| --- | --- |
+| Bluesky Keyword Alerts | `https://telemark-public-post-search-mcp.katfu111111.workers.dev/mcp` |
+| RSS Keyword Monitor | `https://telemark-feed-search-mcp.katfu111111.workers.dev/mcp` |
+| TED Tender Monitor | `https://telemark-procurement-search-mcp.katfu111111.workers.dev/mcp` |
+
 ## Submission Order
 
 1. Official MCP Registry: completed for all three exact registry names. Verify through `https://registry.modelcontextprotocol.io/v0.1/servers?search=<registry-name>`.
-2. Smithery: completed for all three products as external Streamable HTTP listings.
+2. Smithery: completed for all three products as external Streamable HTTP listings using distinct product Workers.
 3. Glama: completed for all three product-specific connector pages. Keep the product-specific routes, not the generic provider route, and keep the repository-root `glama.json` plus gateway `/.well-known/glama.json` live for ownership proof.
 4. mcpservers.org and similar curated directories: submit the GitHub repo URL, product name, one-sentence description, and category. Use free review first.
 5. MCP.so: submit the public GitHub repository as a server or remote server. Its form reads the public README, so keep `README.md`, `llms.txt`, and this pack current before submission.
