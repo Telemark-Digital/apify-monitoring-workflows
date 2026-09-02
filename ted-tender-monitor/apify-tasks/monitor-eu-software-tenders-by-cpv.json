@@ -3,7 +3,7 @@
   "taskName": "preview-eu-software-tenders-by-cpv",
   "publication": {
     "slug": "preview-eu-software-tenders-by-cpv",
-    "seoTitle": "Preview EU Software Tenders by CPV Code",
+    "seoTitle": "Preview German Software Tenders by CPV Code",
     "seoDescription": "Preview German TED software tenders by CPV as JSON. Disable sampleMode on a saved Task for monitoring. Not affiliated with TED or the EU.",
     "displayedInputFields": ["sampleMode", "cpvCodes", "countries", "noticeTypes", "includeChangeNotices"],
     "datasetView": "overview"
