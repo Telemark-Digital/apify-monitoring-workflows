@@ -1,6 +1,6 @@
 # Public Status And Glama Gate
 
-Checked on 2026-08-24.
+Checked on 2026-08-24. Superseded by [MCP promotion checkpoint](./2026-09-02-mcp-directory-promotion.md).
 
 ## Live Surfaces
 
@@ -14,7 +14,7 @@ Checked on 2026-08-24.
 
 ## Glama Gate
 
-Glama has discovered the product connector pages, but each still reports `Unhealthy`.
+Glama originally discovered the product connector pages but reported `Unhealthy`. As of 2026-09-02, all three product connector pages report `Healthy`.
 
 Our public-side checks are in place:
 
@@ -23,4 +23,4 @@ Our public-side checks are in place:
 - The MCP gateway serves `/.well-known/mcp/server-card.json` and product-specific server cards.
 - Product routes return the expected OAuth protected-resource challenge instead of exposing unauthenticated tool execution.
 
-Open action: request a Glama retest or diagnostic if the pages do not automatically move to healthy. The support question is whether Glama's crawler can validate OAuth-protected Streamable HTTP connectors from public metadata, or whether it needs test credentials or a manual retry.
+Closed action: no local Glama health fix remains. Keep the ownership, server-card, and OAuth challenge metadata live.
