@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Run one persistent TED Tender Monitor - EU Procurement Alerts Task on a schedule, wait for any terminal status, persist every committed dataset record, and only then expose tender records and report the terminal outcome.
+Run one persistent TED Tender Monitor - EU Tender Alerts & CPV Task on a schedule, wait for any terminal status, persist every committed dataset record, and only then expose tender records and report the terminal outcome.
 
 ## Required configuration
 
