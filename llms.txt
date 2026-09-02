@@ -26,7 +26,19 @@ Public, credential-free packages for three Apify monitoring Actors and their wor
 - AI client plugin packages are under plugins/ and expose one fixed Telemark gateway route per Actor.
 - Official MCP Registry entries are live for all three product routes.
 - Smithery external Streamable HTTP listings are live for all three product routes.
-- Glama connector pages are discovered but currently show `Unhealthy`; the public MCP ownership, server-card, and OAuth protected-resource metadata routes are live.
+- Glama connector pages are live and `Healthy` for all three product routes; the public MCP ownership, server-card, and OAuth protected-resource metadata routes are live.
+
+## MCP Directory Surfaces
+
+- Bluesky Official MCP Registry: https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Fbluesky-keyword-alerts
+- Bluesky Glama: https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/bluesky-keyword-alerts
+- Bluesky Smithery: https://smithery.ai/servers/thetelemarkdigital/bluesky-keyword-alerts
+- RSS Official MCP Registry: https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Frss-keyword-monitor
+- RSS Glama: https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/rss-keyword-monitor
+- RSS Smithery: https://smithery.ai/servers/thetelemarkdigital/rss-keyword-monitor
+- TED Official MCP Registry: https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Fted-tender-monitor
+- TED Glama: https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/ted-tender-monitor
+- TED Smithery: https://smithery.ai/servers/thetelemarkdigital/ted-tender-monitor
 
 ## Usage Boundary
 
