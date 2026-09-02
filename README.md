@@ -8,7 +8,7 @@ Created and maintained by **Telemark Digital**.
 
 - [AI-agent index](./llms.txt) gives crawlers and coding assistants the product map, Apify links, plugin paths, and workflow boundaries.
 - [Phase 1 visibility checkpoint](./docs/release-notes/2026-08-11-phase-1-visibility.md) lists the current public example expansion and external gates.
-- [Promotion and directory checkpoint](./docs/release-notes/2026-08-24-public-status-and-glama-gate.md) records the live n8n, Make, MCP Registry, Smithery, OpenAI, Claude, and Glama gate status.
+- [MCP promotion checkpoint](./docs/release-notes/2026-09-02-mcp-directory-promotion.md) records the live n8n, Make, MCP Registry, Smithery, Glama, and Apify agentic discovery status.
 - [n8n creator checkpoint](./docs/release-notes/2026-08-12-n8n-creator-ladder.md) records the first two n8n template approvals and creator-ladder context.
 - [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) explains the Claude/Codex plugin package layout and the safe distribution boundary.
 - [MCP Directory Listing Pack](./docs/mcp-directory-listings.md) contains per-product `server.json` metadata and copy for remote MCP directories.
@@ -39,13 +39,19 @@ Live n8n workflow templates:
 - [TED Tender Monitor for EU procurement alerts](https://n8n.io/workflows/18030-monitor-eu-ted-tenders-with-apify-and-store-notices-in-n8n-data-tables/)
 - [Bluesky Keyword & Mention Alerts](https://n8n.io/workflows/18103-monitor-bluesky-keyword-posts-with-apify-and-data-tables/)
 
+Live MCP and AI-agent directory surfaces:
+
+- Official MCP Registry: [`bluesky-keyword-alerts`](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Fbluesky-keyword-alerts), [`rss-keyword-monitor`](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Frss-keyword-monitor), [`ted-tender-monitor`](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Fted-tender-monitor)
+- Glama MCP connector pages: [Bluesky](https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/bluesky-keyword-alerts), [RSS](https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/rss-keyword-monitor), [TED](https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/ted-tender-monitor)
+- Smithery MCP listings: [Bluesky](https://smithery.ai/servers/thetelemarkdigital/bluesky-keyword-alerts), [RSS](https://smithery.ai/servers/thetelemarkdigital/rss-keyword-monitor), [TED](https://smithery.ai/servers/thetelemarkdigital/ted-tender-monitor)
+
 ## AI client plugins
 
 Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are included under [plugins](./plugins/). Each plugin exposes exactly one public Apify Actor through a product-specific Telemark MCP gateway route backed by Apify OAuth/MCP and includes a product-specific skill that keeps bounded one-off discovery separate from saved-Task monitoring.
 
 The plugin packages passed repository-source installation plus live OAuth/MCP calls in Codex and Claude Code on 2026-07-23. These repository-source packages are separate from the official OpenAI and Anthropic review programs. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and current directory gates.
 
-Remote MCP directory metadata for the same product routes is under [mcp](./mcp/). Official MCP Registry and Smithery listings are live for all three products. Glama connector pages are discovered, but still report `Unhealthy` while the public OAuth challenge, ownership, and server-card endpoints are live; see [MCP Directory Listing Pack](./docs/mcp-directory-listings.md).
+Remote MCP directory metadata for the same product routes is under [mcp](./mcp/). Official MCP Registry, Smithery, and Glama listings are live for all three products. Glama reports each connector as `Healthy`, and the public OAuth challenge, ownership, and server-card endpoints are live; see [MCP Directory Listing Pack](./docs/mcp-directory-listings.md).
 
 Public product icons are in [assets/icons](./assets/icons/) using clean external filenames. The AI-client plugin manifests omit optional icon fields for this release so the plugin packages remain text-only and easy to publish through GitHub's web editor.
 
