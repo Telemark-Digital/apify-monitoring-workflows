@@ -2,7 +2,7 @@
 
 This pack is for MCP directories and AI-agent connector indexes that accept GitHub-backed or remote Streamable HTTP MCP listings. Submit only the product-scoped Telemark gateway routes below. Do not submit direct, broad Apify MCP URLs, and do not describe these listings as official Bluesky, RSS, TED, EU, Apify, OpenAI, or Anthropic integrations.
 
-Status on 2026-09-02: all three product gateway routes return the expected OAuth protected-resource challenge, and the public ownership and server-card metadata are live. Exact Official MCP Registry entries are live for all three products. Smithery external Streamable HTTP listings are live for all three products through the distinct free-capped product Workers. Glama connector pages are live and report `Healthy` for all three products.
+Status on 2026-09-15: all three product gateway routes return the expected OAuth protected-resource challenge, and the public ownership and server-card metadata are live. Exact Official MCP Registry entries are live for all three products. Smithery external Streamable HTTP listings are live for all three products through the distinct free-capped product Workers. Glama connector pages are live and report `Healthy` for all three products. VerifyMCP trust pages and mcpbeat uptime proof pages are public for all three product routes.
 
 ## Product Metadata
 
@@ -20,14 +20,23 @@ Status on 2026-09-02: all three product gateway routes return the expected OAuth
 | RSS Keyword Monitor | `https://telemark-feed-search-mcp.katfu111111.workers.dev/mcp` |
 | TED Tender Monitor | `https://telemark-procurement-search-mcp.katfu111111.workers.dev/mcp` |
 
+## Trust And Uptime Proof
+
+| Product | VerifyMCP trust page | mcpbeat uptime proof |
+| --- | --- | --- |
+| Bluesky Keyword Alerts | `https://verifymcp.io/servers/telemarkdigital-publisher-bluesky-keyword-alerts/bluesky` | `https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/bluesky-keyword-alerts/` |
+| RSS Keyword Monitor | `https://verifymcp.io/servers/telemarkdigital-publisher-rss-keyword-monitor/rss` | `https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/rss-keyword-monitor/` |
+| TED Tender Monitor | `https://verifymcp.io/servers/telemarkdigital-publisher-ted-tender-monitor/ted` | `https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/ted-tender-monitor/` |
+
 ## Submission Order
 
 1. Official MCP Registry: completed for all three exact registry names. Verify through `https://registry.modelcontextprotocol.io/v0.1/servers?search=<registry-name>`.
 2. Smithery: completed for all three products as external Streamable HTTP listings using distinct product Workers.
 3. Glama: completed for all three product-specific connector pages. Keep the product-specific routes, not the generic provider route, and keep the repository-root `glama.json` plus gateway `/.well-known/glama.json` live for ownership proof.
-4. mcpservers.org and similar curated directories: submit the GitHub repo URL, product name, one-sentence description, and category. Use free review first.
-5. MCP.so: submit the public GitHub repository as a server or remote server. Its form reads the public README, so keep `README.md`, `llms.txt`, and this pack current before submission.
-6. PulseMCP: submit or monitor after Official MCP Registry publication, because PulseMCP ingests the official registry and enriches `server.json` metadata.
+4. VerifyMCP and mcpbeat: public trust and uptime proof pages are live. Link these in repository and listing copy; do not claim a fixed score or uptime percentage unless it has just been rechecked.
+5. mcpservers.org and similar curated directories: submit the GitHub repo URL, product name, one-sentence description, and category. Use free review first.
+6. MCP.so: submit the public GitHub repository as a server or remote server. Its form reads the public README, so keep `README.md`, `llms.txt`, and this pack current before submission.
+7. PulseMCP: submit or monitor after Official MCP Registry publication, because PulseMCP ingests the official registry and enriches `server.json` metadata.
 
 ## Current Listing Status
 
@@ -41,7 +50,7 @@ Status on 2026-09-02: all three product gateway routes return the expected OAuth
 
 | Product | Server name | Short description | Category | Link |
 | --- | --- | --- | --- | --- |
-| Bluesky Keyword Alerts | Bluesky Keyword Alerts | Search bounded public Bluesky keywords, handles, mentions, and hashtags. | Search / Web Data / Monitoring | `https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/mcp/bluesky-keyword-alerts` |
+| Bluesky Keyword Alerts | Bluesky Keyword Alerts | Search bounded public Bluesky keywords, handles, mentions, and hashtags with public trust and uptime proof. | Search / Web Data / Monitoring | `https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/mcp/bluesky-keyword-alerts` |
 | RSS Keyword Monitor | RSS Keyword Monitor | Search bounded RSS, Atom, and RDF feed matches by keyword or regex. | Search / Web Data / Monitoring | `https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/mcp/rss-keyword-monitor` |
 | TED Tender Monitor | TED Tender Monitor | Search EU TED procurement notices by CPV, country, keyword, value, or type. | Search / Procurement / Monitoring | `https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/mcp/ted-tender-monitor` |
 
