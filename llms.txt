@@ -6,14 +6,20 @@ Public, credential-free packages for three Apify monitoring Actors and their wor
 
 - Bluesky Keyword & Mention Alerts: https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts
   - Public examples: https://apify.com/uplifted_novice_vbl/bluesky-keyword-mention-alerts/examples
+  - MCP trust proof: https://verifymcp.io/servers/telemarkdigital-publisher-bluesky-keyword-alerts/bluesky
+  - MCP uptime proof: https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/bluesky-keyword-alerts/
   - Local package: bluesky-keyword-mention-alerts/
   - Plugin package: plugins/bluesky-keyword-alerts/
 - RSS Keyword Monitor: https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new
   - Public examples: https://apify.com/uplifted_novice_vbl/rss-keyword-monitor-only-new/examples
+  - MCP trust proof: https://verifymcp.io/servers/telemarkdigital-publisher-rss-keyword-monitor/rss
+  - MCP uptime proof: https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/rss-keyword-monitor/
   - Local package: rss-keyword-monitor/
   - Plugin package: plugins/rss-keyword-monitor/
 - TED Tender Monitor: https://apify.com/uplifted_novice_vbl/ted-tender-watch
   - Public examples: https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples
+  - MCP trust proof: https://verifymcp.io/servers/telemarkdigital-publisher-ted-tender-monitor/ted
+  - MCP uptime proof: https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/ted-tender-monitor/
   - Local package: ted-tender-monitor/
   - Plugin package: plugins/ted-tender-monitor/
 
@@ -27,18 +33,25 @@ Public, credential-free packages for three Apify monitoring Actors and their wor
 - Official MCP Registry entries are live for all three product routes.
 - Smithery external Streamable HTTP listings are live for all three products through distinct free-capped product Worker routes.
 - Glama connector pages are live and `Healthy` for all three product routes; the public MCP ownership, server-card, and OAuth protected-resource metadata routes are live.
+- VerifyMCP trust pages and mcpbeat uptime proof pages are linked per product below.
 
 ## MCP Directory Surfaces
 
 - Bluesky Official MCP Registry: https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Fbluesky-keyword-alerts
 - Bluesky Glama: https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/bluesky-keyword-alerts
 - Bluesky Smithery: https://smithery.ai/servers/thetelemarkdigital/bluesky-keyword-alerts
+- Bluesky VerifyMCP trust: https://verifymcp.io/servers/telemarkdigital-publisher-bluesky-keyword-alerts/bluesky
+- Bluesky mcpbeat uptime: https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/bluesky-keyword-alerts/
 - RSS Official MCP Registry: https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Frss-keyword-monitor
 - RSS Glama: https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/rss-keyword-monitor
 - RSS Smithery: https://smithery.ai/servers/thetelemarkdigital/rss-keyword-monitor
+- RSS VerifyMCP trust: https://verifymcp.io/servers/telemarkdigital-publisher-rss-keyword-monitor/rss
+- RSS mcpbeat uptime: https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/rss-keyword-monitor/
 - TED Official MCP Registry: https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Fted-tender-monitor
 - TED Glama: https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/ted-tender-monitor
 - TED Smithery: https://smithery.ai/servers/thetelemarkdigital/ted-tender-monitor
+- TED VerifyMCP trust: https://verifymcp.io/servers/telemarkdigital-publisher-ted-tender-monitor/ted
+- TED mcpbeat uptime: https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/ted-tender-monitor/
 
 ## Usage Boundary
 
