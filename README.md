@@ -12,10 +12,11 @@ Created and maintained by **Telemark Digital**.
 - [n8n creator checkpoint](./docs/release-notes/2026-08-12-n8n-creator-ladder.md) records the first two n8n template approvals and creator-ladder context.
 - [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) explains the Claude/Codex plugin package layout and the safe distribution boundary.
 - [MCP Directory Listing Pack](./docs/mcp-directory-listings.md) contains per-product `server.json` metadata and copy for remote MCP directories.
+- [MCP trust and uptime proof](./docs/mcp-directory-listings.md#trust-and-uptime-proof) links VerifyMCP trust pages and mcpbeat uptime proof for the same product routes.
 
 ## Products
 
-- [Bluesky Keyword & Mention Alerts](./bluesky-keyword-mention-alerts/) monitors public Bluesky posts for keywords, handles, mentions, and hashtags.
+- [Bluesky Keyword & Mention Alerts](./bluesky-keyword-mention-alerts/) monitors public Bluesky posts for keywords, handles, mentions, and hashtags; its MCP route has public VerifyMCP trust and mcpbeat uptime proof.
 - [RSS Keyword Monitor](./rss-keyword-monitor/) filters RSS, Atom, and RDF feeds by keyword, regular expression, and exclusion rules.
 - [TED Tender Monitor](./ted-tender-monitor/) finds new or changed EU procurement notices by CPV code, country, keyword, value, and notice type.
 
@@ -44,6 +45,8 @@ Live MCP and AI-agent directory surfaces:
 - Official MCP Registry: [`bluesky-keyword-alerts`](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Fbluesky-keyword-alerts), [`rss-keyword-monitor`](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Frss-keyword-monitor), [`ted-tender-monitor`](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.telemarkdigital-publisher%2Fted-tender-monitor)
 - Glama MCP connector pages: [Bluesky](https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/bluesky-keyword-alerts), [RSS](https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/rss-keyword-monitor), [TED](https://glama.ai/mcp/connectors/io.github.telemarkdigital-publisher/ted-tender-monitor)
 - Smithery MCP listings: [Bluesky](https://smithery.ai/servers/thetelemarkdigital/bluesky-keyword-alerts), [RSS](https://smithery.ai/servers/thetelemarkdigital/rss-keyword-monitor), [TED](https://smithery.ai/servers/thetelemarkdigital/ted-tender-monitor)
+- VerifyMCP trust pages: [Bluesky](https://verifymcp.io/servers/telemarkdigital-publisher-bluesky-keyword-alerts/bluesky), [RSS](https://verifymcp.io/servers/telemarkdigital-publisher-rss-keyword-monitor/rss), [TED](https://verifymcp.io/servers/telemarkdigital-publisher-ted-tender-monitor/ted)
+- mcpbeat uptime proof pages: [Bluesky](https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/bluesky-keyword-alerts/), [RSS](https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/rss-keyword-monitor/), [TED](https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/ted-tender-monitor/)
 
 ## AI client plugins
 
@@ -51,7 +54,7 @@ Foundational Codex, ChatGPT desktop, and Claude Code plugin packages are include
 
 The plugin packages passed repository-source installation plus live OAuth/MCP calls in Codex and Claude Code on 2026-07-23. These repository-source packages are separate from the official OpenAI and Anthropic review programs. See [AI Client Plugin Marketplaces](./docs/ai-plugin-marketplaces.md) for the package layout, safe usage boundary, and current directory gates.
 
-Remote MCP directory metadata for the same product routes is under [mcp](./mcp/). Official MCP Registry, Smithery, and Glama listings are live for all three products. Smithery uses distinct free-capped product Worker URLs for cleaner tool discovery. Glama reports each connector as `Healthy`, and the public OAuth challenge, ownership, and server-card endpoints are live; see [MCP Directory Listing Pack](./docs/mcp-directory-listings.md).
+Remote MCP directory metadata for the same product routes is under [mcp](./mcp/). Official MCP Registry, Smithery, and Glama listings are live for all three products. Smithery uses distinct free-capped product Worker URLs for cleaner tool discovery. Glama reports each connector as `Healthy`, VerifyMCP provides public trust pages, mcpbeat provides public uptime proof pages, and the public OAuth challenge, ownership, and server-card endpoints are live; see [MCP Directory Listing Pack](./docs/mcp-directory-listings.md).
 
 Public product icons are in [assets/icons](./assets/icons/) using clean external filenames. The AI-client plugin manifests omit optional icon fields for this release so the plugin packages remain text-only and easy to publish through GitHub's web editor.
 
