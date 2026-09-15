@@ -6,6 +6,8 @@ This package contains public examples and workflow templates for [Bluesky Keywor
 
 > Unofficial and independent. This Actor is not affiliated with, endorsed by, or sponsored by Bluesky Social PBC.
 
+MCP trust and uptime proof for the same product route: [VerifyMCP trust page](https://verifymcp.io/servers/telemarkdigital-publisher-bluesky-keyword-alerts/bluesky), [mcpbeat uptime proof](https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/bluesky-keyword-alerts/).
+
 ## Choose a public example
 
 | Goal | Example | Discovery target |
@@ -72,7 +74,7 @@ See `fixtures/sample-posts.json` for sanitized example records.
 
 - `workflows/WORKFLOW-CONTRACT.md`: platform-neutral behavior and acceptance rules
 - `workflows/n8n/bluesky-alerts-task-to-json.json`: importable credential-free n8n workflow
-- `workflows/n8n/README.md`: account connection and test steps; public n8n Creator submission `18103` is under review
+- `workflows/n8n/README.md`: account connection and test steps; public n8n template `18103` is live
 - `workflows/make/README.md`: exact Make scenario implementation package
 - `workflows/make/module-spec.json`: machine-readable module and mapping plan
 - [Bluesky Keyword and Mention Alerts on Make](https://us2.make.com/public/shared-scenario/FtrDlcux4Vr/bluesky-keyword-and-mention-alerts-from): live public shared scenario
