@@ -2,7 +2,7 @@
 
 This repository includes foundational plugin packages for Codex, ChatGPT desktop, and Claude Code. Each plugin exposes one Telemark Digital Apify Actor through Apify's hosted MCP endpoint and adds a product-specific skill for safe use.
 
-Status on 2026-09-02: repository-source installation and live OAuth/MCP canaries passed in Codex and Claude Code on 2026-07-23. Official MCP Registry and Smithery remote listings are live for all three products. Glama connector pages are live and report `Healthy` for all three products; see [MCP Directory Listing Pack](./mcp-directory-listings.md). Claude plugin submissions remain a separate review gate. OpenAI app listings are also separate from these repository-source packages; TED and Bluesky are released, and RSS is in review after the result-shape fixture fix.
+Status on 2026-09-15: repository-source installation and live OAuth/MCP canaries passed in Codex and Claude Code on 2026-07-23. Official MCP Registry and Smithery remote listings are live for all three products. Glama connector pages are live and report `Healthy` for all three products. VerifyMCP trust pages and mcpbeat uptime proof pages are linked from the MCP Directory Listing Pack. Claude plugin submissions remain a separate review gate. OpenAI app listings are also separate from these repository-source packages; TED and Bluesky are released, and RSS is in review after the result-shape fixture fix.
 
 ## Directory Status
 
@@ -13,12 +13,22 @@ Status on 2026-09-02: repository-source installation and live OAuth/MCP canaries
 | Official MCP Registry | Live | Live | Live |
 | Smithery | Live | Live | Live |
 | Glama | Healthy | Healthy | Healthy |
+| VerifyMCP | Trust page live | Trust page live | Trust page live |
+| mcpbeat | Uptime proof live | Uptime proof live | Uptime proof live |
+
+## Trust And Uptime Proof
+
+| Product | VerifyMCP trust page | mcpbeat uptime proof |
+| --- | --- | --- |
+| Bluesky Keyword Alerts | <https://verifymcp.io/servers/telemarkdigital-publisher-bluesky-keyword-alerts/bluesky> | <https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/bluesky-keyword-alerts/> |
+| RSS Keyword Monitor | <https://verifymcp.io/servers/telemarkdigital-publisher-rss-keyword-monitor/rss> | <https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/rss-keyword-monitor/> |
+| TED Tender Monitor | <https://verifymcp.io/servers/telemarkdigital-publisher-ted-tender-monitor/ted> | <https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/ted-tender-monitor/> |
 
 ## Included Plugins
 
 | Plugin | Actor | Intended use |
 | --- | --- | --- |
-| `bluesky-keyword-alerts` | `uplifted_novice_vbl/bluesky-keyword-mention-alerts` | Bounded public Bluesky keyword, handle, mention, and hashtag discovery. |
+| `bluesky-keyword-alerts` | `uplifted_novice_vbl/bluesky-keyword-mention-alerts` | Bounded public Bluesky keyword, handle, mention, and hashtag discovery with public MCP trust and uptime proof linked above. |
 | `rss-keyword-monitor` | `uplifted_novice_vbl/rss-keyword-monitor-only-new` | Bounded RSS, Atom, and RDF keyword or regex discovery. |
 | `ted-tender-monitor` | `uplifted_novice_vbl/ted-tender-watch` | Bounded TED procurement notice discovery. |
 
