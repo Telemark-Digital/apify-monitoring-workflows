@@ -17,6 +17,7 @@ Public, credential-free packages for three Apify monitoring Actors and their wor
   - Local package: rss-keyword-monitor/
   - Plugin package: plugins/rss-keyword-monitor/
 - TED Tender Monitor: https://apify.com/uplifted_novice_vbl/ted-tender-watch
+  - Positioning: TED tender monitor for new or changed EU procurement notices
   - Public examples: https://apify.com/uplifted_novice_vbl/ted-tender-watch/examples
   - MCP trust proof: https://verifymcp.io/servers/telemarkdigital-publisher-ted-tender-monitor/ted
   - MCP uptime proof: https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/ted-tender-monitor/
