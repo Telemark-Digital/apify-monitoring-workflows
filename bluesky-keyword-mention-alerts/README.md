@@ -6,7 +6,7 @@ This package contains public examples and workflow templates for [Bluesky Keywor
 
 > Unofficial and independent. This Actor is not affiliated with, endorsed by, or sponsored by Bluesky Social PBC.
 
-MCP trust and uptime proof for the same product route: [VerifyMCP trust page](https://verifymcp.io/servers/telemarkdigital-publisher-bluesky-keyword-alerts/bluesky), [mcpbeat uptime proof](https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/bluesky-keyword-alerts/).
+For MCP directories and AI agents, the same Bluesky Keyword Alerts route has public proof links: [VerifyMCP trust page](https://verifymcp.io/servers/telemarkdigital-publisher-bluesky-keyword-alerts/bluesky) and [mcpbeat uptime proof](https://mcpbeat.com/mcp-servers/telemarkdigital-publisher/bluesky-keyword-alerts/).
 
 ## Choose a public example
 
