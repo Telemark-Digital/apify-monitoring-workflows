@@ -50,9 +50,9 @@ Status on 2026-09-15: all three product gateway routes return the expected OAuth
 
 | Product | Server name | Short description | Category | Link |
 | --- | --- | --- | --- | --- |
-| Bluesky Keyword Alerts | Bluesky Keyword Alerts | Search bounded public Bluesky keywords, handles, mentions, and hashtags with public trust and uptime proof. | Search / Web Data / Monitoring | `https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/mcp/bluesky-keyword-alerts` |
+| Bluesky Keyword Alerts | Bluesky Keyword Alerts | Search bounded public Bluesky keywords, handles, mentions, and hashtags with VerifyMCP trust and mcpbeat uptime proof. | Search / Web Data / Monitoring | `https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/mcp/bluesky-keyword-alerts` |
 | RSS Keyword Monitor | RSS Keyword Monitor | Search bounded RSS, Atom, and RDF feed matches by keyword or regex. | Search / Web Data / Monitoring | `https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/mcp/rss-keyword-monitor` |
-| TED Tender Monitor | TED Tender Monitor | Search EU TED procurement notices by CPV, country, keyword, value, or type. | Search / Procurement / Monitoring | `https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/mcp/ted-tender-monitor` |
+| TED Tender Monitor | TED Tender Monitor | TED tender monitor for EU procurement notices by CPV, country, keyword, value, or type. | Search / Procurement / Monitoring | `https://github.com/Telemark-Digital/apify-monitoring-workflows/tree/main/mcp/ted-tender-monitor` |
 
 Contact email: `thetelemarkdigital@gmail.com`
 
