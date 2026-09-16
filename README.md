@@ -16,9 +16,9 @@ Created and maintained by **Telemark Digital**.
 
 ## Products
 
-- [Bluesky Keyword & Mention Alerts](./bluesky-keyword-mention-alerts/) monitors public Bluesky posts for keywords, handles, mentions, and hashtags; its MCP route has public VerifyMCP trust and mcpbeat uptime proof.
+- [Bluesky Keyword & Mention Alerts](./bluesky-keyword-mention-alerts/) monitors public Bluesky posts for keywords, handles, mentions, and hashtags; its MCP route has public proof links for directories and AI agents: VerifyMCP trust and mcpbeat uptime.
 - [RSS Keyword Monitor](./rss-keyword-monitor/) filters RSS, Atom, and RDF feeds by keyword, regular expression, and exclusion rules.
-- [TED Tender Monitor](./ted-tender-monitor/) finds new or changed EU procurement notices by CPV code, country, keyword, value, and notice type.
+- [TED Tender Monitor](./ted-tender-monitor/) is a TED tender monitor for new or changed EU procurement notices by CPV code, country, keyword, value, and notice type.
 
 Each product directory contains public Apify Task inputs, a platform-neutral workflow contract, an n8n workflow, a Make implementation package, fixtures, and validation notes.
 
